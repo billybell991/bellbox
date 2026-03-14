@@ -122,7 +122,7 @@ export class HieroglyphicsGame extends BaseGame {
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) {
         this.currentPhrase = prompts[0];
-        return { phrase: prompts[0], type: 'hieroglyphics', instruction: 'Translate this into EMOJIS ONLY! 🔤➡️😀' };
+        return { text: prompts[0], type: 'hieroglyphics', instruction: 'Translate this into EMOJIS ONLY! 🔤➡️😀' };
       }
     } catch { /* fallback */ }
 
@@ -132,7 +132,7 @@ export class HieroglyphicsGame extends BaseGame {
     const phrase = list[Math.floor(Math.random() * list.length)];
     this.usedPhrases.add(phrase);
     this.currentPhrase = phrase;
-    return { phrase, type: 'hieroglyphics', instruction: 'Translate this into EMOJIS ONLY! 🔤➡️😀' };
+    return { text: phrase, type: 'hieroglyphics', instruction: 'Translate this into EMOJIS ONLY! 🔤➡️😀' };
   }
 
   /** Encoders see the phrase and submit emojis, decoders submit guesses */
@@ -140,8 +140,8 @@ export class HieroglyphicsGame extends BaseGame {
     const base = super.getState(socketId);
     base.isEncoder = this.encoders.has(socketId);
     if (!base.isEncoder && base.prompt) {
-      // Decoders don't see the phrase — they'll see emoji submissions during voting
-      base.prompt = { ...base.prompt, phrase: '[Hidden — you\'ll guess from the emojis!]' };
+      // Decoders don't see the phrase — they see a different instruction
+      base.prompt = { ...base.prompt, text: '🤔 Wait for the emoji clues...', instruction: 'Try to guess what phrase the emojis represent!' };
     }
     return base;
   }

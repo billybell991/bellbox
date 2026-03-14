@@ -82,10 +82,12 @@ export default function App() {
         if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
 
         if (res.state === 'IN_GAME' && res.activeGame) {
-          // Dropped into an active game
+          // Restore game-specific state
           if (res.activeGame === 'nerds-against-humanity') {
+            if (res.gameState) setNahGameState(res.gameState);
             setScreen('nah-game');
           } else if (res.activeGame === 'trivia-fetch') {
+            if (res.gameState) setTriviaGameState(res.gameState);
             setScreen('trivia-game');
           } else {
             const info = (res.games || []).find(g => g.id === res.activeGame);

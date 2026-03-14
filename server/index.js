@@ -100,16 +100,18 @@ const GAMES = {
     id: 'nerds-against-humanity',
     name: 'Nerds Against Humanity',
     description: 'A party game for horrible nerds. Judge picks the funniest card combo!',
+    howToPlay: 'Each round, one player is the Card Czar and draws a black prompt card. Everyone else picks the funniest white card from their hand to complete the prompt. The Card Czar reads all submissions and picks the winner. First to the score limit wins!',
     emoji: '🃏',
     minPlayers: 3,
     maxPlayers: 10,
-    color: '#4a2371',
+    color: '#AFFF33',
     category: 'Wordplay & Wit',
   },
   'trivia-fetch': {
     id: 'trivia-fetch',
     name: 'Trivia Fetch!',
     description: 'Spin the wheel, answer trivia, collect paw stamps. Hosted by Gus!',
+    howToPlay: 'Take turns spinning the wheel to land on a trivia category. Answer correctly to earn paw stamps and keep spinning! Answer wrong and your turn passes. First to collect all paw stamps wins. Hosted by Gus the dog!',
     emoji: '🐕',
     minPlayers: 2,
     maxPlayers: 6,
@@ -120,151 +122,180 @@ const GAMES = {
   'caption-this': {
     id: 'caption-this', name: 'Caption This!', emoji: '🖼️',
     description: 'Write hilarious captions for bizarre image descriptions!',
+    howToPlay: 'An AI generates a bizarre scene description. Everyone writes their funniest caption. All captions are revealed and players vote for the best one. Most votes wins the round!',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
   },
   'hot-take-tribunal': {
     id: 'hot-take-tribunal', name: 'Hot Take Tribunal', emoji: '🔥',
     description: 'Defend your most controversial opinions. The crowd judges!',
+    howToPlay: 'Each round presents a spicy topic. One player must defend an outrageous hot take while everyone else judges how convincing they are. The crowd votes guilty or not guilty!',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
   },
   'wrong-answers-only': {
     id: 'wrong-answers-only', name: 'Wrong Answers Only', emoji: '🚫',
     description: 'Give the worst possible answer. Embrace total absurdity!',
+    howToPlay: 'A question appears and everyone races to give the WORST, most hilariously wrong answer. The AI judges how creatively terrible your answer is. Points for maximum absurdity!',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
   },
   'sketchy-context': {
     id: 'sketchy-context', name: 'Sketchy Context', emoji: '💬',
     description: 'Explain what\'s REALLY happening in this absurd scene!',
+    howToPlay: 'An AI describes a bizarre scene. Players must write the most hilarious explanation for what is actually going on. Vote for the funniest context! The best storyteller wins.',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
   },
   'pitch-slap': {
     id: 'pitch-slap', name: 'Pitch Slap', emoji: '💡',
     description: 'Pitch a terrible product idea. The audience decides your fate!',
+    howToPlay: 'You get a ridiculous product concept. Pitch it to the group like your life depends on it! Everyone votes on whether they would invest. Best pitch wins the round!',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
   },
   // ── Moral Mayhem ─────────────────────────────
   'moral-maze': {
     id: 'moral-maze', name: 'Moral Maze', emoji: '🌀',
     description: 'Navigate a web of ethical dilemmas. What would you sacrifice?',
+    howToPlay: 'Face increasingly absurd ethical dilemmas. Everyone picks their choice secretly, then all answers are revealed. See who shares your moral compass (or lack thereof)!',
     minPlayers: 3, maxPlayers: 10, color: '#33CCFF', category: 'Moral Mayhem',
   },
   'lesser-evil': {
     id: 'lesser-evil', name: 'Lesser Evil', emoji: '😈',
     description: 'Choose between two terrible options. Pick the lesser evil!',
+    howToPlay: 'Two awful scenarios are presented. Everyone votes for the one they think is less terrible. If you pick the majority answer, you score! Consensus is survival.',
     minPlayers: 3, maxPlayers: 10, color: '#33CCFF', category: 'Moral Mayhem',
   },
   'off-the-rails': {
     id: 'off-the-rails', name: 'Off The Rails', emoji: '🚄',
     description: 'Guide a runaway trolley through escalating ethical quandaries!',
+    howToPlay: 'The classic trolley problem, but it keeps getting worse. Each round adds a new twist. Make your choice and see how your friends react. No judgment... okay, lots of judgment.',
     minPlayers: 3, maxPlayers: 10, color: '#33CCFF', category: 'Moral Mayhem',
   },
   'honorable-bot': {
     id: 'honorable-bot', name: 'Honorable Bot', emoji: '🤖',
     description: 'Program a robot with your moral code. Watch it hilariously fail!',
+    howToPlay: 'Write rules for an AI robot to follow. Then watch as it encounters situations your rules never anticipated. The AI interprets your rules literally with hilarious results!',
     minPlayers: 3, maxPlayers: 10, color: '#33CCFF', category: 'Moral Mayhem',
   },
   // ── Spark of Creation ────────────────────────
   'ai-dlibs': {
     id: 'ai-dlibs', name: 'AI-Dlibs', emoji: '📝',
     description: 'Mad Libs meets AI! Fill in blanks for hilarious stories.',
+    howToPlay: 'Everyone submits words for different categories (noun, verb, adjective, etc.). The AI weaves them into an absurd story. The results are read aloud for maximum laughs!',
     minPlayers: 3, maxPlayers: 10, color: '#ff4081', category: 'Spark of Creation',
   },
   'slide-deck': {
     id: 'slide-deck', name: 'Slide Deck', emoji: '📊',
     description: 'Improvise a presentation on a ridiculous topic. Master BS!',
+    howToPlay: 'You get a random ridiculous presentation topic and must improvise a convincing pitch. The AI generates absurd slide titles to guide you. Everyone votes on the best BS artist!',
     minPlayers: 3, maxPlayers: 10, color: '#ff4081', category: 'Spark of Creation',
   },
   'hieroglyphics': {
     id: 'hieroglyphics', name: 'Hieroglyphics', emoji: '🗿',
     description: 'Describe something using only emojis. Can friends decode it?',
+    howToPlay: 'Get a word or phrase and describe it using ONLY emojis. Other players try to guess what you mean. More creative emoji combos earn bonus points!',
     minPlayers: 3, maxPlayers: 10, color: '#ff4081', category: 'Spark of Creation',
   },
   'one-word-story': {
     id: 'one-word-story', name: 'One Word Story', emoji: '📖',
     description: 'Build an epic tale, one word at a time. Chaos guaranteed!',
+    howToPlay: 'Players take turns adding one word to build a story. The AI keeps track and narrates. Try to steer the story in hilarious directions! Bonus points for plot twists.',
     minPlayers: 3, maxPlayers: 10, color: '#ff4081', category: 'Spark of Creation',
   },
   // ── Sonic Shenanigans ────────────────────────
   'voice-chameleon': {
     id: 'voice-chameleon', name: 'Voice Chameleon', emoji: '🦎',
     description: 'Mimic famous voices or characters. Can you fool everyone?',
+    howToPlay: 'Get a character or celebrity to impersonate. Record yourself doing the voice. Everyone listens and rates your impression. The AI also judges your accuracy!',
     minPlayers: 3, maxPlayers: 8, color: '#21ffb2', category: 'Sonic Shenanigans',
   },
   'sound-bites': {
     id: 'sound-bites', name: 'Sound Bites', emoji: '🔊',
     description: 'Recreate absurd sound effects or jingles with your voice!',
+    howToPlay: 'Get a sound effect prompt (car crash, laser beam, dramatic gasp). Record yourself making the sound with just your voice. Everyone votes on the most convincing (or funniest) recreation!',
     minPlayers: 3, maxPlayers: 8, color: '#21ffb2', category: 'Sonic Shenanigans',
   },
   'accent-roulette': {
     id: 'accent-roulette', name: 'Accent Roulette', emoji: '🗣️',
     description: 'Speak with a random accent. Try not to break character!',
+    howToPlay: 'Spin the wheel for a random accent. Read a sentence in that accent and record it. The AI analyzes your attempt. Players vote on who nailed it (or hilariously butchered it)!',
     minPlayers: 3, maxPlayers: 8, color: '#21ffb2', category: 'Sonic Shenanigans',
   },
   'ai-interview': {
     id: 'ai-interview', name: 'The AI Interview', emoji: '🎙️',
     description: 'Answer bizarre interview questions for absurd jobs!',
+    howToPlay: 'You are interviewing for ridiculous jobs (Professional Mattress Tester, Zombie Therapist). Answer the AI interviewer\'s bizarre questions. Players vote on who got "hired"!',
     minPlayers: 3, maxPlayers: 8, color: '#21ffb2', category: 'Sonic Shenanigans',
   },
   // ── Schemes & Suspects ───────────────────────
   'under-the-bus': {
     id: 'under-the-bus', name: 'Under The Bus', emoji: '🚌',
     description: 'Blame your friends for fictional crimes. Ultimate scapegoat!',
+    howToPlay: 'A fictional crime is presented. Write the most convincing argument for why ANOTHER player is guilty. Everyone votes on the most believable accusation. Don\'t get thrown under the bus!',
     minPlayers: 3, maxPlayers: 10, color: '#FF7F00', category: 'Schemes & Suspects',
   },
   'dead-giveaway': {
     id: 'dead-giveaway', name: 'Dead Giveaway', emoji: '👀',
     description: 'Spot the liar among you. Their tells are your victory!',
+    howToPlay: 'One player gets a secret lie to tell. Everyone else tries to identify the liar by asking questions. The liar must stay convincing. Vote to catch them!',
     minPlayers: 4, maxPlayers: 10, color: '#FF7F00', category: 'Schemes & Suspects',
   },
   'small-claims': {
     id: 'small-claims', name: 'Small Claims', emoji: '🏛️',
     description: 'Argue a ridiculous court case against your friends!',
+    howToPlay: 'Two players face off in a ridiculous court case (who stole the last pizza slice?). Present your argument and call witnesses. The jury (other players) delivers the verdict!',
     minPlayers: 3, maxPlayers: 10, color: '#FF7F00', category: 'Schemes & Suspects',
   },
   'alibi': {
     id: 'alibi', name: 'Alibi', emoji: '🕵️',
     description: 'Craft a believable alibi on the spot. Escape suspicion!',
+    howToPlay: 'A crime happened and you need an alibi! Quickly craft a story about where you were. Other players interrogate you with questions. Inconsistencies get you caught!',
     minPlayers: 4, maxPlayers: 10, color: '#FF7F00', category: 'Schemes & Suspects',
   },
   'wiretap': {
     id: 'wiretap', name: 'Wiretap', emoji: '🎧',
     description: 'Decipher secret conversations and uncover hidden motives!',
+    howToPlay: 'Listen to AI-generated snippets of suspicious conversations. Figure out what\'s really going on and identify the culprit. Best detective instincts win!',
     minPlayers: 2, maxPlayers: 10, color: '#FF7F00', category: 'Schemes & Suspects',
   },
   'bad-influence': {
     id: 'bad-influence', name: 'Bad Influence', emoji: '🎭',
     description: 'Secretly manipulate others to achieve your mischievous goals!',
+    howToPlay: 'Each player gets a secret objective (get someone to say a specific word, make someone agree with something absurd). Manipulate the conversation to complete your mission!',
     minPlayers: 3, maxPlayers: 10, color: '#FF7F00', category: 'Schemes & Suspects',
   },
   // ── Rapid Reactions ──────────────────────────
   'snap-decision': {
     id: 'snap-decision', name: 'Snap Decision', emoji: '⏱️',
     description: 'Make split-second choices under pressure. Every second counts!',
+    howToPlay: 'Quick-fire questions appear with a ticking clock. Pick the best answer before time runs out! Faster correct answers earn more points. Stay sharp!',
     minPlayers: 2, maxPlayers: 10, color: '#FFE02F', category: 'Rapid Reactions',
   },
   'hot-potato': {
     id: 'hot-potato', name: 'Hot Potato', emoji: '🥔',
     description: 'Pass the bomb before it explodes. Don\'t get caught holding it!',
+    howToPlay: 'A ticking bomb passes between players. Answer a quick question to pass it on! If the timer runs out while you\'re holding it — BOOM, you lose a life!',
     minPlayers: 3, maxPlayers: 10, color: '#FFE02F', category: 'Rapid Reactions',
   },
   'deepfake-detective': {
     id: 'deepfake-detective', name: 'Deepfake Detective', emoji: '🔍',
     description: 'Spot the AI-generated fake. Your perception is tested!',
+    howToPlay: 'See a set of statements or descriptions — some real, some AI-generated fakes. Identify which ones are fake! Test your BS detector against the machine.',
     minPlayers: 3, maxPlayers: 10, color: '#FFE02F', category: 'Rapid Reactions',
   },
   'art-heist': {
     id: 'art-heist', name: 'Art Heist', emoji: '💰',
     description: 'Quickly identify valuable art before the alarm sounds!',
+    howToPlay: 'AI describes artworks — some priceless masterpieces, some worthless fakes. Quickly decide which to steal before the alarm triggers! Most valuable haul wins.',
     minPlayers: 3, maxPlayers: 10, color: '#FFE02F', category: 'Rapid Reactions',
   },
   'ai-hostage': {
     id: 'ai-hostage', name: 'AI Hostage', emoji: '🚨',
     description: 'Negotiate with a rogue AI to save the day. Think fast!',
+    howToPlay: 'A rogue AI has taken something hostage. Players take turns negotiating with it. The AI responds based on your approach. Cooperate or compete to resolve the crisis!',
     minPlayers: 3, maxPlayers: 10, color: '#FFE02F', category: 'Rapid Reactions',
   },
   'story-sabotage': {
     id: 'story-sabotage', name: 'Story Sabotage', emoji: '❌',
     description: 'Disrupt a developing story with absurd twists!',
+    howToPlay: 'An AI tells a story, but players can inject sabotage twists at key moments. Vote on the best (worst?) disruption. The story gets increasingly unhinged!',
     minPlayers: 4, maxPlayers: 10, color: '#FFE02F', category: 'Rapid Reactions',
   },
 };
@@ -403,7 +434,7 @@ class BellBoxRoom {
   }
 
   getFullState(socketId) {
-    return {
+    const base = {
       roomCode: this.roomCode,
       players: this.getPlayerList(),
       isHost: socketId === this.hostId,
@@ -415,6 +446,18 @@ class BellBoxRoom {
       chatMessages: this.chatMessages.slice(-20),
       spiceLevel: this.spiceLevel,
     };
+
+    // Include game-specific state for reconnection
+    if (this.state === 'IN_GAME' && this.gameInstance) {
+      if (typeof this.gameInstance.getFullState === 'function') {
+        const gs = this.gameInstance.getFullState(socketId);
+        if (gs?.gameState) base.gameState = gs.gameState;
+      } else if (typeof this.gameInstance.getState === 'function') {
+        base.gameState = this.gameInstance.getState(socketId);
+      }
+    }
+
+    return base;
   }
 }
 

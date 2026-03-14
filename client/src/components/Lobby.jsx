@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import socket from '../socket';
 
 const SPICE_LEVELS = [
@@ -19,7 +19,6 @@ export default function Lobby({
     <div className="lobby-screen">
       {/* Header */}
       <div className="lobby-header">
-        <button className="leave-btn" onClick={onLeave} title="Leave party">✕</button>
         <h2 className="lobby-title wobble">BellBox</h2>
       </div>
 
@@ -85,110 +84,138 @@ export default function Lobby({
       </div>
 
       {/* Game Selector */}
-      <div className="game-selector">
-        <h3>Pick a Game!</h3>
-        {(() => {
-          // Group games by category
-          const categories = {};
-          const categoryOrder = ['Wordplay & Wit', 'Moral Mayhem', 'Spark of Creation', 'Sonic Shenanigans', 'Schemes & Suspects', 'Rapid Reactions'];
-          const categoryMeta = {
-            'Wordplay & Wit':      { emoji: '✍️', color: '#AFFF33' },
-            'Moral Mayhem':        { emoji: '⚖️', color: '#33CCFF' },
-            'Spark of Creation':   { emoji: '🎨', color: '#ff4081' },
-            'Sonic Shenanigans':   { emoji: '🎤', color: '#21ffb2' },
-            'Schemes & Suspects':  { emoji: '😈', color: '#FF7F00' },
-            'Rapid Reactions':     { emoji: '⚡', color: '#FFE02F' },
-          };
+      <GameList
+        games={games}
+        votes={votes}
+        players={players}
+        isHost={isHost}
+        onVote={onVote}
+        onLaunch={onLaunch}
+      />
 
-          games.forEach(game => {
-            const cat = game.category || 'Other';
-            if (!categories[cat]) categories[cat] = [];
-            categories[cat].push(game);
-          });
 
-          // Sort categories in order, then append any extras
-          const orderedCats = categoryOrder.filter(c => categories[c]);
-          Object.keys(categories).forEach(c => {
-            if (!orderedCats.includes(c)) orderedCats.push(c);
-          });
-
-          return orderedCats.map(cat => {
-            const meta = categoryMeta[cat] || { emoji: '🎮', color: '#888' };
-            return (
-              <div key={cat} className="game-category">
-                <div className="game-category-header" style={{ '--cat-color': meta.color }}>
-                  <span className="game-category-emoji">{meta.emoji}</span>
-                  <span className="game-category-name">{cat}</span>
-                </div>
-                <div className="game-cards">
-                  {categories[cat].map((game) => {
-                    const voteCount = votes[game.id] || 0;
-                    const playerVoted = players.find(p => p.id === socket.id)?.vote === game.id;
-
-                    return (
-                      <div
-                        key={game.id}
-                        className="game-card"
-                        style={{ '--card-accent': game.color || meta.color }}
-                      >
-                        <div className="game-card-emoji">{game.emoji}</div>
-                        <h3 className="game-card-title">{game.name}</h3>
-                        <p className="game-card-desc">{game.description}</p>
-                        <div className="game-card-players">
-                          {game.minPlayers}-{game.maxPlayers} players
-                        </div>
-
-                        <div className="game-card-actions">
-                          <button
-                            className={`vote-btn ${playerVoted ? 'voted' : ''}`}
-                            onClick={(e) => { e.stopPropagation(); onVote(game.id); }}
-                          >
-                            ❤️ {voteCount}
-                          </button>
-
-                          {isHost && (
-                            <button
-                              className="button button--primary launch-btn"
-                              onClick={() => onLaunch(game.id)}
-                              disabled={players.length < game.minPlayers}
-                            >
-                              {players.length < game.minPlayers
-                                ? `Need ${game.minPlayers}+`
-                                : '🚀 Launch!'}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          });
-        })()}
-      </div>
-
-      {/* Theme selector for NAH (only visible when host is about to launch NAH) */}
-      {isHost && nahThemes && Object.keys(nahThemes).length > 0 && (
-        <div className="theme-selector pop-in">
-          <h3>🃏 Card Packs</h3>
-          <div className="theme-chips">
-            {Object.entries(nahThemes).map(([id, theme]) => (
-              <button
-                key={id}
-                className={`theme-chip ${nahSelectedThemes.includes(id) ? 'selected' : ''}`}
-                onClick={() => onToggleTheme(id)}
-              >
-                {theme.icon} {theme.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {!isHost && (
         <div className="waiting-text pop-in">
           Waiting for the host to launch a game...
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Game List (collapsible categories, compact list rows) ── */
+const categoryOrder = ['Wordplay & Wit', 'Moral Mayhem', 'Spark of Creation', 'Sonic Shenanigans', 'Schemes & Suspects', 'Rapid Reactions'];
+const categoryMeta = {
+  'Wordplay & Wit':      { emoji: '✍️', color: '#AFFF33' },
+  'Moral Mayhem':        { emoji: '⚖️', color: '#33CCFF' },
+  'Spark of Creation':   { emoji: '🎨', color: '#ff4081' },
+  'Sonic Shenanigans':   { emoji: '🎤', color: '#21ffb2' },
+  'Schemes & Suspects':  { emoji: '😈', color: '#FF7F00' },
+  'Rapid Reactions':     { emoji: '⚡', color: '#FFE02F' },
+};
+
+function GameList({ games, votes, players, isHost, onVote, onLaunch }) {
+  const [collapsed, setCollapsed] = useState(() => {
+    const init = {};
+    categoryOrder.forEach(c => { init[c] = true; });
+    return init;
+  });
+  const [infoGame, setInfoGame] = useState(null);
+
+  const toggle = (cat) => setCollapsed(prev => ({ ...prev, [cat]: !prev[cat] }));
+
+  // Group games by category
+  const categories = {};
+  games.forEach(game => {
+    const cat = game.category || 'Other';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(game);
+  });
+
+  const orderedCats = categoryOrder.filter(c => categories[c]);
+  Object.keys(categories).forEach(c => {
+    if (!orderedCats.includes(c)) orderedCats.push(c);
+  });
+
+  return (
+    <div className="game-selector">
+      <h3>Pick a Game!</h3>
+      {orderedCats.map(cat => {
+        const meta = categoryMeta[cat] || { emoji: '🎮', color: '#888' };
+        const isCollapsed = collapsed[cat];
+        return (
+          <div key={cat} className="game-category">
+            <button
+              className="game-category-header"
+              style={{ '--cat-color': meta.color }}
+              onClick={() => toggle(cat)}
+            >
+              <span className="game-category-emoji">{meta.emoji}</span>
+              <span className="game-category-name">{cat}</span>
+              <span className="game-category-count">{categories[cat].length}</span>
+              <span className={`game-category-chevron ${isCollapsed ? 'collapsed' : ''}`}>▾</span>
+            </button>
+            {!isCollapsed && (
+              <div className="game-list">
+                {categories[cat].map((game) => {
+                  const voteCount = votes[game.id] || 0;
+                  const playerVoted = players.find(p => p.id === socket.id)?.vote === game.id;
+                  const canLaunch = players.length >= game.minPlayers;
+
+                  return (
+                    <div
+                      key={game.id}
+                      className={`game-row ${isHost ? 'game-row--host' : ''}`}
+                      style={{ '--card-accent': game.color || meta.color }}
+                      onClick={() => isHost && onLaunch(game.id)}
+                    >
+                      <div className="game-row-emoji">{game.emoji}</div>
+                      <div className="game-row-info">
+                        <div className="game-row-title">{game.name}</div>
+                        <div className="game-row-desc">{game.description}</div>
+                        <div className="game-row-players">{game.minPlayers}-{game.maxPlayers} players</div>
+                      </div>
+                      <div className="game-row-actions">
+                        <button
+                          className="game-info-btn"
+                          onClick={(e) => { e.stopPropagation(); setInfoGame(game); }}
+                          title="How to play"
+                        >?</button>
+                        <button
+                          className={`vote-btn vote-btn--compact ${playerVoted ? 'voted' : ''}`}
+                          onClick={(e) => { e.stopPropagation(); onVote(game.id); }}
+                        >
+                          ❤️ {voteCount}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Game Info Popup */}
+      {infoGame && (
+        <div className="game-info-overlay" onClick={() => setInfoGame(null)}>
+          <div className="game-info-popup pop-in" onClick={e => e.stopPropagation()}>
+            <button className="game-info-close" onClick={() => setInfoGame(null)}>✕</button>
+            <div className="game-info-emoji">{infoGame.emoji}</div>
+            <h2 className="game-info-title">{infoGame.name}</h2>
+            <div className="game-info-meta">
+              {infoGame.minPlayers}-{infoGame.maxPlayers} players
+            </div>
+            <p className="game-info-desc">{infoGame.description}</p>
+            {infoGame.howToPlay && (
+              <>
+                <h3 className="game-info-section-title">How to Play</h3>
+                <p className="game-info-howto">{infoGame.howToPlay}</p>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

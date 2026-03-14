@@ -40,11 +40,12 @@ export default function Chat({ messages, onSend, onSendVoice, playerName }) {
   return (
     <div className="chat-wrapper">
       {open && (
-        <div className="chat-panel pop-in">
-          <div className="chat-header">
-            <span>💬 Chat</span>
-            <button className="chat-close" onClick={() => setOpen(false)}>✕</button>
-          </div>
+        <>
+          <div className="chat-backdrop" onClick={() => setOpen(false)} />
+          <div className="chat-panel pop-in">
+            <div className="chat-header">
+              <span>💬 Chat</span>
+            </div>
           <div className="chat-messages">
             {messages.length === 0 && (
               <div className="chat-empty">No messages yet. Say hi! 👋</div>
@@ -79,6 +80,7 @@ export default function Chat({ messages, onSend, onSendVoice, playerName }) {
             <AudioRecorder onRecordComplete={handleVoiceRecorded} compact />
           </form>
         </div>
+        </>
       )}
 
       <button className="chat-toggle" onClick={() => setOpen(!open)}>

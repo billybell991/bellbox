@@ -13,6 +13,13 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
     if (mySubmitted || isCzar) return;
     const pick = blackCard.pick;
 
+    // If card is already selected and we have enough picks, submit
+    if (selectedCards.includes(index) && selectedCards.length === pick) {
+      onSubmit(selectedCards);
+      setSelectedCards([]);
+      return;
+    }
+
     setSelectedCards(prev => {
       if (prev.includes(index)) {
         return prev.filter(i => i !== index);
@@ -32,7 +39,7 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
   };
 
   const renderBlackCard = () => (
-    <div className={`black-card ${!isCzar && phase === 'picking' ? 'compact' : ''}`}>
+    <div className={`black-card ${!isCzar && phase === 'picking' ? 'compact' : ''} ${isCzar && phase === 'picking' ? 'czar-waiting' : ''}`}>
       <div className="black-card-text">{blackCard.text}</div>
       <div className="black-card-meta">
         Pick {blackCard.pick} &bull; Round {roundNumber}
@@ -89,14 +96,12 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
                   {selectedCards.indexOf(i) + 1}
                 </span>
               )}
+              {selectedCards.includes(i) && selectedCards.length === blackCard.pick && (
+                <span className="tap-to-submit">tap again to submit</span>
+              )}
             </div>
           ))}
         </div>
-        {!mySubmitted && selectedCards.length === blackCard.pick && (
-          <button className="btn btn-submit" onClick={confirmSubmit}>
-            SUBMIT {blackCard.pick > 1 ? 'CARDS' : 'CARD'}
-          </button>
-        )}
       </div>
     );
   };

@@ -35,11 +35,11 @@ export async function getBellBotCommentary(event, context = {}, spiceLevel = 2) 
 
   switch (event) {
     case 'round_start':
-      prompt = `${persona}\n\nYou're starting Round ${context.round || '?'} of "${context.gameName || 'the game'}". The prompt/challenge is: "${context.prompt || 'unknown'}". Give a SHORT, punchy 1-2 sentence intro. Be theatrical. Don't explain rules.`;
+      prompt = `${persona}\n\nRound ${context.round || '?'} of "${context.gameName || 'the game'}". Give a punchy 5-10 word hype line. ONE short sentence max. No rules, no explanation.`;
       break;
 
     case 'reveal':
-      prompt = `${persona}\n\nA player named "${context.playerName}" just submitted: "${context.submission}". Give a SHORT 1 sentence reaction/commentary. Be specific to what they submitted. Game: "${context.gameName}".`;
+      prompt = `${persona}\n\n"${context.playerName}" just won the round in "${context.gameName}" with: "${context.submission}". Give a punchy 5-8 word reaction. Be specific.`;
       break;
 
     case 'judge':

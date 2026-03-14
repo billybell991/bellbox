@@ -149,11 +149,10 @@ export default function GameShell({
       {/* Header */}
       <div className="gs-header">
         <div className="gs-game-title">
-          <span className="gs-game-emoji">{gameEmoji}</span>
           <span>{gameName}</span>
         </div>
         <div className="gs-round-badge">
-          Round {round}/{totalRounds}
+          Rd {round}/{totalRounds}
         </div>
       </div>
 

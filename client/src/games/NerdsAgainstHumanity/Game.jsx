@@ -11,11 +11,24 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
 
   const toggleCard = (index) => {
     if (mySubmitted || isCzar) return;
+    const pick = blackCard.pick;
+    // Pick 1: tap = instant submit
+    if (pick === 1) {
+      onSubmit([index]);
+      return;
+    }
+    // If card is already selected and we have enough picks, submit
+    if (selectedCards.includes(index) && selectedCards.length === pick) {
+      onSubmit(selectedCards);
+      setSelectedCards([]);
+      return;
+    }
+    // Toggle selection
     setSelectedCards(prev => {
       if (prev.includes(index)) {
         return prev.filter(i => i !== index);
       }
-      if (prev.length >= blackCard.pick) {
+      if (prev.length >= pick) {
         return [...prev.slice(1), index];
       }
       return [...prev, index];
@@ -33,7 +46,7 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
     <div className={`black-card ${!isCzar && phase === 'picking' ? 'compact' : ''} ${isCzar && phase === 'picking' ? 'czar-waiting' : ''}`}>
       <div className="black-card-text">{blackCard.text}</div>
       <div className="black-card-meta">
-        Pick {blackCard.pick} &bull; Round {roundNumber}
+        Pick {blackCard.pick} &bull; Rd {roundNumber}
       </div>
     </div>
   );
@@ -82,21 +95,17 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
               onClick={() => toggleCard(i)}
             >
               <span className="white-card-text">{card}</span>
-              {selectedCards.includes(i) && (
+              {selectedCards.includes(i) && blackCard.pick > 1 && (
                 <span className="card-order">
                   {selectedCards.indexOf(i) + 1}
                 </span>
               )}
+              {selectedCards.includes(i) && selectedCards.length === blackCard.pick && !mySubmitted && (
+                <span className="tap-to-submit">tap again to submit</span>
+              )}
             </div>
           ))}
         </div>
-        {selectedCards.length === blackCard.pick && !mySubmitted && (
-          <div className="card-submit-bar">
-            <button className="card-submit-btn" onClick={confirmSubmit}>
-              Submit {blackCard.pick > 1 ? `${selectedCards.length} Cards` : 'Card'} ✨
-            </button>
-          </div>
-        )}
       </div>
     );
   };
@@ -203,7 +212,7 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
   return (
     <div className="game">
       <div className="game-header">
-        <span className="round-indicator">Round {roundNumber}</span>
+        <span className="round-indicator">Rd {roundNumber}</span>
         <span className="czar-indicator">Czar: {czarName} {isCzar ? '(You!)' : ''}</span>
 
       </div>

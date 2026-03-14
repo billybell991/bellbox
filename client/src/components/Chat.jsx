@@ -17,11 +17,14 @@ export default function Chat({ messages, onSend, onSendVoice, playerName }) {
     lastCountRef.current = messages.length;
   }, [messages.length, open]);
 
-  // Clear unread on open
+  const inputRef = useRef(null);
+
+  // Clear unread on open + focus input
   useEffect(() => {
     if (open) {
       setUnread(0);
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [open, messages.length]);
 
@@ -69,6 +72,7 @@ export default function Chat({ messages, onSend, onSendVoice, playerName }) {
           </div>
           <form className="chat-input-area" onSubmit={handleSend}>
             <input
+              ref={inputRef}
               type="text"
               placeholder="Type a message..."
               value={text}

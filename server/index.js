@@ -123,7 +123,7 @@ const GAMES = {
   },
   // ── Wordplay & Wit ───────────────────────────
   'caption-this': {
-    id: 'caption-this', name: 'Artificial Insult-igence', emoji: '🤖🔥',
+    id: 'caption-this', name: 'Artificial Insult-igence', emoji: '🤖',
     description: 'Write hilarious captions for bizarre AI images — and get roasted by SassBot!',
     howToPlay: 'Each round, an AI generates a bizarre image. Everyone writes their funniest caption for it. SassBot — the AI judge — roasts your answers and scores each one based on creativity, humor, and relevance. The sassier the spice level, the meaner SassBot gets. Highest score wins the round!',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',

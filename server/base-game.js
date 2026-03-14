@@ -337,7 +337,7 @@ export class BaseGame {
         bellbotSays = await getBellBotCommentary('reveal', {
           gameName: this.gameName,
           playerName: roundWinner.name,
-          submission: `winner of round ${this.round} with ${roundWinner.roundTotal} points`,
+          submission: roundWinner.submission || 'top answer',
         }, this.spiceLevel);
       }
     } catch { /* use empty */ }

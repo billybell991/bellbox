@@ -7,7 +7,8 @@
     "dev:server": "cd server && node index.js",
     "dev:client": "cd client && npx vite",
     "build": "cd client && npx vite build",
-    "start": "npm run build && cd server && node index.js",
+    "start": "cd server && node index.js",
+    "render-build": "cd server && npm install && cd ../client && npm install && npx vite build",
     "dev": "npm run build && cd server && node index.js"
   }
 }

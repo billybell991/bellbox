@@ -36,6 +36,7 @@ export default function JoinScreen({ onCreateRoom, onJoinRoom }) {
             onChange={e => setName(e.target.value)}
             maxLength={20}
             autoComplete="off"
+            autoFocus
           />
         </div>
 

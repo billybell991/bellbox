@@ -10,6 +10,7 @@ export default function PartyMenu({
   myId,
   roomCode,
   screen,
+  gameInfo,
   onPromote,
   onKick,
   onReturnToLobby,
@@ -17,6 +18,7 @@ export default function PartyMenu({
   showToast,
 }) {
   const [open, setOpen] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const panelRef = useRef(null);
 
   // Close on outside click
@@ -144,6 +146,13 @@ export default function PartyMenu({
         <div className="pm-divider" />
 
         {/* Actions */}
+        {inGame && gameInfo?.howToPlay && (
+          <button className="pm-item pm-item--action" onClick={() => { setShowHowToPlay(true); setOpen(false); }}>
+            <span className="pm-item-icon">❓</span>
+            <span className="pm-item-label">How to Play</span>
+          </button>
+        )}
+
         {inGame && (
           <button className="pm-item pm-item--action" onClick={() => { onReturnToLobby?.(); setOpen(false); }}>
             <span className="pm-item-icon">🏠</span>
@@ -162,6 +171,19 @@ export default function PartyMenu({
           BellBox Party Pack
         </div>
       </div>
+
+      {/* How to Play popup — same style as lobby game info */}
+      {showHowToPlay && gameInfo && (
+        <div className="game-info-overlay" onClick={() => setShowHowToPlay(false)}>
+          <div className="game-info-popup pop-in">
+            <div className="game-info-emoji">{gameInfo.emoji}</div>
+            <h2 className="game-info-title">{gameInfo.name}</h2>
+            <h3 className="game-info-section-title">How to Play</h3>
+            <p className="game-info-howto">{gameInfo.howToPlay}</p>
+            <div className="game-info-dismiss">tap anywhere to close</div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -8,6 +8,7 @@ import ThemeSwitcher from './components/ThemeSwitcher';
 
 // Game components
 import NAHGame from './games/NerdsAgainstHumanity/Game';
+import MemeMeleeGame from './games/MemeMelee/Game';
 import TriviaGame from './games/TriviaFetch/Game';
 import BaseGamePlayer from './games/BaseGamePlayer';
 
@@ -41,6 +42,9 @@ export default function App() {
 
   // Spice level (1=Family Fun, 2=Spicy, 3=Unhinged)
   const [spiceLevel, setSpiceLevel] = useState(2);
+
+  // AI Bots toggle
+  const [aiBots, setAiBots] = useState(false);
 
   // Trivia game state
   const [triviaGameState, setTriviaGameState] = useState(null);
@@ -80,12 +84,16 @@ export default function App() {
         setVotes(res.votes || {});
         setChatMessages(res.chatMessages || []);
         if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
+        if (res.aiBots !== undefined) setAiBots(res.aiBots);
 
         if (res.state === 'IN_GAME' && res.activeGame) {
           // Restore game-specific state
           if (res.activeGame === 'nerds-against-humanity') {
             if (res.gameState) setNahGameState(res.gameState);
             setScreen('nah-game');
+          } else if (res.activeGame === 'meme-melee') {
+            if (res.gameState) setNahGameState(res.gameState);
+            setScreen('meme-melee-game');
           } else if (res.activeGame === 'trivia-fetch') {
             if (res.gameState) setTriviaGameState(res.gameState);
             setScreen('trivia-game');
@@ -132,6 +140,11 @@ export default function App() {
       setSpiceLevel(sl);
     });
 
+    socket.on('ai-bots-update', ({ aiBots: ab, players: pl }) => {
+      setAiBots(ab);
+      setPlayers(pl);
+    });
+
     socket.on('chat-message', (msg) => {
       setChatMessages(prev => [...prev.slice(-49), msg]);
     });
@@ -140,6 +153,8 @@ export default function App() {
     socket.on('game-launched', ({ game }) => {
       if (game === 'nerds-against-humanity') {
         setScreen('nah-game');
+      } else if (game === 'meme-melee') {
+        setScreen('meme-melee-game');
       } else if (game === 'trivia-fetch') {
         setScreen('trivia-game');
       } else {
@@ -149,11 +164,12 @@ export default function App() {
     });
 
     // ── Back to lobby ─────────────────────────────────────
-    socket.on('back-to-lobby', ({ players: pl, votes: v, games: g, spiceLevel: sl }) => {
+    socket.on('back-to-lobby', ({ players: pl, votes: v, games: g, spiceLevel: sl, aiBots: ab }) => {
       setPlayers(pl);
       if (v) setVotes(v);
       if (g) setGames(g);
       if (sl) setSpiceLevel(sl);
+      if (ab !== undefined) setAiBots(ab);
       setNahGameState(null);
       setTriviaGameState(null);
       setActiveGameInfo(null);
@@ -176,7 +192,8 @@ export default function App() {
         winner: null,
       });
       setPlayers(data.players);
-      setScreen('nah-game');
+      // Keep current screen if already in meme-melee-game
+      setScreen(prev => prev === 'meme-melee-game' ? 'meme-melee-game' : 'nah-game');
     });
 
     socket.on('submission-update', ({ players: pl }) => {
@@ -255,6 +272,7 @@ export default function App() {
       socket.off('player-left');
       socket.off('vote-update');
       socket.off('spice-update');
+      socket.off('ai-bots-update');
       socket.off('chat-message');
       socket.off('game-launched');
       socket.off('back-to-lobby');
@@ -282,6 +300,7 @@ export default function App() {
       setVotes(res.votes || {});
       setChatMessages(res.chatMessages || []);
       if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
+      if (res.aiBots !== undefined) setAiBots(res.aiBots);
       setScreen('lobby');
       socket.emit('get-themes', (t) => setNahThemes(t));
     });
@@ -298,10 +317,13 @@ export default function App() {
       setVotes(res.votes || {});
       setChatMessages(res.chatMessages || []);
       if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
+      if (res.aiBots !== undefined) setAiBots(res.aiBots);
 
       if (res.state === 'IN_GAME' && res.activeGame) {
         if (res.activeGame === 'nerds-against-humanity') {
           setScreen('nah-game');
+        } else if (res.activeGame === 'meme-melee') {
+          setScreen('meme-melee-game');
         } else if (res.activeGame === 'trivia-fetch') {
           setScreen('trivia-game');
         } else {
@@ -323,6 +345,12 @@ export default function App() {
 
   const handleSetSpice = (level) => {
     socket.emit('set-spice', { spiceLevel: level }, (res) => {
+      if (res?.error) showToast(res.error);
+    });
+  };
+
+  const handleToggleAiBots = () => {
+    socket.emit('toggle-ai-bots', (res) => {
       if (res?.error) showToast(res.error);
     });
   };
@@ -372,6 +400,12 @@ export default function App() {
 
   const handlePlayAgain = () => {
     socket.emit('play-again');
+  };
+
+  const handleRestartSameGame = () => {
+    socket.emit('restart-same-game', (res) => {
+      if (res?.error) showToast(res.error);
+    });
   };
 
   const handlePromoteHost = (targetId) => {
@@ -435,6 +469,8 @@ export default function App() {
           }}
           spiceLevel={spiceLevel}
           onSetSpice={handleSetSpice}
+          aiBots={aiBots}
+          onToggleAiBots={handleToggleAiBots}
         />
       )}
 
@@ -446,6 +482,21 @@ export default function App() {
           onJudge={handleNAHJudge}
           onNextRound={handleNextRound}
           onPlayAgain={handleReturnToLobby}
+          onRestartSame={handleRestartSameGame}
+          isHost={isHost}
+          onLeave={handleReturnToLobby}
+        />
+      )}
+
+      {screen === 'meme-melee-game' && nahGameState && (
+        <MemeMeleeGame
+          gameState={nahGameState}
+          myId={socket.id}
+          onSubmit={handleNAHSubmit}
+          onJudge={handleNAHJudge}
+          onNextRound={handleNextRound}
+          onPlayAgain={handleReturnToLobby}
+          onRestartSame={handleRestartSameGame}
           isHost={isHost}
           onLeave={handleReturnToLobby}
         />
@@ -494,9 +545,14 @@ export default function App() {
             )}
 
             {isHost && (
-              <button className="button button--primary" onClick={handleReturnToLobby}>
-                🎉 Back to Party!
-              </button>
+              <div className="game-over-buttons">
+                <button className="button button--primary" onClick={handleRestartSameGame}>
+                  🔄 Play Again
+                </button>
+                <button className="button button--primary" onClick={handleReturnToLobby}>
+                  🎉 Back to Party!
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -510,6 +566,7 @@ export default function App() {
           isHost={isHost}
           gameInfo={activeGameInfo}
           onReturn={handleReturnToLobby}
+          onRestartSame={handleRestartSameGame}
         />
       )}
 
@@ -521,6 +578,7 @@ export default function App() {
           myId={socket.id}
           roomCode={roomCode}
           screen={screen}
+          gameInfo={activeGameInfo}
           onPromote={handlePromoteHost}
           onKick={handleKickPlayer}
           onReturnToLobby={handleReturnToLobby}

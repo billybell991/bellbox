@@ -12,6 +12,7 @@ export default function Lobby({
   onVote, onLaunch, onLeave,
   nahThemes, nahSelectedThemes, onToggleTheme,
   spiceLevel, onSetSpice,
+  aiBots, onToggleAiBots,
 }) {
   const currentSpice = SPICE_LEVELS.find(s => s.level === spiceLevel) || SPICE_LEVELS[1];
 
@@ -50,7 +51,8 @@ export default function Lobby({
         </div>
       </div>
 
-      {/* ── Spice-O-Meter ─────────────────────────────────── */}
+      {/* ── Spice-O-Meter (host only) ─────────────────────── */}
+      {isHost && (
       <div className="spice-meter pop-in">
         <h3>🌡️ Spice-O-Meter</h3>
         <div className="spice-track">
@@ -66,9 +68,8 @@ export default function Lobby({
               key={s.level}
               className={`spice-btn ${spiceLevel === s.level ? 'active' : ''}`}
               style={{ '--spice-color': s.color }}
-              onClick={() => isHost && onSetSpice(s.level)}
-              disabled={!isHost}
-              title={isHost ? s.description : 'Only the host can change this'}
+              onClick={() => onSetSpice(s.level)}
+              title={s.description}
             >
               <span className="spice-emoji">{s.emoji}</span>
               <span className="spice-label">{s.label}</span>
@@ -78,10 +79,23 @@ export default function Lobby({
         <div className="spice-description" style={{ color: currentSpice.color }}>
           {currentSpice.emoji} {currentSpice.description}
         </div>
-        {!isHost && (
-          <div className="spice-host-note">Host controls the spice level</div>
-        )}
       </div>
+      )}
+
+      {/* ── AI Opponents Toggle (host only) ───────────────── */}
+      {isHost && (
+      <div className="ai-bots-toggle pop-in">
+        <div className="ai-bots-row" onClick={onToggleAiBots}>
+          <span className="ai-bots-label">🤖 AI Opponents</span>
+          <div className={`toggle-switch ${aiBots ? 'on' : ''}`}>
+            <div className="toggle-knob" />
+          </div>
+        </div>
+        <div className="ai-bots-desc">
+          {aiBots ? 'Bot players will fill out the group' : 'Add bot players to fill out the group'}
+        </div>
+      </div>
+      )}
 
       {/* Game Selector */}
       <GameList
@@ -107,12 +121,12 @@ export default function Lobby({
 /* ── Game List (collapsible categories, compact list rows) ── */
 const categoryOrder = ['Wordplay & Wit', 'Moral Mayhem', 'Spark of Creation', 'Sonic Shenanigans', 'Schemes & Suspects', 'Rapid Reactions'];
 const categoryMeta = {
-  'Wordplay & Wit':      { emoji: '✍️', color: '#AFFF33' },
-  'Moral Mayhem':        { emoji: '⚖️', color: '#33CCFF' },
-  'Spark of Creation':   { emoji: '🎨', color: '#ff4081' },
-  'Sonic Shenanigans':   { emoji: '🎤', color: '#21ffb2' },
-  'Schemes & Suspects':  { emoji: '😈', color: '#FF7F00' },
-  'Rapid Reactions':     { emoji: '⚡', color: '#FFE02F' },
+  'Wordplay & Wit':      { emoji: '✍️', color: '#AFFF33', desc: 'Clever prompts, funny fills, and battle of the brains' },
+  'Moral Mayhem':        { emoji: '⚖️', color: '#33CCFF', desc: 'Debate, judge, and question everything you believe' },
+  'Spark of Creation':   { emoji: '🎨', color: '#ff4081', desc: 'Draw, caption, and create absurd masterpieces' },
+  'Sonic Shenanigans':   { emoji: '🎤', color: '#21ffb2', desc: 'Sing, speak, and perform your heart out' },
+  'Schemes & Suspects':  { emoji: '😈', color: '#FF7F00', desc: 'Bluff, deceive, and figure out who\'s lying' },
+  'Rapid Reactions':     { emoji: '⚡', color: '#FFE02F', desc: 'Fast-paced rounds that test your reflexes' },
 };
 
 function GameList({ games, votes, players, isHost, onVote, onLaunch }) {
@@ -123,7 +137,18 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch }) {
   });
   const [infoGame, setInfoGame] = useState(null);
 
-  const toggle = (cat) => setCollapsed(prev => ({ ...prev, [cat]: !prev[cat] }));
+  const toggle = (cat) => setCollapsed(prev => {
+    const wasCollapsed = prev[cat];
+    const next = { ...prev, [cat]: !wasCollapsed };
+    if (wasCollapsed) {
+      // Opening — scroll the category into view after render
+      setTimeout(() => {
+        const el = document.getElementById(`cat-${cat}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 50);
+    }
+    return next;
+  });
 
   // Group games by category
   const categories = {};
@@ -140,20 +165,25 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch }) {
 
   return (
     <div className="game-selector">
-      <h3>Pick a Game!</h3>
+      <h3>{isHost ? 'Pick a Game!' : 'The host is picking a game'}</h3>
       {orderedCats.map(cat => {
         const meta = categoryMeta[cat] || { emoji: '🎮', color: '#888' };
         const isCollapsed = collapsed[cat];
         return (
-          <div key={cat} className="game-category">
+          <div key={cat} id={`cat-${cat}`} className="game-category">
             <button
               className="game-category-header"
               style={{ '--cat-color': meta.color }}
               onClick={() => toggle(cat)}
             >
               <span className="game-category-emoji">{meta.emoji}</span>
-              <span className="game-category-name">{cat}</span>
-              <span className="game-category-count">{categories[cat].length}</span>
+              <div className="game-category-text">
+                <div className="game-category-name-row">
+                  <span className="game-category-name">{cat}</span>
+                  <span className="game-category-count">{categories[cat].length} games</span>
+                </div>
+                {meta.desc && <div className="game-category-desc">{meta.desc}</div>}
+              </div>
               <span className={`game-category-chevron ${isCollapsed ? 'collapsed' : ''}`}>▾</span>
             </button>
             {!isCollapsed && (
@@ -201,8 +231,7 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch }) {
       {/* Game Info Popup */}
       {infoGame && (
         <div className="game-info-overlay" onClick={() => setInfoGame(null)}>
-          <div className="game-info-popup pop-in" onClick={e => e.stopPropagation()}>
-            <button className="game-info-close" onClick={() => setInfoGame(null)}>✕</button>
+          <div className="game-info-popup pop-in">
             <div className="game-info-emoji">{infoGame.emoji}</div>
             <h2 className="game-info-title">{infoGame.name}</h2>
             <div className="game-info-meta">
@@ -215,6 +244,7 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch }) {
                 <p className="game-info-howto">{infoGame.howToPlay}</p>
               </>
             )}
+            <div className="game-info-dismiss">tap anywhere to close</div>
           </div>
         </div>
       )}

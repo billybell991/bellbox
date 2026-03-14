@@ -1,6 +1,12 @@
 // Caption This — Players write funny captions for AI-generated images
 import { BaseGame } from '../../base-game.js';
 import { getBellBotCommentary, parseBellBotJSON } from '../../bellbot.js';
+import { generateImage } from '../trivia-fetch/imagen.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const CAPTION_PROMPTS = {
   1: [
@@ -96,7 +102,7 @@ export class CaptionThisGame extends BaseGame {
   constructor(roomCode) {
     super(roomCode, {
       id: 'caption-this',
-      name: 'Caption This!',
+      name: 'Artificial Insult-igence',
       rounds: 4,
       submissionTime: 45,
       votingTime: 30,
@@ -107,7 +113,8 @@ export class CaptionThisGame extends BaseGame {
   }
 
   async generatePrompt() {
-    // Try AI-generated prompts first
+    // Pick a scene description (AI or fallback)
+    let sceneDesc;
     try {
       const raw = await getBellBotCommentary('generate_prompt', {
         gameName: this.gameName,
@@ -116,16 +123,57 @@ export class CaptionThisGame extends BaseGame {
         extra: `Spice level: ${this.spiceLevel}. Generate ONE vivid, funny image description that players will write captions for. Make it visual and specific. Something you could imagine as a photo or painting.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
-      if (prompts?.[0]) return { text: prompts[0], type: 'caption' };
+      if (prompts?.[0]) sceneDesc = prompts[0];
     } catch { /* fallback */ }
 
-    // Fallback to pre-written prompts
-    const tier = CAPTION_PROMPTS[this.spiceLevel] || CAPTION_PROMPTS[1];
-    const available = tier.filter(p => !this.usedPrompts.has(p));
-    const pool = available.length > 0 ? available : tier;
-    const prompt = pool[Math.floor(Math.random() * pool.length)];
-    this.usedPrompts.add(prompt);
-    return { text: prompt, type: 'caption' };
+    if (!sceneDesc) {
+      const tier = CAPTION_PROMPTS[this.spiceLevel] || CAPTION_PROMPTS[1];
+      const available = tier.filter(p => !this.usedPrompts.has(p));
+      const pool = available.length > 0 ? available : tier;
+      sceneDesc = pool[Math.floor(Math.random() * pool.length)];
+      this.usedPrompts.add(sceneDesc);
+    }
+
+    // Try to generate an image from the description
+    try {
+      const styles = [
+        'A photorealistic image:',
+        'A dramatic oil painting:',
+        'A retro 1950s advertisement style image:',
+        'A surveillance camera still frame:',
+        'A nature documentary screenshot:',
+        'A Renaissance painting:',
+        'A funny cartoon illustration:',
+        'A wacky stock photo:',
+        'A dramatic movie poster scene:',
+        'A vintage polaroid photo:',
+        'A claymation scene:',
+        'A pixel art scene:',
+        'A watercolor painting:',
+        'An action figure diorama:',
+      ];
+      const style = styles[Math.floor(Math.random() * styles.length)];
+      const imagePrompt = `${style} ${sceneDesc}. Vivid detail, exaggerated expressions, no text or words anywhere in the image.`;
+      const base64 = await generateImage(imagePrompt, '1:1');
+      if (base64) {
+        const imgDir = path.resolve(__dirname, '../../../client/public/images/caption-this');
+        if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir, { recursive: true });
+        const filename = `round-${this.round}-${Date.now()}.png`;
+        fs.writeFileSync(path.join(imgDir, filename), Buffer.from(base64, 'base64'));
+        console.log(`[CaptionThis] Generated image: ${filename}`);
+        return {
+          text: 'Caption this image!',
+          instruction: 'Write the funniest caption you can think of',
+          imageUrl: `/images/caption-this/${filename}`,
+          type: 'caption',
+        };
+      }
+    } catch (err) {
+      console.warn('[CaptionThis] Image generation failed, using text fallback:', err.message);
+    }
+
+    // Fallback: text-only prompt
+    return { text: sceneDesc, instruction: 'Write a funny caption for this scene', type: 'caption' };
   }
 
   validateSubmission(submission) {

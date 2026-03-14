@@ -482,7 +482,6 @@ const standardWhiteCards = [
   "Frodo's tight little squirrel bum",
   "Tonsil rocks",
   "Machine gun diarrhea",
-  "Eric Houle's only black tie",
   "Warren's cowboy boots",
   "Mullet man's mangey dog",
   "Horny Dwyer",

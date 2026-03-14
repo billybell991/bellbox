@@ -294,37 +294,27 @@ export class BaseGame {
    * Tally scores and produce round results
    */
   async tallyScores() {
-    if (this.state !== STATES.VOTING) return { error: 'Not in voting phase' };
+    if (this.state !== STATES.VOTING && this.state !== STATES.REVEAL) return { error: 'Not in voting/reveal phase' };
 
-    // Count votes per submission
-    const voteCounts = new Map();
-    for (const [, targetId] of this.votes) {
-      voteCounts.set(targetId, (voteCounts.get(targetId) || 0) + 1);
-    }
-
-    const totalVotes = this.votes.size || 1;
-
-    // Calculate round scores
+    // Calculate round scores (AI-only scoring)
     const roundScores = [];
     for (const [socketId] of this.submissions) {
       const aiResult = this.aiScores.get(socketId) || { score: 250, comment: '' };
-      const voteCount = voteCounts.get(socketId) || 0;
-      const voteScore = Math.round((voteCount / totalVotes) * 500);
-      const total = Math.min(aiResult.score + voteScore, 1000);
+      const total = Math.min(aiResult.score, 500);
 
       // Add to cumulative score
       const player = this.players.get(socketId);
       if (player) player.score += total;
 
+      const sub = this.submissions.get(socketId);
       roundScores.push({
         id: socketId,
         name: player?.name || 'Anonymous',
         aiScore: aiResult.score,
         aiComment: aiResult.comment,
-        voteCount,
-        voteScore,
         roundTotal: total,
         cumulativeScore: player?.score || 0,
+        submission: this.getSubmissionText(sub),
       });
     }
 
@@ -358,6 +348,7 @@ export class BaseGame {
       roundScores,
       leaderboard: this.getScores(),
       bellbotSays,
+      prompt: this.currentPrompt,
       gameOver: this.state === STATES.GAME_OVER,
     };
   }

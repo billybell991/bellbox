@@ -4,7 +4,7 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
   const [selectedCards, setSelectedCards] = useState([]);
   const [showScoreboard, setShowScoreboard] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
-  const { phase, blackCard, hand, cardCzar, roundNumber, players, scores, submissions, winner } = gameState;
+  const { phase, blackCard: memeCard, hand, cardCzar, roundNumber, players, scores, submissions, winner } = gameState;
   const isCzar = myId === cardCzar;
   const czarName = players?.find(p => p.id === cardCzar)?.name || 'Someone';
   const mySubmitted = players?.find(p => p.id === myId)?.hasSubmitted;
@@ -12,28 +12,28 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
   const toggleCard = (index) => {
     if (mySubmitted || isCzar) return;
     setSelectedCards(prev => {
-      if (prev.includes(index)) {
-        return prev.filter(i => i !== index);
-      }
-      if (prev.length >= blackCard.pick) {
-        return [...prev.slice(1), index];
-      }
+      if (prev.includes(index)) return prev.filter(i => i !== index);
+      if (prev.length >= memeCard.pick) return [...prev.slice(1), index];
       return [...prev, index];
     });
   };
 
   const confirmSubmit = () => {
-    if (selectedCards.length === blackCard.pick) {
+    if (selectedCards.length === memeCard.pick) {
       onSubmit(selectedCards);
       setSelectedCards([]);
     }
   };
 
-  const renderBlackCard = () => (
-    <div className={`black-card ${!isCzar && phase === 'picking' ? 'compact' : ''} ${isCzar && phase === 'picking' ? 'czar-waiting' : ''}`}>
-      <div className="black-card-text">{blackCard.text}</div>
-      <div className="black-card-meta">
-        Pick {blackCard.pick} &bull; Round {roundNumber}
+  const renderMemeCard = () => (
+    <div className={`meme-card ${!isCzar && phase === 'picking' ? 'compact' : ''} ${isCzar && phase === 'picking' ? 'czar-waiting' : ''}`}>
+      {memeCard.imageUrl ? (
+        <img src={memeCard.imageUrl} alt={memeCard.alt || 'Meme'} className="meme-card-image" />
+      ) : (
+        <div className="meme-card-text">{memeCard.text || 'Caption this!'}</div>
+      )}
+      <div className="meme-card-meta">
+        Pick {memeCard.pick} caption{memeCard.pick > 1 ? 's' : ''} &bull; Round {roundNumber}
       </div>
     </div>
   );
@@ -45,11 +45,11 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
       return (
         <div className="status-bar">
           {isCzar ? (
-            <span>You are the <strong>Card Czar</strong> — wait for submissions</span>
+            <span>You are the <strong>Meme Judge</strong> — wait for captions</span>
           ) : mySubmitted ? (
-            <span>Card submitted! Waiting for others...</span>
+            <span>Caption submitted! Waiting for others...</span>
           ) : (
-            <span>Pick {blackCard.pick} card{blackCard.pick > 1 ? 's' : ''} from your hand</span>
+            <span>Pick {memeCard.pick} caption{memeCard.pick > 1 ? 's' : ''} for this meme</span>
           )}
           <div className="submission-count">{submitted}/{total} submitted</div>
         </div>
@@ -59,9 +59,9 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
       return (
         <div className="status-bar">
           {isCzar ? (
-            <span>Pick the <strong>funniest</strong> answer!</span>
+            <span>Pick the <strong>funniest</strong> caption!</span>
           ) : (
-            <span>The Card Czar ({czarName}) is judging...</span>
+            <span>The Meme Judge ({czarName}) is choosing...</span>
           )}
         </div>
       );
@@ -71,7 +71,6 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
 
   const renderHand = () => {
     if (phase !== 'picking' || isCzar || !hand) return null;
-
     return (
       <div className="hand-section">
         <div className="hand">
@@ -83,17 +82,15 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
             >
               <span className="white-card-text">{card}</span>
               {selectedCards.includes(i) && (
-                <span className="card-order">
-                  {selectedCards.indexOf(i) + 1}
-                </span>
+                <span className="card-order">{selectedCards.indexOf(i) + 1}</span>
               )}
             </div>
           ))}
         </div>
-        {selectedCards.length === blackCard.pick && !mySubmitted && (
+        {selectedCards.length === memeCard.pick && !mySubmitted && (
           <div className="card-submit-bar">
             <button className="card-submit-btn" onClick={confirmSubmit}>
-              Submit {blackCard.pick > 1 ? `${selectedCards.length} Cards` : 'Card'} ✨
+              Submit {memeCard.pick > 1 ? `${selectedCards.length} Captions` : 'Caption'} ✨
             </button>
           </div>
         )}
@@ -103,7 +100,6 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
 
   const renderJudging = () => {
     if (phase !== 'judging' || !submissions) return null;
-
     return (
       <div className="judging-section">
         <div className="submissions-grid">
@@ -114,9 +110,7 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
               onClick={() => isCzar && onJudge(i)}
             >
               {sub.cards.map((card, j) => (
-                <div key={j} className="submission-white-card">
-                  {card}
-                </div>
+                <div key={j} className="submission-white-card">{card}</div>
               ))}
             </div>
           ))}
@@ -127,7 +121,6 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
 
   const renderRoundEnd = () => {
     if (phase !== 'roundend' && phase !== 'gameover') return null;
-
     return (
       <div className="round-end-overlay">
         <div className="round-end-content">
@@ -142,9 +135,13 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
               <h3 className="winner-name">{winner?.name}</h3>
             </>
           )}
-          {blackCard && (
-            <div className="black-card compact" style={{ margin: '12px 0 4px' }}>
-              <div className="black-card-text">{blackCard.text}</div>
+          {memeCard && (
+            <div className="meme-card compact" style={{ margin: '12px 0 4px' }}>
+              {memeCard.imageUrl ? (
+                <img src={memeCard.imageUrl} alt={memeCard.alt || 'Meme'} className="meme-card-image" />
+              ) : (
+                <div className="meme-card-text">{memeCard.text}</div>
+              )}
             </div>
           )}
           {winner?.cards && (
@@ -163,9 +160,7 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
             ))}
           </div>
           {phase === 'roundend' && (
-            <button className="btn btn-next" onClick={onNextRound}>
-              NEXT ROUND
-            </button>
+            <button className="btn btn-next" onClick={onNextRound}>NEXT ROUND</button>
           )}
           {phase === 'gameover' && isHost && (
             <div className="game-over-buttons">
@@ -201,14 +196,14 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
   };
 
   return (
-    <div className="game">
+    <div className="game meme-melee-game">
       <div className="game-header">
         <span className="round-indicator">Round {roundNumber}</span>
-        <span className="czar-indicator">Czar: {czarName} {isCzar ? '(You!)' : ''}</span>
+        <span className="czar-indicator">Judge: {czarName} {isCzar ? '(You!)' : ''}</span>
 
       </div>
 
-      {renderBlackCard()}
+      {renderMemeCard()}
       {renderStatus()}
       {renderHand()}
       {renderJudging()}
@@ -219,10 +214,7 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
         <div className="confirm-overlay" onClick={() => setShowLeaveConfirm(false)}>
           <div className="confirm-modal">
             <h2>Leave Game?</h2>
-            <p>You'll lose your current progress and cards.</p>
-            {isHost && players?.length > 1 && (
-              <p className="confirm-host-note">Host will be passed to the next player.</p>
-            )}
+            <p>You'll lose your current progress.</p>
             <div className="confirm-actions">
               <button className="btn btn-back" onClick={() => setShowLeaveConfirm(false)}>STAY</button>
               <button className="btn btn-leave" onClick={onLeave}>LEAVE</button>

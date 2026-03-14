@@ -10,10 +10,12 @@ import dotenv from 'dotenv';
 // Game-specific imports
 import { GameRoom as NAHRoom } from './games/nerds-against-humanity/game.js';
 import { themes as nahThemes } from './games/nerds-against-humanity/cards.js';
+import { MemeGameRoom } from './games/meme-melee/game.js';
 import { TriviaGame } from './games/trivia-fetch/game.js';
 import { CATEGORIES, WHEEL_SEGMENTS, getGusReaction } from './games/trivia-fetch/trivia.js';
 import { generateAllAssets, getMissingAssets } from './games/trivia-fetch/generate-assets.js';
 import { transcribeAudio, analyzeAudio, isAudioAvailable } from './gemini-audio.js';
+import { getBellBotCommentary, parseBellBotJSON } from './bellbot.js';
 
 // BaseGame-derived game imports
 import { CaptionThisGame } from './games/caption-this/game.js';
@@ -106,6 +108,7 @@ const GAMES = {
     maxPlayers: 10,
     color: '#AFFF33',
     category: 'Wordplay & Wit',
+    enabled: true,
   },
   'trivia-fetch': {
     id: 'trivia-fetch',
@@ -120,10 +123,11 @@ const GAMES = {
   },
   // ── Wordplay & Wit ───────────────────────────
   'caption-this': {
-    id: 'caption-this', name: 'Caption This!', emoji: '🖼️',
-    description: 'Write hilarious captions for bizarre image descriptions!',
-    howToPlay: 'An AI generates a bizarre scene description. Everyone writes their funniest caption. All captions are revealed and players vote for the best one. Most votes wins the round!',
+    id: 'caption-this', name: 'Artificial Insult-igence', emoji: '🤖🔥',
+    description: 'Write hilarious captions for bizarre AI images — and get roasted by SassBot!',
+    howToPlay: 'Each round, an AI generates a bizarre image. Everyone writes their funniest caption for it. SassBot — the AI judge — roasts your answers and scores each one based on creativity, humor, and relevance. The sassier the spice level, the meaner SassBot gets. Highest score wins the round!',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
+    enabled: true,
   },
   'hot-take-tribunal': {
     id: 'hot-take-tribunal', name: 'Hot Take Tribunal', emoji: '🔥',
@@ -298,7 +302,17 @@ const GAMES = {
     howToPlay: 'An AI tells a story, but players can inject sabotage twists at key moments. Vote on the best (worst?) disruption. The story gets increasingly unhinged!',
     minPlayers: 4, maxPlayers: 10, color: '#FFE02F', category: 'Rapid Reactions',
   },
+  'meme-melee': {
+    id: 'meme-melee', name: 'Meme Melee', emoji: '🤣',
+    description: 'Match hilarious captions to meme images. The Meme Judge picks the winner!',
+    howToPlay: 'Each round, a meme image is revealed. Everyone plays a caption card from their hand to match it. The Meme Judge picks the funniest combo. First to 7 points wins!',
+    minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
+  },
 };
+
+function getEnabledGames() {
+  return Object.values(GAMES).filter(g => g.enabled);
+}
 
 // ─── BellBox Lobby Room ───────────────────────────────────────
 class BellBoxRoom {
@@ -315,6 +329,7 @@ class BellBoxRoom {
     this.votes = new Map(); // socketId -> gameId
     this.chatMessages = []; // { sender, text, timestamp }
     this.spiceLevel = 2; // 1=Family Fun, 2=Spicy, 3=Unhinged
+    this.aiBots = false; // Whether AI opponents are enabled
 
     this.addPlayer(hostId, hostName);
   }
@@ -371,6 +386,67 @@ class BellBoxRoom {
     }
 
     return player;
+  }
+
+  // ── AI Bot Management ────────────────────────────────
+  addAiBots() {
+    if (this.aiBots) return; // already added
+    const firstNames = [
+      'Martha', 'Dave', 'Linda', 'Gary', 'Susan', 'Doug', 'Karen', 'Steve',
+      'Brenda', 'Phil', 'Janet', 'Earl', 'Dolores', 'Chuck', 'Barb', 'Hank',
+      'Patty', 'Larry', 'Donna', 'Ralph', 'Cheryl', 'Bud', 'Gladys', 'Norm',
+    ];
+    // Fill to 3 total players
+    const realCount = this.players.size;
+    const botsNeeded = Math.max(0, 3 - realCount);
+    if (botsNeeded === 0) { this.aiBots = true; return; }
+    const shuffled = firstNames.sort(() => Math.random() - 0.5);
+    for (let i = 0; i < botsNeeded; i++) {
+      const botId = `ai-bot-${i + 1}-${this.roomCode}`;
+      if (this.players.has(botId)) continue;
+      const botName = `${shuffled[i]}Bot \u{1F916}`;
+      this.addPlayer(botId, botName);
+      const botPlayer = this.players.get(botId);
+      if (botPlayer) botPlayer.playerId = `bot-pid-${i + 1}`;
+      this.playerIdMap.set(`bot-pid-${i + 1}`, botId);
+    }
+    this.aiBots = true;
+  }
+
+  removeAiBots() {
+    if (!this.aiBots) return;
+    // Remove all bot players
+    for (let i = 0; i < 3; i++) {
+      const botId = `ai-bot-${i + 1}-${this.roomCode}`;
+      this.removePlayer(botId);
+      this.playerIdMap.delete(`bot-pid-${i + 1}`);
+    }
+    this.aiBots = false;
+  }
+
+  rebalanceBots() {
+    if (!this.aiBots) return;
+    const realCount = [...this.players.keys()].filter(id => !this.isBot(id)).length;
+    const botsNeeded = Math.max(0, 3 - realCount);
+    const currentBots = this.getBotIds();
+    // Remove excess bots (last ones first)
+    while (currentBots.length > botsNeeded) {
+      const botId = currentBots.pop();
+      this.removePlayer(botId);
+      // Clean up playerIdMap
+      for (const [pid, sid] of this.playerIdMap) {
+        if (sid === botId) { this.playerIdMap.delete(pid); break; }
+      }
+    }
+    // If all bots removed and none needed, keep aiBots true (toggle still on)
+  }
+
+  isBot(socketId) {
+    return typeof socketId === 'string' && socketId.startsWith('ai-bot-');
+  }
+
+  getBotIds() {
+    return this.playerOrder.filter(id => this.isBot(id));
   }
 
   castVote(socketId, gameId) {
@@ -442,9 +518,10 @@ class BellBoxRoom {
       state: this.state,
       activeGame: this.activeGame,
       votes: this.getVoteTally(),
-      games: Object.values(GAMES),
+      games: getEnabledGames(),
       chatMessages: this.chatMessages.slice(-20),
       spiceLevel: this.spiceLevel,
+      aiBots: this.aiBots,
     };
 
     // Include game-specific state for reconnection
@@ -566,6 +643,8 @@ io.on('connection', (socket) => {
     if (result.error) return callback(result);
 
     socket.join(code);
+    // If bots are enabled, remove one to make room for the real player
+    room.rebalanceBots();
     callback({ success: true, ...room.getFullState(socket.id) });
     socket.to(code).emit('player-joined', { players: room.getPlayerList() });
     console.log(`🎮 ${name} joined room ${code}`);
@@ -597,6 +676,27 @@ io.on('connection', (socket) => {
     room.spiceLevel = spiceLevel;
     callback?.({ success: true });
     io.to(room.roomCode).emit('spice-update', { spiceLevel });
+  });
+
+  // ── Toggle AI Bots ──────────────────────────────────────
+  socket.on('toggle-ai-bots', (callback) => {
+    const room = getRoomByPlayer(socket.id);
+    if (!room) return callback?.({ error: 'Not in a room' });
+    if (socket.id !== room.hostId) return callback?.({ error: 'Only the host can toggle AI players' });
+    if (room.state !== 'LOBBY') return callback?.({ error: 'Cannot change during a game' });
+
+    if (room.aiBots) {
+      room.removeAiBots();
+    } else {
+      if (room.players.size > 8) return callback?.({ error: 'Not enough room for AI players' });
+      room.addAiBots();
+    }
+
+    callback?.({ success: true, aiBots: room.aiBots });
+    io.to(room.roomCode).emit('ai-bots-update', {
+      aiBots: room.aiBots,
+      players: room.getPlayerList(),
+    });
   });
 
   // ── Promote to Party Leader ──────────────────────────────
@@ -731,6 +831,7 @@ io.on('connection', (socket) => {
 
     const game = GAMES[gameId];
     if (!game) return callback({ error: 'Unknown game' });
+    if (!game.enabled) return callback({ error: `${game.name} is not available yet` });
 
     if (room.players.size < game.minPlayers) {
       return callback({ error: `Need at least ${game.minPlayers} players for ${game.name}` });
@@ -782,6 +883,32 @@ io.on('connection', (socket) => {
           scores: room.gameInstance.getScores(),
         });
       }
+      scheduleNAHBotActions(room);
+
+    } else if (gameId === 'meme-melee') {
+      // Meme Melee — same structure as NAH
+      room.gameInstance = new MemeGameRoom(room.roomCode, room.hostId, room.players.get(room.hostId).name);
+      for (const socketId of room.playerOrder) {
+        if (socketId !== room.hostId) {
+          const p = room.players.get(socketId);
+          room.gameInstance.addPlayer(socketId, p.name, p.playerId);
+        }
+      }
+      for (const [pid, sid] of room.playerIdMap) {
+        room.gameInstance.playerIdMap.set(pid, sid);
+      }
+
+      const startResult = room.gameInstance.startGame(room.spiceLevel);
+      if (startResult.error) {
+        room.state = 'LOBBY';
+        room.activeGame = null;
+        room.gameInstance = null;
+        return callback(startResult);
+      }
+
+      callback({ success: true, game: gameId });
+      io.to(room.roomCode).emit('game-launched', { game: gameId });
+      emitNAHNewRound(room); // same protocol
 
     } else if (gameId === 'trivia-fetch') {
       room.gameInstance = new TriviaGame(room.roomCode, room.hostId, room.players.get(room.hostId).name);
@@ -828,18 +955,23 @@ io.on('connection', (socket) => {
       }
 
       // Start game
+      callback({ success: true, game: gameId });
+      io.to(room.roomCode).emit('game-launched', { game: gameId });
+      io.to(room.roomCode).emit('bg-preparing', { message: 'Generating round...' });
+
       const startResult = await room.gameInstance.startGame(room.spiceLevel);
       if (startResult?.error) {
         room.state = 'LOBBY';
         room.activeGame = null;
         room.gameInstance = null;
-        return callback(startResult);
+        io.to(room.roomCode).emit('back-to-lobby', {
+          players: room.getPlayerList(), votes: room.getVoteTally(), games: getEnabledGames(),
+        });
+        return;
       }
 
-      callback({ success: true, game: gameId });
-
-      io.to(room.roomCode).emit('game-launched', { game: gameId });
       io.to(room.roomCode).emit('bg-round-start', startResult);
+      scheduleBaseGameBotSubmissions(room);
     }
 
     console.log(`🎲 ${game.name} launched in room ${room.roomCode}`);
@@ -860,8 +992,9 @@ io.on('connection', (socket) => {
     io.to(room.roomCode).emit('back-to-lobby', {
       players: room.getPlayerList(),
       votes: room.getVoteTally(),
-      games: Object.values(GAMES),
+      games: getEnabledGames(),
       spiceLevel: room.spiceLevel,
+      aiBots: room.aiBots,
     });
   });
 
@@ -875,7 +1008,7 @@ io.on('connection', (socket) => {
 
   socket.on('submit-cards', ({ cardIndices }, callback) => {
     const room = getRoomByPlayer(socket.id);
-    if (!room || room.activeGame !== 'nerds-against-humanity') return callback({ error: 'Not in NAH game' });
+    if (!room || (room.activeGame !== 'nerds-against-humanity' && room.activeGame !== 'meme-melee')) return callback({ error: 'Not in a card game' });
 
     const gi = room.gameInstance;
     const result = gi.submitCards(socket.id, cardIndices);
@@ -892,15 +1025,17 @@ io.on('connection', (socket) => {
     if (gi.state === 'JUDGING') {
       io.to(room.roomCode).emit('judging-phase', {
         submissions: gi.getAnonymousSubmissions(),
-        blackCard: gi.currentBlackCard,
+        blackCard: gi.currentBlackCard || gi.currentMeme,
         cardCzar: gi.getCardCzarId(),
       });
+      // If the czar is a bot, auto-judge
+      scheduleNAHBotJudge(room);
     }
   });
 
   socket.on('judge-pick', ({ submissionIndex }, callback) => {
     const room = getRoomByPlayer(socket.id);
-    if (!room || room.activeGame !== 'nerds-against-humanity') return callback({ error: 'Not in NAH game' });
+    if (!room || (room.activeGame !== 'nerds-against-humanity' && room.activeGame !== 'meme-melee')) return callback({ error: 'Not in a card game' });
 
     const gi = room.gameInstance;
     if (socket.id !== gi.getCardCzarId()) return callback({ error: 'Only the Card Czar can judge' });
@@ -921,7 +1056,7 @@ io.on('connection', (socket) => {
 
   socket.on('next-round', () => {
     const room = getRoomByPlayer(socket.id);
-    if (!room || room.activeGame !== 'nerds-against-humanity') return;
+    if (!room || (room.activeGame !== 'nerds-against-humanity' && room.activeGame !== 'meme-melee')) return;
 
     const gi = room.gameInstance;
     if (gi.state === 'GAME_OVER') return;
@@ -936,7 +1071,7 @@ io.on('connection', (socket) => {
     if (!room) return;
     if (socket.id !== room.hostId) return;
 
-    if (room.activeGame === 'nerds-against-humanity') {
+    if (room.activeGame === 'nerds-against-humanity' || room.activeGame === 'meme-melee') {
       const gi = room.gameInstance;
       gi.state = 'LOBBY';
       for (const [, player] of gi.players) {
@@ -959,8 +1094,125 @@ io.on('connection', (socket) => {
     io.to(room.roomCode).emit('back-to-lobby', {
       players: room.getPlayerList(),
       votes: room.getVoteTally(),
-      games: Object.values(GAMES),
+      games: getEnabledGames(),
     });
+  });
+
+  // ── Restart Same Game ───────────────────────────────────
+  socket.on('restart-same-game', async (callback) => {
+    const room = getRoomByPlayer(socket.id);
+    if (!room) return callback({ error: 'Not in a room' });
+    if (socket.id !== room.hostId) return callback({ error: 'Only the host can restart' });
+    if (!room.activeGame) return callback({ error: 'No active game to restart' });
+
+    const gameId = room.activeGame;
+    const game = GAMES[gameId];
+    if (!game) return callback({ error: 'Unknown game' });
+
+    // Preserve themes from old NAH instance
+    const oldThemes = room.gameInstance?.selectedThemes;
+
+    // Tear down old instance
+    room.gameInstance = null;
+
+    // Re-create game instance using the same pattern as launch-game
+    if (gameId === 'nerds-against-humanity') {
+      room.gameInstance = new NAHRoom(room.roomCode, room.hostId, room.players.get(room.hostId).name);
+      for (const socketId of room.playerOrder) {
+        if (socketId !== room.hostId) {
+          const p = room.players.get(socketId);
+          room.gameInstance.addPlayer(socketId, p.name, p.playerId);
+        }
+      }
+      for (const [pid, sid] of room.playerIdMap) {
+        room.gameInstance.playerIdMap.set(pid, sid);
+      }
+      const startResult = room.gameInstance.startGame(oldThemes, room.spiceLevel);
+      if (startResult.error) return callback(startResult);
+
+      callback({ success: true, game: gameId });
+      io.to(room.roomCode).emit('game-launched', { game: gameId });
+      for (const socketId of room.gameInstance.playerOrder) {
+        const player = room.gameInstance.players.get(socketId);
+        io.to(socketId).emit('new-round', {
+          blackCard: room.gameInstance.currentBlackCard,
+          hand: player.hand,
+          cardCzar: room.gameInstance.getCardCzarId(),
+          roundNumber: room.gameInstance.roundNumber,
+          players: room.gameInstance.getPlayerList(),
+          scores: room.gameInstance.getScores(),
+        });
+      }
+      scheduleNAHBotActions(room);
+
+    } else if (gameId === 'meme-melee') {
+      room.gameInstance = new MemeGameRoom(room.roomCode, room.hostId, room.players.get(room.hostId).name);
+      for (const socketId of room.playerOrder) {
+        if (socketId !== room.hostId) {
+          const p = room.players.get(socketId);
+          room.gameInstance.addPlayer(socketId, p.name, p.playerId);
+        }
+      }
+      for (const [pid, sid] of room.playerIdMap) {
+        room.gameInstance.playerIdMap.set(pid, sid);
+      }
+      const startResult = room.gameInstance.startGame(room.spiceLevel);
+      if (startResult.error) return callback(startResult);
+
+      callback({ success: true, game: gameId });
+      io.to(room.roomCode).emit('game-launched', { game: gameId });
+      emitNAHNewRound(room);
+
+    } else if (gameId === 'trivia-fetch') {
+      room.gameInstance = new TriviaGame(room.roomCode, room.hostId, room.players.get(room.hostId).name);
+      for (const socketId of room.playerOrder) {
+        if (socketId !== room.hostId) {
+          const p = room.players.get(socketId);
+          room.gameInstance.addPlayer(socketId, p.name, p.playerId);
+        }
+      }
+      for (const [pid, sid] of room.playerIdMap) {
+        room.gameInstance.playerIdMap.set(pid, sid);
+      }
+      const startResult = room.gameInstance.startGame();
+      if (startResult.error) return callback(startResult);
+
+      callback({ success: true, game: gameId });
+      io.to(room.roomCode).emit('game-launched', { game: gameId });
+      io.to(room.roomCode).emit('game-started', {
+        players: room.gameInstance.getPlayerList(),
+        activePlayerId: room.gameInstance.getActivePlayerId(),
+        categories: CATEGORIES,
+      });
+
+    } else if (BASE_GAME_CLASSES[gameId]) {
+      const GameClass = BASE_GAME_CLASSES[gameId];
+      room.gameInstance = new GameClass(room.roomCode);
+      for (const socketId of room.playerOrder) {
+        const p = room.players.get(socketId);
+        room.gameInstance.addPlayer(socketId, p.name, p.playerId);
+      }
+
+      callback({ success: true, game: gameId });
+      io.to(room.roomCode).emit('game-launched', { game: gameId });
+      io.to(room.roomCode).emit('bg-preparing', { message: 'Generating round...' });
+
+      const startResult = await room.gameInstance.startGame(room.spiceLevel);
+      if (startResult?.error) {
+        room.state = 'LOBBY';
+        room.activeGame = null;
+        room.gameInstance = null;
+        io.to(room.roomCode).emit('back-to-lobby', {
+          players: room.getPlayerList(), votes: room.getVoteTally(), games: getEnabledGames(),
+        });
+        return;
+      }
+
+      io.to(room.roomCode).emit('bg-round-start', startResult);
+      scheduleBaseGameBotSubmissions(room);
+    }
+
+    console.log(`🔄 ${game.name} restarted in room ${room.roomCode}`);
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -1150,6 +1402,8 @@ io.on('connection', (socket) => {
     });
 
     if (result.allSubmitted) {
+      // Notify players we're processing
+      io.to(room.roomCode).emit('bg-preparing', { message: 'Judging submissions...' });
       // Lock and move to reveal  
       const lockResult = await gi.lockSubmissions();
       if (lockResult) {
@@ -1181,11 +1435,12 @@ io.on('connection', (socket) => {
     const room = getRoomByPlayer(socket.id);
     if (!isBaseGame(room)) return callback?.({ error: 'Not in a BaseGame' });
 
+    callback?.({ success: true });
+    io.to(room.roomCode).emit('bg-preparing', { message: 'Judging submissions...' });
+
     const gi = room.gameInstance;
     const lockResult = await gi.lockSubmissions();
-    if (lockResult?.error) return callback?.({ error: lockResult.error });
-
-    callback?.({ success: true });
+    if (lockResult?.error) return;
 
     if (lockResult.roundScores) {
       io.to(room.roomCode).emit('bg-round-end', {
@@ -1222,6 +1477,7 @@ io.on('connection', (socket) => {
     });
 
     if (result.allVoted) {
+      io.to(room.roomCode).emit('bg-preparing', { message: 'Tallying scores...' });
       tallyBaseGameScores(room);
     }
   });
@@ -1232,6 +1488,7 @@ io.on('connection', (socket) => {
     if (!isBaseGame(room)) return callback?.({ error: 'Not in a BaseGame' });
 
     callback?.({ success: true });
+    io.to(room.roomCode).emit('bg-preparing', { message: 'Tallying scores...' });
     await tallyBaseGameScores(room);
   });
 
@@ -1240,12 +1497,15 @@ io.on('connection', (socket) => {
     const room = getRoomByPlayer(socket.id);
     if (!isBaseGame(room)) return callback?.({ error: 'Not in a BaseGame' });
 
+    callback?.({ success: true });
+    io.to(room.roomCode).emit('bg-preparing', { message: 'Generating round...' });
+
     const gi = room.gameInstance;
     const result = await gi.startNextRound();
-    if (result?.error) return callback?.({ error: result.error });
+    if (result?.error) return;
 
-    callback?.({ success: true });
     io.to(room.roomCode).emit('bg-round-start', result);
+    scheduleBaseGameBotSubmissions(room);
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -1285,11 +1545,11 @@ io.on('connection', (socket) => {
       });
 
       // Check if game instance needs ending
-      if (room.gameInstance && room.activeGame === 'nerds-against-humanity') {
+      if (room.gameInstance && (room.activeGame === 'nerds-against-humanity' || room.activeGame === 'meme-melee')) {
         const gi = room.gameInstance;
         if (gi.state === 'GAME_OVER') {
           io.to(room.roomCode).emit('round-winner', {
-            winnerName: null, winningCards: [], blackCard: gi.currentBlackCard,
+            winnerName: null, winningCards: [], blackCard: gi.currentBlackCard || gi.currentMeme,
             scores: gi.getScores(), gameOver: true, message: 'Not enough players',
           });
         } else if (gi.state === 'PICKING') {
@@ -1357,13 +1617,214 @@ function emitNAHNewRound(room) {
   for (const socketId of gi.playerOrder) {
     const player = gi.players.get(socketId);
     io.to(socketId).emit('new-round', {
-      blackCard: gi.currentBlackCard,
+      blackCard: gi.currentBlackCard || gi.currentMeme,
       hand: player.hand,
       cardCzar: gi.getCardCzarId(),
       roundNumber: gi.roundNumber,
       players: gi.getPlayerList(),
       scores: gi.getScores(),
     });
+  }
+  // Auto-play for AI bots
+  scheduleNAHBotActions(room);
+}
+
+// ── AI Bot Auto-Play ──────────────────────────────────────────
+function scheduleNAHBotActions(room) {
+  if (!room.aiBots) return;
+  const gi = room.gameInstance;
+  if (!gi || gi.state !== 'PICKING') return;
+  const czarId = gi.getCardCzarId();
+
+  // Bots that need to submit cards
+  for (const botId of room.getBotIds()) {
+    if (botId === czarId) continue; // czar doesn't submit
+    if (gi.submissions.has(botId)) continue;
+
+    setTimeout(() => {
+      if (gi.state !== 'PICKING') return;
+      const player = gi.players.get(botId);
+      if (!player || gi.submissions.has(botId)) return;
+
+      const pick = (gi.currentBlackCard || gi.currentMeme)?.pick || 1;
+      const indices = [];
+      const available = [...Array(player.hand.length).keys()];
+      for (let p = 0; p < pick && available.length > 0; p++) {
+        const ri = Math.floor(Math.random() * available.length);
+        indices.push(available.splice(ri, 1)[0]);
+      }
+
+      const result = gi.submitCards(botId, indices);
+      if (!result.error) {
+        io.to(room.roomCode).emit('submission-update', {
+          players: gi.getPlayerList(),
+          submittedCount: gi.submissions.size,
+          totalNeeded: gi.playerOrder.length - 1,
+        });
+
+        if (gi.state === 'JUDGING') {
+          io.to(room.roomCode).emit('judging-phase', {
+            submissions: gi.getAnonymousSubmissions(),
+            blackCard: gi.currentBlackCard || gi.currentMeme,
+            cardCzar: gi.getCardCzarId(),
+          });
+          // If the czar is also a bot, auto-judge
+          scheduleNAHBotJudge(room);
+        }
+      }
+    }, 1500 + Math.random() * 2000); // 1.5-3.5s delay
+  }
+}
+
+function scheduleNAHBotJudge(room) {
+  if (!room.aiBots) return;
+  const gi = room.gameInstance;
+  if (!gi || gi.state !== 'JUDGING') return;
+  const czarId = gi.getCardCzarId();
+  if (!room.isBot(czarId)) return;
+
+  setTimeout(() => {
+    if (gi.state !== 'JUDGING') return;
+    const subs = gi.getAnonymousSubmissions();
+    if (subs.length === 0) return;
+    const pick = Math.floor(Math.random() * subs.length);
+    const result = gi.judgeWinner(pick);
+    if (!result.error) {
+      io.to(room.roomCode).emit('round-winner', {
+        winnerName: result.winnerName,
+        winningCards: result.winningCards,
+        blackCard: result.blackCard,
+        scores: gi.getScores(),
+        gameOver: result.gameOver,
+      });
+      // Auto-advance to next round after a pause
+      if (!result.gameOver) {
+        setTimeout(() => {
+          if (gi.state === 'ROUND_END') {
+            gi.startRound();
+            emitNAHNewRound(room);
+          }
+        }, 3000);
+      }
+    }
+  }, 2000 + Math.random() * 1500);
+}
+
+const BOT_RESPONSES = [
+  'A sock full of bees',
+  'Grandma\'s secret recipe',
+  'Aggressive eye contact',
+  'An uncomfortably long hug',
+  'That weird noise at 3am',
+  'A suspiciously enthusiastic thumbs up',
+  'Pretending to be a robot',
+  'Screaming into a pillow',
+  'A strongly worded letter',
+  'Interpretive dance',
+  'Blaming the dog',
+  'A mysterious briefcase',
+  'Weaponized cringe',
+  'Running away dramatically',
+];
+
+async function generateBotAnswers(room, count = 2) {
+  const gi = room.gameInstance;
+  const promptText = typeof gi.currentPrompt === 'string' ? gi.currentPrompt : gi.currentPrompt?.text || gi.currentPrompt?.instruction || '';
+  if (!promptText) return null;
+
+  try {
+    const raw = await getBellBotCommentary('bot_answer', {
+      gameName: gi.gameName || 'BellBox Game',
+      prompt: promptText,
+      count,
+    }, gi.spiceLevel || 2);
+    const answers = parseBellBotJSON(raw);
+    if (Array.isArray(answers) && answers.length >= count) return answers;
+  } catch { /* fall through to null */ }
+  return null;
+}
+
+async function scheduleBaseGameBotSubmissions(room) {
+  if (!room.aiBots) return;
+  const gi = room.gameInstance;
+  if (!gi || gi.state !== 'SUBMISSION') return;
+
+  // Try to get Gemini-powered answers, fall back to static list
+  const botIds = [...room.getBotIds()];
+  const geminiAnswers = await generateBotAnswers(room, botIds.length);
+
+  for (let idx = 0; idx < botIds.length; idx++) {
+    const botId = botIds[idx];
+    const player = gi.players.get(botId);
+    if (!player || player.submitted) continue;
+
+    setTimeout(() => {
+      if (gi.state !== 'SUBMISSION') return;
+      const p = gi.players.get(botId);
+      if (!p || p.submitted) return;
+
+      const answer = (geminiAnswers && geminiAnswers[idx])
+        ? geminiAnswers[idx]
+        : BOT_RESPONSES[Math.floor(Math.random() * BOT_RESPONSES.length)];
+      const result = gi.submitEntry(botId, answer);
+      if (!result.error) {
+        io.to(room.roomCode).emit('bg-submission-update', {
+          submittedCount: result.submittedCount,
+          totalPlayers: result.totalPlayers,
+          players: gi.getPlayerList(),
+        });
+
+        if (result.allSubmitted) {
+          io.to(room.roomCode).emit('bg-preparing', { message: 'Judging submissions...' });
+          gi.lockSubmissions().then(lockResult => {
+            if (!lockResult || lockResult.error) return;
+            if (lockResult.roundScores) {
+              io.to(room.roomCode).emit('bg-round-end', {
+                state: lockResult.state, round: lockResult.round,
+                roundScores: lockResult.roundScores, leaderboard: lockResult.leaderboard,
+                bellbotSays: lockResult.bellbotSays, correctAnswer: lockResult.correctAnswer,
+                gameOver: lockResult.gameOver,
+              });
+            } else {
+              io.to(room.roomCode).emit('bg-reveal-start', {
+                state: lockResult.state, totalSubmissions: lockResult.totalSubmissions,
+              });
+              emitBaseGameReveals(room);
+            }
+          });
+        }
+      }
+    }, 2000 + Math.random() * 3000);
+  }
+}
+
+function scheduleBaseGameBotVotes(room) {
+  if (!room.aiBots) return;
+  const gi = room.gameInstance;
+  if (!gi || gi.state !== 'VOTING') return;
+
+  for (const botId of room.getBotIds()) {
+    const p = gi.players.get(botId);
+    if (!p || p.voted) continue;
+
+    setTimeout(() => {
+      if (gi.state !== 'VOTING') return;
+      const pp = gi.players.get(botId);
+      if (!pp || pp.voted) return;
+
+      // Pick a random non-bot player to vote for
+      const targets = gi.playerOrder.filter(id => id !== botId && !room.isBot(id));
+      if (targets.length === 0) return;
+      const target = targets[Math.floor(Math.random() * targets.length)];
+      const result = gi.castVote(botId, target);
+      if (!result.error) {
+        io.to(room.roomCode).emit('bg-vote-update', { players: gi.getPlayerList() });
+        if (result.allVoted) {
+          io.to(room.roomCode).emit('bg-preparing', { message: 'Tallying scores...' });
+          tallyBaseGameScores(room);
+        }
+      }
+    }, 1500 + Math.random() * 2000);
   }
 }
 
@@ -1387,16 +1848,15 @@ async function emitBaseGameReveals(room) {
     next = gi.getNextReveal();
   }
 
-  // Send all reveals at once, then move to voting (or scoring if no voting)
+  // Send all reveals at once, then auto-tally after a brief viewing period
   io.to(room.roomCode).emit('bg-reveals', {
     reveals,
-    state: gi.state,
-    timeLimit: gi.votingTime,
+    state: 'REVEAL',
+    timeLimit: 0,
   });
 
-  // If game auto-skipped voting (e.g. snap-decision with votingTime=0)
+  // If game auto-skipped to scoring (e.g. snap-decision)
   if (gi.state === 'ROUND_END' || gi.state === 'GAME_OVER' || gi.state === 'SCORING') {
-    // Some games handle scoring internally (snap-decision)
     io.to(room.roomCode).emit('bg-round-end', {
       state: gi.state,
       round: gi.round,
@@ -1404,6 +1864,11 @@ async function emitBaseGameReveals(room) {
       leaderboard: gi.getScores(),
       gameOver: gi.state === 'GAME_OVER',
     });
+  } else {
+    // Brief delay for players to see reveals, then auto-tally
+    setTimeout(() => {
+      tallyBaseGameScores(room);
+    }, 5000);
   }
 }
 
@@ -1418,6 +1883,7 @@ async function tallyBaseGameScores(room) {
     roundScores: result.roundScores,
     leaderboard: result.leaderboard,
     bellbotSays: result.bellbotSays,
+    prompt: result.prompt,
     gameOver: result.gameOver,
   });
 }

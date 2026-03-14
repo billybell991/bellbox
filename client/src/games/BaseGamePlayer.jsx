@@ -21,7 +21,12 @@ function TextSubmission({ prompt, onSubmit, disabled }) {
     <div className="bg-submission bg-submission--text">
       <div className="bg-prompt-card">
         {prompt?.instruction && <div className="bg-instruction">{prompt.instruction}</div>}
-        <div className="bg-prompt-text">{prompt?.text || prompt?.question || ''}</div>
+        {prompt?.imageUrl && (
+          <img className="bg-prompt-image" src={prompt.imageUrl} alt="Caption this!" />
+        )}
+        {(!prompt?.imageUrl) && (
+          <div className="bg-prompt-text">{prompt?.text || prompt?.question || ''}</div>
+        )}
         {prompt?.job && <div className="bg-prompt-job">Position: {prompt.job}</div>}
       </div>
       <div className="bg-input-area">
@@ -34,10 +39,17 @@ function TextSubmission({ prompt, onSubmit, disabled }) {
           placeholder="Type your answer..."
           maxLength={500}
           disabled={disabled}
-          rows={3}
+          rows={2}
         />
-        <button className="bg-submit-btn" onClick={handleSubmit} disabled={disabled || !text.trim()}>
-          Submit ✨
+        <button
+          className={`bg-send-btn ${text.trim() ? 'active' : ''}`}
+          onClick={handleSubmit}
+          disabled={disabled || !text.trim()}
+          aria-label="Send"
+        >
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
         </button>
       </div>
     </div>
@@ -85,8 +97,15 @@ function AudioSubmission({ prompt, onSubmit, disabled, socket }) {
               placeholder="Type your performance..."
               maxLength={300}
             />
-            <button className="bg-submit-btn bg-submit-btn--small" onClick={handleTextFallback} disabled={!text.trim()}>
-              Send
+            <button
+              className={`bg-send-btn ${text.trim() ? 'active' : ''}`}
+              onClick={handleTextFallback}
+              disabled={!text.trim()}
+              aria-label="Send"
+            >
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -127,8 +146,9 @@ function SnapSubmission({ prompt, onSubmit, disabled }) {
 function AIDlibsSubmission({ prompt, onSubmit, disabled }) {
   const blanks = prompt?.blanks || [];
   const [answers, setAnswers] = useState({});
+  const firstRef = useRef(null);
 
-  useEffect(() => { setAnswers({}); }, [prompt]);
+  useEffect(() => { setAnswers({}); firstRef.current?.focus(); }, [prompt]);
 
   const update = (key, val) => setAnswers(prev => ({ ...prev, [key]: val }));
   const allFilled = blanks.every(b => answers[b]?.trim());
@@ -143,10 +163,11 @@ function AIDlibsSubmission({ prompt, onSubmit, disabled }) {
         <div className="bg-instruction">{prompt?.instruction || 'Fill in the blanks!'}</div>
       </div>
       <div className="bg-dlibs-blanks">
-        {blanks.map(blank => (
+        {blanks.map((blank, i) => (
           <div key={blank} className="bg-dlib-field">
             <label className="bg-dlib-label">{blank.replace(/_/g, ' ')}</label>
             <input
+              ref={i === 0 ? firstRef : undefined}
               className="bg-dlib-input"
               value={answers[blank] || ''}
               onChange={e => update(blank, e.target.value)}
@@ -157,8 +178,15 @@ function AIDlibsSubmission({ prompt, onSubmit, disabled }) {
           </div>
         ))}
       </div>
-      <button className="bg-submit-btn" onClick={handleSubmit} disabled={disabled || !allFilled}>
-        Submit 📝
+      <button
+        className={`bg-send-btn bg-send-btn--form ${allFilled ? 'active' : ''}`}
+        onClick={handleSubmit}
+        disabled={disabled || !allFilled}
+        aria-label="Submit"
+      >
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
       </button>
     </div>
   );
@@ -210,8 +238,9 @@ function VotePanel({ reveals, myId, onVote, voted }) {
 
 // ── Main Component ────────────────────────────────────────────
 
-export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onReturn }) {
-  const [phase, setPhase] = useState('WAITING');
+export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onReturn, onRestartSame }) {
+  const [phase, setPhase] = useState('PREPARING');
+  const [preparingMessage, setPreparingMessage] = useState('Generating round...');
   const [round, setRound] = useState(0);
   const [totalRounds, setTotalRounds] = useState(4);
   const [prompt, setPrompt] = useState(null);
@@ -229,6 +258,11 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
 
   useEffect(() => {
     // ── Round start ─────────────────────────────
+    const onPreparing = (data) => {
+      setPhase('PREPARING');
+      setPreparingMessage(data?.message || 'Getting things ready...');
+    };
+
     const onRoundStart = (data) => {
       setPhase('SUBMISSION');
       setRound(data.round);
@@ -280,10 +314,12 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
       setScores(data.leaderboard || []);
       setBellbotSays(data.bellbotSays || '');
       setCorrectAnswer(data.correctAnswer || null);
+      if (data.prompt) setPrompt(data.prompt);
       setGameOver(data.gameOver);
       setPhase(data.gameOver ? 'GAME_OVER' : 'ROUND_END');
     };
 
+    socket.on('bg-preparing', onPreparing);
     socket.on('bg-round-start', onRoundStart);
     socket.on('bg-submission-update', onSubmissionUpdate);
     socket.on('bg-reveal-start', onRevealStart);
@@ -292,6 +328,7 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
     socket.on('bg-round-end', onRoundEnd);
 
     return () => {
+      socket.off('bg-preparing', onPreparing);
       socket.off('bg-round-start', onRoundStart);
       socket.off('bg-submission-update', onSubmissionUpdate);
       socket.off('bg-reveal-start', onRevealStart);
@@ -349,6 +386,7 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
       gameEmoji={gameInfo?.emoji || '🎮'}
       bellbotSays={bellbotSays}
       onReturn={gameOver ? handleReturnToLobby : handleNextRound}
+      onRestartSame={gameOver ? onRestartSame : undefined}
       isHost={isHost}
       round={round}
       totalRounds={totalRounds}
@@ -359,6 +397,8 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
       roundScores={roundScores}
       gameOver={gameOver}
       winner={winner}
+      prompt={prompt}
+      preparingMessage={preparingMessage}
       renderSubmission={() => (
         <div className="bg-game-area">
           {/* Submission count */}
@@ -368,8 +408,10 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
 
           {submitted ? (
             <div className="bg-waiting">
-              <div className="bg-waiting-emoji">✅</div>
-              <div className="bg-waiting-text">Submitted! Waiting for others...</div>
+              <div className="bg-waiting-text">
+                Answer submitted! Waiting on others
+                <span className="bg-waiting-dots"><span></span><span></span><span></span></span>
+              </div>
             </div>
           ) : isSnapGame ? (
             <SnapSubmission prompt={prompt} onSubmit={handleSubmit} disabled={submitted} />
@@ -384,6 +426,11 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
       )}
       renderReveal={() => (
         <div className="bg-reveal-area">
+          {prompt?.imageUrl && (
+            <div className="bg-reveal-image">
+              <img src={prompt.imageUrl} alt="Round prompt" className="bg-prompt-img" />
+            </div>
+          )}
           <h3 className="bg-section-title">📢 Submissions</h3>
           {reveals.map((r, i) => <RevealCard key={r.playerId || i} reveal={r} />)}
         </div>

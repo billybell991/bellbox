@@ -63,21 +63,29 @@ function Leaderboard({ scores, compact }) {
 }
 
 // ── Round Scores ────────────────────────────────────────────
-function RoundScoreboard({ roundScores }) {
+function RoundScoreboard({ roundScores, prompt }) {
   if (!roundScores?.length) return null;
+  const winner = roundScores[0];
   return (
     <div className="gs-round-scores">
       <h3>Round Results</h3>
+      {/* Show prompt image + winning caption */}
+      {prompt?.imageUrl && (
+        <div className="gs-winner-showcase">
+          <img src={prompt.imageUrl} alt="Round prompt" className="gs-winner-img" />
+          {winner?.submission && (
+            <div className="gs-winner-caption">
+              <span className="gs-winner-label">👑 {winner.name}:</span> "{winner.submission}"
+            </div>
+          )}
+        </div>
+      )}
       {roundScores.map((s, i) => (
         <div key={s.id || i} className="gs-round-score-row">
           <span className="gs-rank">{i === 0 ? '👑' : `${i + 1}.`}</span>
           <span className="gs-name">{s.name}</span>
-          <div className="gs-score-breakdown">
-            <span className="gs-ai-score" title="AI Score">🤖 {s.aiScore}</span>
-            <span className="gs-vote-score" title="Vote Score">👥 {s.voteScore}</span>
-            <span className="gs-total">= {s.roundTotal}</span>
-          </div>
-          {s.aiComment && <div className="gs-ai-comment">"{s.aiComment}"</div>}
+          {s.aiComment && <span className="gs-ai-comment">"{s.aiComment}"</span>}
+          <span className="gs-ai-score" title="SassBot Score">🤖 {s.aiScore}</span>
         </div>
       ))}
     </div>
@@ -112,6 +120,7 @@ export default function GameShell({
   bellbotSkin = '🤖',
   bellbotSays = '',
   onReturn,
+  onRestartSame,
   isHost,
   round = 0,
   totalRounds = 4,
@@ -130,6 +139,8 @@ export default function GameShell({
   roundScores = [],
   gameOver = false,
   winner = null,
+  prompt = null,
+  preparingMessage = 'Getting things ready...',
 }) {
   const phase = gameState?.state || gameState?.phase || 'WAITING';
 
@@ -154,15 +165,23 @@ export default function GameShell({
         <GameTimer seconds={timeLimit} onExpire={onTimeExpire} label={timerLabel} />
       )}
 
-      {/* Compact leaderboard during play */}
-      {phase !== 'GAME_OVER' && scores.length > 0 && (
-        <Leaderboard scores={scores} compact />
-      )}
+      {/* Leaderboard only shown at round-end and game-over */}
 
       {/* Main content area */}
       <div className="gs-content">
         {renderCustom ? renderCustom() : (
           <>
+            {/* Preparing Phase — show spinner, keep scores visible */}
+            {phase === 'PREPARING' && (
+              <div className="gs-scoring">
+                <RoundScoreboard roundScores={roundScores} prompt={prompt} />
+                <div className="bg-waiting">
+                  <div className="bg-waiting-emoji"><span className="bg-spinner">⏳</span></div>
+                  <div className="bg-waiting-text">{preparingMessage}</div>
+                </div>
+              </div>
+            )}
+
             {/* Submission Phase */}
             {phase === 'SUBMISSION' && renderSubmission && renderSubmission()}
 
@@ -175,13 +194,11 @@ export default function GameShell({
             {/* Scoring Phase / Round End */}
             {(phase === 'SCORING' || phase === 'ROUND_END') && (
               <div className="gs-scoring">
-                <RoundScoreboard roundScores={roundScores} />
+                <RoundScoreboard roundScores={roundScores} prompt={prompt} />
                 {renderScoring && renderScoring()}
-                {isHost && (
-                  <button className="button button--primary gs-next-btn" onClick={onReturn}>
-                    {round >= totalRounds ? '🏆 Final Scores' : '➡️ Next Round'}
-                  </button>
-                )}
+                <button className="button button--primary gs-next-btn" onClick={onReturn}>
+                  {round >= totalRounds ? 'Final Scores' : 'Next Round'}
+                </button>
               </div>
             )}
 
@@ -193,9 +210,16 @@ export default function GameShell({
                 <div className="gs-winner-score">{winner?.score || 0} points</div>
                 <Leaderboard scores={scores} />
                 {isHost && (
-                  <button className="button button--primary gs-back-btn" onClick={onReturn}>
-                    🎉 Back to Party!
-                  </button>
+                  <div className="game-over-buttons">
+                    {onRestartSame && (
+                      <button className="button button--primary gs-back-btn" onClick={onRestartSame}>
+                        🔄 Play Again
+                      </button>
+                    )}
+                    <button className="button button--primary gs-back-btn" onClick={onReturn}>
+                      🎉 Back to Party!
+                    </button>
+                  </div>
                 )}
               </div>
             )}

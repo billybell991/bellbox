@@ -303,7 +303,7 @@ export class TriviaGame {
       playerName: player.name,
       state: this.state,
       gameState: this.state !== 'LOBBY' ? {
-        phase: this.state.toLowerCase(),
+        phase: this.state === 'QUESTION' ? 'spinning' : this.state.toLowerCase(),
         activePlayerId: this.getActivePlayerId(),
         scores: this.getScores(),
         pawStamps: this.getAllPawStamps(),

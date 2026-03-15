@@ -41,7 +41,7 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
   const [answerResult, setAnswerResult] = useState(null); // { correct, correctIndex, funFact, stampEarned }
   const [timeLeft, setTimeLeft] = useState(20);
   const [loading, setLoading] = useState(false);
-  const [currentSegment, setCurrentSegment] = useState(null);
+  const [currentSegment, setCurrentSegment] = useState(gameState?.currentSegment || null);
 
 
   const timerRef = useRef(null);
@@ -59,6 +59,8 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
       setCurrentSegment({ ...segment, categoryId });
       // Animate wheel for all players
       wheelRef.current?.spinTo(segmentIndex);
+      // After wheel animation, show loading for ALL players
+      setTimeout(() => setLoading(true), 3800);
     };
 
     const onQuestionShow = ({ question: q, options: opts, timeLimit, activePlayerId: apId }) => {
@@ -102,6 +104,7 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
           setSelectedAnswer(null);
           setAnswerResult(null);
           setCurrentSegment(null);
+          setLoading(false);
         }, state === 'SPINNING' && answerResult ? 2500 : 100);
       }
     };
@@ -202,10 +205,12 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
         <div className="wheel-area">
           <Wheel ref={wheelRef} disabled={!isMyTurn} onTap={handleSpin} segments={wheelSegments} />
           {isMyTurn ? (
-            <div className="tap-to-spin-text">Tap the wheel to spin!</div>
+            !loading && <div className="tap-to-spin-text">Tap the wheel to spin!</div>
           ) : (
-            <div className="waiting-spin-text">
-              Waiting for {getActivePlayerName()} to spin...
+            !loading && <div className="waiting-spin-text">
+              {currentSegment
+                ? `${getActivePlayerName()} is answering...`
+                : `Waiting for ${getActivePlayerName()} to spin...`}
             </div>
           )}
         </div>
@@ -225,7 +230,7 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
           <div style={{ marginTop: 8 }}>
           <GusMascot size={48} variant="thinking" className="gus-icon-img" />
             <p style={{ color: 'var(--text-light)', fontWeight: 600, marginTop: 4 }}>
-              Gus is fetching your question
+              {isMyTurn ? 'Gus is fetching your question' : `Gus is fetching a question for ${getActivePlayerName()}`}
               <span className="loading-dots">
                 <span></span><span></span><span></span>
               </span>

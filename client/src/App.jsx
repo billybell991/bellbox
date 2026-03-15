@@ -86,16 +86,16 @@ export default function App() {
         if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
         if (res.aiBots !== undefined) setAiBots(res.aiBots);
 
-        if (res.state === 'IN_GAME' && res.activeGame) {
+        if (res.state === 'IN_GAME' && res.activeGame && res.gameState) {
           // Restore game-specific state
           if (res.activeGame === 'nerds-against-humanity') {
-            if (res.gameState) setNahGameState(res.gameState);
+            setNahGameState(res.gameState);
             setScreen('nah-game');
           } else if (res.activeGame === 'meme-melee') {
-            if (res.gameState) setNahGameState(res.gameState);
+            setNahGameState(res.gameState);
             setScreen('meme-melee-game');
           } else if (res.activeGame === 'trivia-fetch') {
-            if (res.gameState) setTriviaGameState(res.gameState);
+            setTriviaGameState(res.gameState);
             setScreen('trivia-game');
           } else {
             const info = (res.games || []).find(g => g.id === res.activeGame);

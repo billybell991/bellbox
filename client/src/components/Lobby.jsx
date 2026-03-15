@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import socket from '../socket';
 
 const SPICE_LEVELS = [
@@ -114,6 +114,7 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch, spiceLevel,
   const [preLaunchGame, setPreLaunchGame] = useState(null);
   const [selectedPacks, setSelectedPacks] = useState([]);
   const [selectedTriviaCats, setSelectedTriviaCats] = useState([]);
+  const [triviaCatsOpen, setTriviaCatsOpen] = useState(false);
 
   const toggle = (cat) => setCollapsed(prev => {
     const wasCollapsed = prev[cat];
@@ -243,10 +244,16 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch, spiceLevel,
         <div className="game-info-overlay" onClick={() => setPreLaunchGame(null)}>
           <div className="prelaunch-modal pop-in" onClick={(e) => e.stopPropagation()}>
             <div className="prelaunch-header">
-              <span className="prelaunch-emoji">{preLaunchGame.emoji}</span>
+              {preLaunchGame.id === 'trivia-fetch' ? (
+                <img src="/images/gus-mascot.png" alt="Gus" className="prelaunch-gus" />
+              ) : (
+                <span className="prelaunch-emoji">{preLaunchGame.emoji}</span>
+              )}
               <h2 className="prelaunch-title">{preLaunchGame.name}</h2>
+              {preLaunchGame.id === 'trivia-fetch' && (
+                <div className="prelaunch-subtitle">Gus is ready to play! 🐾</div>
+              )}
             </div>
-
             {/* ── Spice-O-Meter (spicy games only) ── */}
             {preLaunchGame.spicy && (
               <div className="prelaunch-section">
@@ -275,43 +282,6 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch, spiceLevel,
                 <div className="spice-description" style={{ color: (SPICE_LEVELS.find(s => s.level === spiceLevel) || SPICE_LEVELS[1]).color }}>
                   {(SPICE_LEVELS.find(s => s.level === spiceLevel) || SPICE_LEVELS[1]).emoji}{' '}
                   {(SPICE_LEVELS.find(s => s.level === spiceLevel) || SPICE_LEVELS[1]).description}
-                </div>
-              </div>
-            )}
-
-            {/* ── Trivia Category Picker ── */}
-            {preLaunchGame.triviaCategories && (
-              <div className="prelaunch-section">
-                <h3>🎯 Pick 6 Categories</h3>
-                <div className="trivia-cat-grid">
-                  {preLaunchGame.triviaCategories.map((cat, i) => {
-                    const isSelected = selectedTriviaCats.includes(cat.id);
-                    const isDefault = (preLaunchGame.defaultCategories || []).includes(cat.id);
-                    return (
-                      <button
-                        key={cat.id}
-                        className={`trivia-cat-chip ${isSelected ? 'active' : ''}`}
-                        style={isSelected ? { borderColor: cat.color, background: `${cat.color}22` } : {}}
-                        onClick={() => {
-                          setSelectedTriviaCats(prev => {
-                            if (prev.includes(cat.id)) {
-                              if (prev.length <= 1) return prev;
-                              return prev.filter(c => c !== cat.id);
-                            }
-                            if (prev.length >= 6) return prev;
-                            return [...prev, cat.id];
-                          });
-                        }}
-                      >
-                        <span className="trivia-cat-emoji">{cat.emoji}</span>
-                        <span className="trivia-cat-name">{cat.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="topic-hint">
-                  {selectedTriviaCats.length}/6 selected
-                  {selectedTriviaCats.length < 6 && ` — pick ${6 - selectedTriviaCats.length} more`}
                 </div>
               </div>
             )}
@@ -372,22 +342,84 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch, spiceLevel,
               </div>
             )}
 
-            <button
-              className="prelaunch-go-btn"
-              disabled={preLaunchGame.triviaCategories && selectedTriviaCats.length !== 6}
-              onClick={() => {
-                if (preLaunchGame.triviaCategories) {
-                  onLaunch(preLaunchGame.id, { selectedCategories: selectedTriviaCats });
-                } else {
-                  onLaunch(preLaunchGame.id, { selectedTopics: selectedPacks });
-                }
-                setPreLaunchGame(null);
-              }}
-            >
-              {preLaunchGame.id === 'trivia-fetch' ? '🎾 Throw the Ball!' : '🚀 Launch!'}
-            </button>
-            <div className="game-info-dismiss" onClick={() => setPreLaunchGame(null)}>
-              tap outside to cancel
+            <div className="prelaunch-actions">
+              <button
+                className="prelaunch-go-btn"
+                disabled={preLaunchGame.triviaCategories && selectedTriviaCats.length !== 6}
+                onClick={() => {
+                  if (preLaunchGame.triviaCategories) {
+                    onLaunch(preLaunchGame.id, { selectedCategories: selectedTriviaCats });
+                  } else {
+                    onLaunch(preLaunchGame.id, { selectedTopics: selectedPacks });
+                  }
+                  setPreLaunchGame(null);
+                  setTriviaCatsOpen(false);
+                }}
+              >
+                {preLaunchGame.id === 'trivia-fetch' ? '🎾 Throw the Ball!' : '🚀 Launch!'}
+              </button>
+
+              {/* ── Trivia Category Picker (collapsible) ── */}
+              {preLaunchGame.triviaCategories && (
+                <>
+                  <button
+                    className={`prelaunch-customize-btn ${triviaCatsOpen ? 'open' : ''}`}
+                    onClick={() => setTriviaCatsOpen(prev => !prev)}
+                  >
+                    🎯 Customize Categories
+                    <span className="prelaunch-customize-chevron">{triviaCatsOpen ? '▴' : '▾'}</span>
+                  </button>
+
+                  {triviaCatsOpen && (
+                    <div className="prelaunch-section trivia-cats-drawer">
+                      <div className="trivia-cat-grid">
+                        {preLaunchGame.triviaCategories.map((cat) => {
+                          const isSelected = selectedTriviaCats.includes(cat.id);
+                          return (
+                            <button
+                              key={cat.id}
+                              className={`trivia-cat-chip ${isSelected ? 'active' : ''}`}
+                              style={isSelected ? { borderColor: cat.color, background: `${cat.color}22` } : {}}
+                              onClick={() => {
+                                setSelectedTriviaCats(prev => {
+                                  if (prev.includes(cat.id)) {
+                                    if (prev.length <= 1) return prev;
+                                    return prev.filter(c => c !== cat.id);
+                                  }
+                                  if (prev.length >= 6) return prev;
+                                  return [...prev, cat.id];
+                                });
+                              }}
+                            >
+                              <span className="trivia-cat-emoji">{cat.emoji}</span>
+                              <span className="trivia-cat-name">{cat.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="topic-hint">
+                        {selectedTriviaCats.length}/6 selected
+                        {selectedTriviaCats.length < 6 && ` — pick ${6 - selectedTriviaCats.length} more`}
+                      </div>
+                      {selectedTriviaCats.length === 6 && (
+                        <button
+                          className="prelaunch-lock-btn"
+                          onClick={() => setTriviaCatsOpen(false)}
+                        >
+                          🐾 Lock It In!
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              <button
+                className="prelaunch-cancel-btn"
+                onClick={() => { setPreLaunchGame(null); setTriviaCatsOpen(false); }}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

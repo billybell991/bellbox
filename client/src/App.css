@@ -1261,6 +1261,8 @@ h1, h2, h3 {
 
 .prelaunch-header {
   margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .prelaunch-emoji {
@@ -1269,11 +1271,30 @@ h1, h2, h3 {
   margin-bottom: 4px;
 }
 
+.prelaunch-gus {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 4px;
+  mix-blend-mode: lighten;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+}
+
 .prelaunch-title {
   font-family: var(--font-heading);
   color: var(--cream);
   font-size: 1.3rem;
   margin: 0;
+  text-shadow: 0 0 12px rgba(33, 255, 178, 0.3);
+}
+
+.prelaunch-subtitle {
+  font-family: var(--font-body);
+  color: rgba(255,255,255,0.5);
+  font-size: 0.85rem;
+  margin-top: 4px;
+  font-style: italic;
 }
 
 .prelaunch-section {
@@ -1298,9 +1319,11 @@ h1, h2, h3 {
   font-family: var(--font-heading);
   font-size: 1.1rem;
   font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 4px 16px rgba(33, 255, 178, 0.3);
+  box-shadow: 0 4px 16px rgba(33, 255, 178, 0.3), 0 0 20px rgba(33, 255, 178, 0.15);
 }
 
 .prelaunch-go-btn:hover {
@@ -1317,6 +1340,104 @@ h1, h2, h3 {
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+.prelaunch-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.prelaunch-cancel-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: transparent;
+  color: rgba(255,255,255,0.45);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.prelaunch-cancel-btn:hover {
+  border-color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.7);
+}
+
+.prelaunch-customize-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  color: var(--cream);
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+}
+.prelaunch-customize-btn:hover {
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.08);
+}
+.prelaunch-customize-btn.open {
+  border-color: var(--aqua);
+  background: rgba(33, 255, 178, 0.08);
+}
+.prelaunch-customize-chevron {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.trivia-cats-drawer {
+  animation: slideDown 0.25s ease-out;
+  margin-bottom: 0;
+  background: rgba(10, 5, 25, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; max-height: 0; transform: translateY(-8px); }
+  to   { opacity: 1; max-height: 600px; transform: translateY(0); }
+}
+
+.prelaunch-lock-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--yellow), #ffb300);
+  color: #111;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 16px rgba(255, 224, 47, 0.3), 0 0 20px rgba(255, 224, 47, 0.15);
+  animation: fadeIn 0.2s ease-out;
+}
+.prelaunch-lock-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 24px rgba(255, 224, 47, 0.4);
+}
+.prelaunch-lock-btn:active {
+  transform: scale(0.98);
 }
 
 /* ── Trivia Category Picker ──────────────────────────── */

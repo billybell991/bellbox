@@ -106,7 +106,7 @@ export class SmallClaimsGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players present their case in a ridiculous small claims court. Write your most compelling (absurd) legal argument.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE absurd small claims court case description. Something petty, ridiculous, but oddly relatable.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE absurd small claims court case description. Something petty, ridiculous, but oddly relatable.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'case', instruction: 'Present your case to the court! Demand justice! ⚖️ You can type or record your argument.' };

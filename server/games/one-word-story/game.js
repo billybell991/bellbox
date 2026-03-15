@@ -57,7 +57,7 @@ export class OneWordStoryGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players build a story going around in a circle, each adding ONE word. The theme sets the scene.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE story theme/setting in 3-5 words.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE story theme/setting in 3-5 words.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) {

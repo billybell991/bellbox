@@ -120,7 +120,7 @@ export class CaptionThisGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players write funny captions for absurd image descriptions.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE vivid, funny image description that players will write captions for. Make it visual and specific. Something you could imagine as a photo or painting.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE vivid, funny image description that players will write captions for. Make it visual and specific. Something you could imagine as a photo or painting.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) sceneDesc = prompts[0];

@@ -46,7 +46,7 @@ export class BadInfluenceGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players give the WORST possible advice for a situation. The most hilariously terrible advice wins.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE situation where someone needs advice. Players will give the worst advice possible.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE situation where someone needs advice. Players will give the worst advice possible.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'bad-advice', instruction: 'Give the WORST advice possible! 😈' };

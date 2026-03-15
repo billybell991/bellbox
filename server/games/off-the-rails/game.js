@@ -106,7 +106,7 @@ export class OffTheRailsGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players continue a story from where it leaves off, taking it in the wildest direction possible.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE intriguing story opening (2-3 sentences) that ends on a cliffhanger or open-ended moment. Players will write what happens next. End the opening with "..." to invite continuation.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE intriguing story opening (2-3 sentences) that ends on a cliffhanger or open-ended moment. Players will write what happens next. End the opening with "..." to invite continuation.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'story-continue', instruction: 'Continue the story! Take it OFF THE RAILS! 🚂💥' };

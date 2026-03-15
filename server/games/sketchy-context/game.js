@@ -106,7 +106,7 @@ export class SketchyContextGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players explain what\'s REALLY happening in an absurd out-of-context scene description. The most creative/funny explanation wins.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE vivid description of an absurd, out-of-context scene (what you might see in a weird stock photo). Players will write what's "really" happening.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE vivid description of an absurd, out-of-context scene (what you might see in a weird stock photo). Players will write what's "really" happening.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'scene', instruction: 'What\'s REALLY happening here? Give us context! 🔍' };

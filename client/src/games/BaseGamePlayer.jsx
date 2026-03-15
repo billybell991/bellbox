@@ -25,7 +25,7 @@ function TextSubmission({ prompt, onSubmit, disabled }) {
           <img className="bg-prompt-image" src={prompt.imageUrl} alt="Caption this!" />
         )}
         {(!prompt?.imageUrl) && (
-          <div className="bg-prompt-text">{prompt?.text || prompt?.question || ''}</div>
+          <div className={`bg-prompt-text ${prompt?.type === 'rebus' ? 'bg-prompt-text--rebus' : ''}`}>{prompt?.text || prompt?.question || ''}</div>
         )}
         {prompt?.job && <div className="bg-prompt-job">Position: {prompt.job}</div>}
       </div>
@@ -373,6 +373,9 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
   const isSnapGame = promptType === 'snap';
   const isDlibsGame = promptType === 'ai-dlibs';
 
+  // Custom BellBot skin for specific games
+  const bellbotSkin = gameInfo?.id === 'hieroglyphics' ? '/pharaoh.png' : '🤖';
+
   // ── Winner info ─────────────────────────────────────────────
   const winner = scores.length > 0 ? { name: scores[0].name, score: scores[0].score } : null;
 
@@ -385,6 +388,7 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
       gameName={gameInfo?.name || 'BellBox Game'}
       gameEmoji={gameInfo?.emoji || '🎮'}
       bellbotSays={bellbotSays}
+      bellbotSkin={bellbotSkin}
       onReturn={gameOver ? handleReturnToLobby : handleNextRound}
       onRestartSame={gameOver ? onRestartSame : undefined}
       isHost={isHost}
@@ -409,7 +413,7 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
           {submitted ? (
             <div className="bg-waiting">
               <div className="bg-waiting-text">
-                Answer submitted! Waiting on others
+                ✅ Answer locked in! ({submittedCount}/{players.length} submitted)
                 <span className="bg-waiting-dots"><span></span><span></span><span></span></span>
               </div>
             </div>
@@ -442,7 +446,10 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
         <div className="bg-scoring-extra">
           {correctAnswer && (
             <div className="bg-correct-answer">
-              ✅ Correct answer: <strong>{correctAnswer.toUpperCase()}</strong>
+              {prompt?.type === 'rebus' && prompt?.text && (
+                <div className="bg-rebus-answer-emojis">{prompt.text}</div>
+              )}
+              ✅ Correct answer: <strong>{correctAnswer}</strong>
             </div>
           )}
         </div>

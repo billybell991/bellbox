@@ -36,7 +36,7 @@ export class AIHostageGame extends BaseGame {
   async generatePrompt() {
     try {
       const raw = await getBellBotCommentary('generate_scenarios', {
-        instruction: `Create an AI hostage negotiation scenario. An AI has done something absurd and players must write the most creative negotiation/persuasion to resolve it. Spice level: ${this.spiceLevel}. Return JSON.`,
+        instruction: `Create an AI hostage negotiation scenario. An AI has done something absurd and players must write the most creative negotiation/persuasion to resolve it. Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Return JSON.`,
         jsonFormat: '{"demand": "what the AI has done", "objective": "what players must negotiate"}',
       }, this.spiceLevel);
       const result = parseBellBotJSON(raw);

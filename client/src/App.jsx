@@ -46,6 +46,10 @@ export default function App() {
   // AI Bots toggle
   const [aiBots, setAiBots] = useState(false);
 
+  // Topic Packs
+  const [topicPacks, setTopicPacks] = useState({});
+  const [selectedTopics, setSelectedTopics] = useState([]);
+
   // Trivia game state
   const [triviaGameState, setTriviaGameState] = useState(null);
   const [gusMessage, setGusMessage] = useState("Woof! I'm Gus, your host! Let's play! 🎾");
@@ -178,6 +182,10 @@ export default function App() {
       showToast('Back to the party! 🎉');
     });
 
+    socket.on('topics-updated', ({ selected }) => {
+      setSelectedTopics(selected);
+    });
+
     // ── NAH events ────────────────────────────────────────
     socket.on('new-round', (data) => {
       setNahGameState({
@@ -285,6 +293,7 @@ export default function App() {
       socket.off('game-over');
       socket.off('host-changed');
       socket.off('kicked');
+      socket.off('topics-updated');
     };
   }, [showToast]);
 
@@ -301,8 +310,13 @@ export default function App() {
       setChatMessages(res.chatMessages || []);
       if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
       if (res.aiBots !== undefined) setAiBots(res.aiBots);
+      if (res.selectedTopics) setSelectedTopics(res.selectedTopics);
       setScreen('lobby');
       socket.emit('get-themes', (t) => setNahThemes(t));
+      socket.emit('get-topic-packs', (t) => {
+        setTopicPacks(t.packs);
+        setSelectedTopics(t.selected);
+      });
     });
   };
 
@@ -318,6 +332,7 @@ export default function App() {
       setChatMessages(res.chatMessages || []);
       if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
       if (res.aiBots !== undefined) setAiBots(res.aiBots);
+      if (res.selectedTopics) setSelectedTopics(res.selectedTopics);
 
       if (res.state === 'IN_GAME' && res.activeGame) {
         if (res.activeGame === 'nerds-against-humanity') {
@@ -353,6 +368,15 @@ export default function App() {
     socket.emit('toggle-ai-bots', (res) => {
       if (res?.error) showToast(res.error);
     });
+  };
+
+  const handleToggleTopic = (topicId) => {
+    const next = selectedTopics.includes(topicId)
+      ? selectedTopics.filter(t => t !== topicId)
+      : [...selectedTopics, topicId];
+    if (next.length === 0) return; // must keep at least one
+    setSelectedTopics(next);
+    socket.emit('set-topics', { selected: next });
   };
 
   const handleLaunchGame = (gameId) => {
@@ -471,6 +495,10 @@ export default function App() {
           onSetSpice={handleSetSpice}
           aiBots={aiBots}
           onToggleAiBots={handleToggleAiBots}
+          theme={theme}
+          topicPacks={topicPacks}
+          selectedTopics={selectedTopics}
+          onToggleTopic={handleToggleTopic}
         />
       )}
 
@@ -584,6 +612,7 @@ export default function App() {
           onReturnToLobby={handleReturnToLobby}
           onLeave={handleLeave}
           showToast={showToast}
+          theme={theme}
         />
       )}
 

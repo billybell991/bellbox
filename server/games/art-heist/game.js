@@ -42,7 +42,7 @@ export class ArtHeistGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players write the most creative/funny description of a fictional stolen artwork. The best description wins — imagine you\'re writing a museum placard for the world\'s weirdest art.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE art theme/style constraint. Players will describe a fictional artwork within this theme.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE art theme/style constraint. Players will describe a fictional artwork within this theme.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'art-heist', instruction: 'Describe the stolen masterpiece! Be vivid and creative! 🎨🔍' };

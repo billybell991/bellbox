@@ -66,7 +66,7 @@ export class AIDlibsGame extends BaseGame {
     // Try AI-generated template
     try {
       const raw = await getBellBotCommentary('generate_scenarios', {
-        instruction: `Generate a funny Mad Libs-style story template with 5-7 blanks. Spice level: ${this.spiceLevel}. Use square brackets for blanks like [NOUN], [VERB], [ADJECTIVE] etc. Return JSON with "story" (the template string) and "blanks" (array of blank label strings).`,
+        instruction: `Generate a funny Mad Libs-style story template with 5-7 blanks. Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Use square brackets for blanks like [NOUN], [VERB], [ADJECTIVE] etc. Return JSON with "story" (the template string) and "blanks" (array of blank label strings).`,
         jsonFormat: '{"story": "...", "blanks": ["NOUN", "VERB", ...]}',
       }, this.spiceLevel);
       const template = parseBellBotJSON(raw);

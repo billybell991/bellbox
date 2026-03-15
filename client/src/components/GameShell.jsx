@@ -37,9 +37,12 @@ function GameTimer({ seconds, onExpire, label }) {
 // ── BellBot Commentary ──────────────────────────────────────
 function BellBotBubble({ message, skin }) {
   if (!message) return null;
+  const isImage = skin && (skin.startsWith('/') || skin.startsWith('http'));
   return (
     <div className="gs-bellbot">
-      <div className="gs-bellbot-avatar">{skin || '🤖'}</div>
+      <div className="gs-bellbot-avatar">
+        {isImage ? <img src={skin} alt="host" className="gs-bellbot-img" /> : (skin || '🤖')}
+      </div>
       <div className="gs-bellbot-bubble">{message}</div>
     </div>
   );
@@ -170,13 +173,20 @@ export default function GameShell({
       <div className="gs-content">
         {renderCustom ? renderCustom() : (
           <>
-            {/* Preparing Phase — show spinner, keep scores visible */}
+            {/* Preparing Phase — show progress bar, keep scores visible */}
             {phase === 'PREPARING' && (
               <div className="gs-scoring">
                 <RoundScoreboard roundScores={roundScores} prompt={prompt} />
-                <div className="bg-waiting">
-                  <div className="bg-waiting-emoji"><span className="bg-spinner">⏳</span></div>
-                  <div className="bg-waiting-text">{preparingMessage}</div>
+                <div className="gs-preparing">
+                  <div className="gs-preparing-icon">
+                    {bellbotSkin && (bellbotSkin.startsWith('/') || bellbotSkin.startsWith('http'))
+                      ? <img src={bellbotSkin} alt="" className="gs-preparing-avatar" />
+                      : <span className="gs-preparing-emoji">{bellbotSkin || '🤖'}</span>}
+                  </div>
+                  <div className="gs-preparing-text">{preparingMessage}</div>
+                  <div className="gs-preparing-track">
+                    <div className="gs-preparing-fill" key={preparingMessage} />
+                  </div>
                 </div>
               </div>
             )}

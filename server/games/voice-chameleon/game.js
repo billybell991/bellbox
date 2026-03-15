@@ -105,7 +105,7 @@ export class VoiceChameleonGame extends BaseGame {
   async generatePrompt() {
     try {
       const raw = await getBellBotCommentary('generate_scenarios', {
-        instruction: `Generate a voice acting challenge. Provide a character type/voice style and a funny line to deliver in that voice. Spice level: ${this.spiceLevel}. Return JSON.`,
+        instruction: `Generate a voice acting challenge. Provide a character type/voice style and a funny line to deliver in that voice. Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Return JSON.`,
         jsonFormat: '{"voice": "character description", "line": "the line to deliver"}',
       }, this.spiceLevel);
       const result = parseBellBotJSON(raw);

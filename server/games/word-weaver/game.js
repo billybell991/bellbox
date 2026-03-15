@@ -55,7 +55,7 @@ export class WordWeaverGame extends BaseGame {
         gameName: 'Word Weaver',
         count: 1,
         description: 'Generate a single secret word or short phrase (2-3 words max) that players must describe without being too obvious. Should be something common enough that people can write about it but specific enough that a faker would struggle.',
-        extra: `Spice level: ${this.spiceLevel}. Return just the word/phrase as the first element of a JSON array.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Return just the word/phrase as the first element of a JSON array.`,
       }, this.spiceLevel);
       const parsed = parseBellBotJSON(raw);
       if (parsed?.[0]) {

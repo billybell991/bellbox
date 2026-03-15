@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, onPlayAgain, onRestartSame, isHost, onLeave }) {
   const [selectedCards, setSelectedCards] = useState([]);
+  const [selectedJudge, setSelectedJudge] = useState(null);
   const [showScoreboard, setShowScoreboard] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const { phase, blackCard: memeCard, hand, cardCzar, roundNumber, players, scores, submissions, winner } = gameState;
@@ -9,20 +10,36 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
   const czarName = players?.find(p => p.id === cardCzar)?.name || 'Someone';
   const mySubmitted = players?.find(p => p.id === myId)?.hasSubmitted;
 
+  // Reset selections on phase/round change
+  useEffect(() => {
+    setSelectedCards([]);
+    setSelectedJudge(null);
+  }, [phase, roundNumber]);
+
   const toggleCard = (index) => {
     if (mySubmitted || isCzar) return;
-    setSelectedCards(prev => {
-      if (prev.includes(index)) return prev.filter(i => i !== index);
-      if (prev.length >= memeCard.pick) return [...prev.slice(1), index];
-      return [...prev, index];
-    });
-  };
-
-  const confirmSubmit = () => {
-    if (selectedCards.length === memeCard.pick) {
+    const pick = memeCard.pick;
+    if (pick === 1) {
+      // Two-tap: first tap highlights, second tap submits
+      if (selectedCards.includes(index)) {
+        onSubmit([index]);
+        setSelectedCards([]);
+      } else {
+        setSelectedCards([index]);
+      }
+      return;
+    }
+    // Pick 2+: if all picks selected and clicking a selected card, submit
+    if (selectedCards.includes(index) && selectedCards.length === pick) {
       onSubmit(selectedCards);
       setSelectedCards([]);
+      return;
     }
+    setSelectedCards(prev => {
+      if (prev.includes(index)) return prev.filter(i => i !== index);
+      if (prev.length >= pick) return [...prev.slice(1), index];
+      return [...prev, index];
+    });
   };
 
   const renderMemeCard = () => (
@@ -81,19 +98,15 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
               onClick={() => toggleCard(i)}
             >
               <span className="white-card-text">{card}</span>
-              {selectedCards.includes(i) && (
+              {selectedCards.includes(i) && memeCard.pick > 1 && (
                 <span className="card-order">{selectedCards.indexOf(i) + 1}</span>
+              )}
+              {selectedCards.includes(i) && (memeCard.pick === 1 || selectedCards.length === memeCard.pick) && !mySubmitted && (
+                <span className="tap-to-submit">tap to submit</span>
               )}
             </div>
           ))}
         </div>
-        {selectedCards.length === memeCard.pick && !mySubmitted && (
-          <div className="card-submit-bar">
-            <button className="card-submit-btn" onClick={confirmSubmit}>
-              Submit {memeCard.pick > 1 ? `${selectedCards.length} Captions` : 'Caption'} ✨
-            </button>
-          </div>
-        )}
       </div>
     );
   };
@@ -106,12 +119,23 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
           {submissions.map((sub, i) => (
             <div
               key={i}
-              className={`submission-card ${isCzar ? 'judgeable' : ''}`}
-              onClick={() => isCzar && onJudge(i)}
+              className={`submission-card ${isCzar ? 'judgeable' : ''} ${selectedJudge === i ? 'selected' : ''}`}
+              onClick={() => {
+                if (!isCzar) return;
+                if (selectedJudge === i) {
+                  onJudge(i);
+                  setSelectedJudge(null);
+                } else {
+                  setSelectedJudge(i);
+                }
+              }}
             >
               {sub.cards.map((card, j) => (
                 <div key={j} className="submission-white-card">{card}</div>
               ))}
+              {isCzar && selectedJudge === i && (
+                <span className="tap-to-submit">tap to pick this caption</span>
+              )}
             </div>
           ))}
         </div>

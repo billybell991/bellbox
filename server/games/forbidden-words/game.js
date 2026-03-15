@@ -88,7 +88,7 @@ export class ForbiddenWordsGame extends BaseGame {
         gameName: 'Forbidden Words',
         count: 1,
         description: 'Generate a target word/phrase and 4-5 forbidden words that players cannot use when describing it. The target should be guessable but challenging.',
-        extra: `Spice level: ${this.spiceLevel}. Return JSON: {"word": "target phrase", "forbidden": ["word1", "word2", "word3", "word4"]}`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Return JSON: {"word": "target phrase", "forbidden": ["word1", "word2", "word3", "word4"]}`,
       }, this.spiceLevel);
       const parsed = parseBellBotJSON(raw);
       if (parsed?.word && parsed?.forbidden?.length) {

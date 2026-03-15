@@ -2,14 +2,20 @@
 // Handles hosting commentary, submission judging, and content generation
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
-dotenv.config();
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, '.env') });
 
 let model = null;
 if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your-api-key-here') {
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' });
+    console.log('🤖 Gemini AI connected — dynamic questions enabled!');
   } catch { /* silent */ }
+} else {
+  console.log('⚠️ No Gemini API key — using fallback responses');
 }
 
 const SPICE_PERSONA = {

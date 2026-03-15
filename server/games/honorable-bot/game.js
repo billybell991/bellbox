@@ -106,7 +106,7 @@ export class HonorableBotGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players must argue FOR or AGAINST an absurd proposed law in front of the AI judge (BellBot). Write your most persuasive legal argument.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE absurd law/rule that could be debated. Make it specific and funny. Players will argue either FOR or AGAINST it.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE absurd law/rule that could be debated. Make it specific and funny. Players will argue either FOR or AGAINST it.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'law', instruction: 'Present your case, counselor! Argue FOR or AGAINST this law! ⚖️' };

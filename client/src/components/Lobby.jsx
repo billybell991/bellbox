@@ -13,6 +13,8 @@ export default function Lobby({
   nahThemes, nahSelectedThemes, onToggleTheme,
   spiceLevel, onSetSpice,
   aiBots, onToggleAiBots,
+  theme,
+  topicPacks, selectedTopics, onToggleTopic,
 }) {
   const currentSpice = SPICE_LEVELS.find(s => s.level === spiceLevel) || SPICE_LEVELS[1];
 
@@ -43,7 +45,9 @@ export default function Lobby({
               className={`player-chip ${p.isHost ? 'host' : ''}`}
               style={{ animationDelay: `${i * 0.1}s` }}
             >
-              <div className="chip-avatar">{p.name[0].toUpperCase()}</div>
+              <div className="chip-avatar">
+                <img src={`/images/avatars/${theme || 'party'}/avatar-${p.avatar || 1}.png`} alt={p.name} />
+              </div>
               <span className="chip-name">{p.name}</span>
               {p.isHost && <span className="host-crown">👑</span>}
             </div>
@@ -94,6 +98,30 @@ export default function Lobby({
         <div className="ai-bots-desc">
           {aiBots ? 'Bot players will fill out the group' : 'Add bot players to fill out the group'}
         </div>
+      </div>
+      )}
+
+      {/* ── Topic Packs (host only) ───────────────────────── */}
+      {isHost && topicPacks && Object.keys(topicPacks).length > 0 && (
+      <div className="topic-packs pop-in">
+        <h3>📦 Topic Packs</h3>
+        <div className="topic-grid">
+          {Object.values(topicPacks).map(pack => {
+            const isSelected = selectedTopics?.includes(pack.id);
+            return (
+              <button
+                key={pack.id}
+                className={`topic-chip ${isSelected ? 'active' : ''}`}
+                onClick={() => onToggleTopic(pack.id)}
+                title={pack.description}
+              >
+                <span className="topic-emoji">{pack.emoji}</span>
+                <span className="topic-name">{pack.name}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="topic-hint">Tap to toggle — games will use selected topics</div>
       </div>
       )}
 

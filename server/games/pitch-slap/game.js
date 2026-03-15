@@ -106,7 +106,7 @@ export class PitchSlapGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players create the funniest elevator pitch for an absurd product or business.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE product/business category or constraint. Players must pitch a product within this constraint. Make it specific enough to inspire creativity.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE product/business category or constraint. Players must pitch a product within this constraint. Make it specific enough to inspire creativity.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'pitch', instruction: 'Give your best 30-second elevator pitch!' };

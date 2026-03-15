@@ -104,7 +104,7 @@ export class AIInterviewGame extends BaseGame {
   async generatePrompt() {
     try {
       const raw = await getBellBotCommentary('generate_scenarios', {
-        instruction: `Generate a wacky job interview scenario. Include a ridiculous job title and ONE interview question. Spice level: ${this.spiceLevel}. The player will answer via voice recording or text. Return JSON.`,
+        instruction: `Generate a wacky job interview scenario. Include a ridiculous job title and ONE interview question. Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} The player will answer via voice recording or text. Return JSON.`,
         jsonFormat: '{"job": "job title", "question": "interview question"}',
       }, this.spiceLevel);
       const result = parseBellBotJSON(raw);

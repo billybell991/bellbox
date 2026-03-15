@@ -16,6 +16,7 @@ export default function PartyMenu({
   onReturnToLobby,
   onLeave,
   showToast,
+  theme,
 }) {
   const [open, setOpen] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
@@ -109,7 +110,9 @@ export default function PartyMenu({
             const isPlayerHost = p.isHost;
             return (
               <div key={p.id} className={`pm-player ${isPlayerHost ? 'pm-player--leader' : ''} ${isMe ? 'pm-player--me' : ''}`}>
-                <div className="pm-player-avatar">{p.name[0].toUpperCase()}</div>
+                <div className="pm-player-avatar">
+                  <img src={`/images/avatars/${theme || 'party'}/avatar-${p.avatar || 1}.png`} alt={p.name} />
+                </div>
                 <div className="pm-player-info">
                   <span className="pm-player-name">
                     {p.name}{isMe ? ' (you)' : ''}

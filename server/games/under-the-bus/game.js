@@ -106,7 +106,7 @@ export class UnderTheBusGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Something went wrong and everyone needs someone to blame. Players write their alibi/excuse explaining why it WASN\'T them and who they think did it.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE workplace/social disaster scenario. Something went wrong and needs a scapegoat.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE workplace/social disaster scenario. Something went wrong and needs a scapegoat.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'blame', instruction: 'Write your alibi! Why wasn\'t it you? Who do you blame? 🚌' };

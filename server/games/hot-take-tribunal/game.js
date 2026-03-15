@@ -117,7 +117,7 @@ export class HotTakeTribunalGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players must write the most persuasive defense of an absurd hot take.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE controversial/absurd hot take statement. Players will argue FOR this take. Make it debatable and funny.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE controversial/absurd hot take statement. Players will argue FOR this take. Make it debatable and funny.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'hot-take' };

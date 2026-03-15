@@ -107,7 +107,7 @@ export class SoundBitesGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players create the best sound effect (vocal performance) for an absurd situation. Record the most creative noise!',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE absurd scenario that players need to create a sound effect for. Think "what would X sound like?"`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE absurd scenario that players need to create a sound effect for. Think "what would X sound like?"`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'sound-bite', instruction: 'Make the sound! Record your best audio effect! 🔊' };

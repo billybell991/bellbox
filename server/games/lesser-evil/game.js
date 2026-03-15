@@ -103,7 +103,7 @@ export class LesserEvilGame extends BaseGame {
   async generatePrompt() {
     try {
       const raw = await getBellBotCommentary('generate_scenarios', {
-        instruction: `Generate ONE "would you rather" scenario with two equally terrible/absurd options. Spice level: ${this.spiceLevel} (1=family, 2=edgy, 3=unhinged). Format as a JSON object.`,
+        instruction: `Generate ONE "would you rather" scenario with two equally terrible/absurd options. Spice level: ${this.spiceLevel} (1=family, 2=edgy, 3=unhinged).${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Format as a JSON object.`,
         jsonFormat: '{"a": "option A", "b": "option B"}',
       }, this.spiceLevel);
       const choice = parseBellBotJSON(raw);

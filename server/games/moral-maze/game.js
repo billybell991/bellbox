@@ -106,7 +106,7 @@ export class MoralMazeGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players write their funniest/most creative solution to an absurd ethical dilemma.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE absurd ethical dilemma or moral question. It should be funny, specific, and have no obviously correct answer. Players will write their solution/reasoning.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE absurd ethical dilemma or moral question. It should be funny, specific, and have no obviously correct answer. Players will write their solution/reasoning.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'dilemma', instruction: 'What would you do? Explain your reasoning!' };

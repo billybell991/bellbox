@@ -13,6 +13,16 @@ import { themes as nahThemes } from './games/nerds-against-humanity/cards.js';
 import { MemeGameRoom } from './games/meme-melee/game.js';
 import { TriviaGame } from './games/trivia-fetch/game.js';
 import { CATEGORIES, WHEEL_SEGMENTS, getGusReaction } from './games/trivia-fetch/trivia.js';
+
+// ── Universal Topic Packs ─────────────────────────────────
+const TOPIC_PACKS = {
+  'standard':  { id: 'standard',  name: 'Standard Nerdy Filth', emoji: '🤓', description: 'The classic catch-all pack of horrible nerdery' },
+  'scifi':     { id: 'scifi',     name: 'Sci-Fi Smut',          emoji: '🚀', description: 'Boldly going where no filth has gone before' },
+  'fantasy':   { id: 'fantasy',   name: 'Fantasy Filth',        emoji: '🐉', description: 'Swords, sorcery, and deeply questionable choices' },
+  'nostalgia': { id: 'nostalgia', name: '90s/2000s Nostalgia',   emoji: '📼', description: 'A/S/L? The golden age of internet chaos' },
+  'horror':    { id: 'horror',    name: 'Horror & Gore',        emoji: '🔪', description: 'The only thing scarier than these cards is your browser history' },
+  'science':   { id: 'science',   name: 'Science & Tech',       emoji: '⚗️', description: 'When STEM majors drink too much' },
+};
 import { generateAllAssets, getMissingAssets } from './games/trivia-fetch/generate-assets.js';
 import { transcribeAudio, analyzeAudio, isAudioAvailable } from './gemini-audio.js';
 import { getBellBotCommentary, parseBellBotJSON } from './bellbot.js';
@@ -192,10 +202,11 @@ const GAMES = {
     minPlayers: 3, maxPlayers: 10, color: '#ff4081', category: 'Spark of Creation',
   },
   'hieroglyphics': {
-    id: 'hieroglyphics', name: 'Hieroglyphics', emoji: '🗿',
-    description: 'Describe something using only emojis. Can friends decode it?',
-    howToPlay: 'Get a word or phrase and describe it using ONLY emojis. Other players try to guess what you mean. More creative emoji combos earn bonus points!',
+    id: 'hieroglyphics', name: 'High-roglyphics', emoji: '🫅',
+    description: 'Decode emoji rebus puzzles! Pharaoh Punhotep demands answers!',
+    howToPlay: 'Each round, the AI creates an emoji rebus puzzle based on the topic packs your group picked. Type your best guess! The closer your answer, the more points you earn. Exact matches score big. Pharaoh Punhotep judges your wisdom!',
     minPlayers: 3, maxPlayers: 10, color: '#ff4081', category: 'Spark of Creation',
+    enabled: true,
   },
   'one-word-story': {
     id: 'one-word-story', name: 'One Word Story', emoji: '📖',
@@ -330,6 +341,8 @@ class BellBoxRoom {
     this.chatMessages = []; // { sender, text, timestamp }
     this.spiceLevel = 2; // 1=Family Fun, 2=Spicy, 3=Unhinged
     this.aiBots = false; // Whether AI opponents are enabled
+    this.nextAvatar = 1; // cycles 1-10 for avatar assignment
+    this.selectedTopics = Object.keys(TOPIC_PACKS); // all enabled by default
 
     this.addPlayer(hostId, hostName);
   }
@@ -338,7 +351,9 @@ class BellBoxRoom {
     if (this.players.has(socketId)) return { error: 'Already in room' };
     if (this.players.size >= 10) return { error: 'Room is full (max 10)' };
 
-    this.players.set(socketId, { name, playerId: playerId || null, vote: null });
+    const avatar = this.nextAvatar;
+    this.nextAvatar = (this.nextAvatar % 10) + 1;
+    this.players.set(socketId, { name, playerId: playerId || null, vote: null, avatar });
     this.playerOrder.push(socketId);
     if (playerId) this.playerIdMap.set(playerId, socketId);
     return { success: true };
@@ -505,6 +520,7 @@ class BellBoxRoom {
         name: p.name,
         isHost: id === this.hostId,
         vote: p.vote,
+        avatar: p.avatar,
       };
     });
   }
@@ -522,6 +538,7 @@ class BellBoxRoom {
       chatMessages: this.chatMessages.slice(-20),
       spiceLevel: this.spiceLevel,
       aiBots: this.aiBots,
+      selectedTopics: this.selectedTopics,
     };
 
     // Include game-specific state for reconnection
@@ -959,7 +976,7 @@ io.on('connection', (socket) => {
       io.to(room.roomCode).emit('game-launched', { game: gameId });
       io.to(room.roomCode).emit('bg-preparing', { message: 'Generating round...' });
 
-      const startResult = await room.gameInstance.startGame(room.spiceLevel);
+      const startResult = await room.gameInstance.startGame(room.spiceLevel, room.selectedTopics);
       if (startResult?.error) {
         room.state = 'LOBBY';
         room.activeGame = null;
@@ -1004,6 +1021,27 @@ io.on('connection', (socket) => {
 
   socket.on('get-themes', (callback) => {
     callback(nahThemes);
+  });
+
+  // ── Topic Packs ─────────────────────────────────────────
+  socket.on('get-topic-packs', (callback) => {
+    const room = getRoomByPlayer(socket.id);
+    callback({
+      packs: TOPIC_PACKS,
+      selected: room ? room.selectedTopics : Object.keys(TOPIC_PACKS),
+    });
+  });
+
+  socket.on('set-topics', ({ selected }, callback) => {
+    const room = getRoomByPlayer(socket.id);
+    if (!room) return callback?.({ error: 'Not in a room' });
+    if (socket.id !== room.hostId) return callback?.({ error: 'Only the host can change topics' });
+    if (!Array.isArray(selected) || selected.length === 0) return callback?.({ error: 'Select at least one topic' });
+    // Validate all are real topic IDs
+    room.selectedTopics = selected.filter(id => TOPIC_PACKS[id]);
+    if (room.selectedTopics.length === 0) room.selectedTopics = Object.keys(TOPIC_PACKS);
+    callback?.({ success: true, selected: room.selectedTopics });
+    socket.to(room.roomCode).emit('topics-updated', { selected: room.selectedTopics });
   });
 
   socket.on('submit-cards', ({ cardIndices }, callback) => {
@@ -1197,7 +1235,7 @@ io.on('connection', (socket) => {
       io.to(room.roomCode).emit('game-launched', { game: gameId });
       io.to(room.roomCode).emit('bg-preparing', { message: 'Generating round...' });
 
-      const startResult = await room.gameInstance.startGame(room.spiceLevel);
+      const startResult = await room.gameInstance.startGame(room.spiceLevel, room.selectedTopics);
       if (startResult?.error) {
         room.state = 'LOBBY';
         room.activeGame = null;
@@ -1730,12 +1768,13 @@ const BOT_RESPONSES = [
 async function generateBotAnswers(room, count = 2) {
   const gi = room.gameInstance;
   const promptText = typeof gi.currentPrompt === 'string' ? gi.currentPrompt : gi.currentPrompt?.text || gi.currentPrompt?.instruction || '';
+  const instruction = typeof gi.currentPrompt === 'object' ? gi.currentPrompt?.instruction || '' : '';
   if (!promptText) return null;
 
   try {
     const raw = await getBellBotCommentary('bot_answer', {
       gameName: gi.gameName || 'BellBox Game',
-      prompt: promptText,
+      prompt: instruction ? `${instruction}\n${promptText}` : promptText,
       count,
     }, gi.spiceLevel || 2);
     const answers = parseBellBotJSON(raw);
@@ -1865,8 +1904,9 @@ async function emitBaseGameReveals(room) {
       gameOver: gi.state === 'GAME_OVER',
     });
   } else {
-    // Brief delay for players to see reveals, then auto-tally
+    // Brief delay for players to see reveals, then tally
     setTimeout(() => {
+      io.to(room.roomCode).emit('bg-preparing', { message: 'Judging submissions...' });
       tallyBaseGameScores(room);
     }, 5000);
   }
@@ -1885,6 +1925,7 @@ async function tallyBaseGameScores(room) {
     bellbotSays: result.bellbotSays,
     prompt: result.prompt,
     gameOver: result.gameOver,
+    correctAnswer: result.correctAnswer || null,
   });
 }
 

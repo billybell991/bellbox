@@ -136,8 +136,9 @@ export class BaseGame {
    * Start the game. Override generatePrompt() for game-specific prompts.
    * Returns the initial state to broadcast.
    */
-  async startGame(spiceLevel = 2) {
+  async startGame(spiceLevel = 2, topics = []) {
     this.spiceLevel = spiceLevel;
+    this.topics = topics;
     this.round = 0;
     for (const [, p] of this.players) { p.score = 0; }
     return this.startNextRound();
@@ -182,7 +183,7 @@ export class BaseGame {
       round: this.round,
       totalRounds: this.totalRounds,
       prompt: this.currentPrompt,
-      bellbotSays: bellbotIntro,
+      bellbotSays: this.currentPrompt?.hostMessage || bellbotIntro,
       timeLimit: this.submissionTime,
       players: this.getPlayerList(),
       scores: this.getScores(),
@@ -406,6 +407,18 @@ export class BaseGame {
   }
 
   // ── Override Points (subclasses implement these) ──────────
+
+  /** Get a random topic hint from selected topics for prompt generation */
+  getTopicHint() {
+    if (!this.topics || this.topics.length === 0) return '';
+    const topic = this.topics[Math.floor(Math.random() * this.topics.length)];
+    const labels = {
+      'standard': 'nerdy filth', 'scifi': 'sci-fi & space',
+      'fantasy': 'fantasy & medieval', 'nostalgia': '90s/2000s nostalgia',
+      'horror': 'horror & gore', 'science': 'science & technology',
+    };
+    return labels[topic] || topic;
+  }
 
   /** Generate a prompt for the current round */
   async generatePrompt() {

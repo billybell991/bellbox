@@ -111,7 +111,7 @@ export class WrongAnswersOnlyGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players give the funniest WRONG answer to a real/serious question. The more creative and absurd the wrong answer, the better.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE real question (trivia, science, philosophy, or common knowledge) that has a known answer. Players will submit funny WRONG answers.`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE real question (trivia, science, philosophy, or common knowledge) that has a known answer. Players will submit funny WRONG answers.`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'wrong-answer', instruction: 'WRONG answers only! Be creative! 🚫' };

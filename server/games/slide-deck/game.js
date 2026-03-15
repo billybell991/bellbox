@@ -106,7 +106,7 @@ export class SlideDeckGame extends BaseGame {
         gameName: this.gameName,
         count: 1,
         description: 'Players each write ONE presentation slide (title + bullet points) for a ridiculous group presentation. The funniest/most creative slide wins.',
-        extra: `Spice level: ${this.spiceLevel}. Generate ONE absurd presentation topic. Players will each contribute one slide (title + 3 bullet points).`,
+        extra: `Spice level: ${this.spiceLevel}.${this.getTopicHint() ? ` Topic area: ${this.getTopicHint()}.` : ''} Generate ONE absurd presentation topic. Players will each contribute one slide (title + 3 bullet points).`,
       }, this.spiceLevel);
       const prompts = parseBellBotJSON(raw);
       if (prompts?.[0]) return { text: prompts[0], type: 'slide', instruction: 'Create ONE killer slide: title + 3 bullet points! 📊' };

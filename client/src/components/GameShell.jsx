@@ -25,11 +25,23 @@ function GameTimer({ seconds, onExpire, label }) {
 
   const pct = seconds > 0 ? (remaining / seconds) * 100 : 0;
   const urgent = remaining <= 5;
+  const warning = remaining <= 10 && !urgent;
+
+  const getBarColor = () => {
+    if (urgent) return '#f44336';
+    if (warning) return '#FFB347';
+    return '#21ffb2';
+  };
 
   return (
     <div className={`gs-timer ${urgent ? 'gs-timer--urgent' : ''}`}>
-      <div className="gs-timer-bar" style={{ width: `${pct}%` }} />
-      <span className="gs-timer-text">{label || ''} {remaining}s</span>
+      <div
+        className="gs-timer-bar"
+        style={{ width: `${pct}%`, background: getBarColor(), boxShadow: `0 0 10px ${getBarColor()}` }}
+      />
+      <span className="gs-timer-text">
+        {remaining > 0 ? `${label ? label + ' ' : ''}⏰ ${remaining}s` : "⏰ Time's up!"}
+      </span>
     </div>
   );
 }

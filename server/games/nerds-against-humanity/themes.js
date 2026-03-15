@@ -2,17 +2,17 @@
 
 export const themes = {
   standard: {
-    name: "Standard Nerdy Filth",
+    name: "Standard Nerdery",
     description: "The classic catch-all pack of horrible nerdery",
     icon: "🤓",
   },
   scifi: {
     name: "Sci-Fi Smut",
-    description: "Boldly going where no filth has gone before",
+    description: "Boldly going where no one has gone before",
     icon: "🚀",
   },
   fantasy: {
-    name: "Fantasy Filth",
+    name: "Fantasy & Fables",
     description: "Swords, sorcery, and deeply questionable choices",
     icon: "🐉",
   },
@@ -133,7 +133,7 @@ export const scifiWhiteCards = [
 ];
 
 // ============================================================
-// FANTASY FILTH
+// FANTASY & FABLES
 // ============================================================
 export const fantasyBlackCards = [
   { text: "The inscription on the One Ring actually reads: _____.", pick: 1 },

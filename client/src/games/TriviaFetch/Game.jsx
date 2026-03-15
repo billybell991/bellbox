@@ -1,32 +1,32 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Wheel from './Wheel';
 import GusMascot from './GusMascot';
 
-const CATEGORIES = [
-  { id: 'disney',      name: 'Disney',       emoji: '🏰', color: '#9B59B6' },
-  { id: 'harrypotter', name: 'Harry Potter',  emoji: '⚡', color: '#AE1438' },
-  { id: 'horror',      name: 'Horror',        emoji: '🎃', color: '#34495E' },
-  { id: 'animals',     name: 'Animals',       emoji: '🐾', color: '#27AE60' },
-  { id: 'tv',          name: 'TV Shows',      emoji: '📺', color: '#3498DB' },
-  { id: 'movies',      name: 'Movies',        emoji: '🎬', color: '#E67E22' },
-  { id: 'music',       name: 'Music',         emoji: '🎵', color: '#E91E63' },
-  { id: 'science',     name: 'Science',       emoji: '🔬', color: '#00BCD4' },
-];
-
-const SEGMENT_MAP = {
-  disney: { name: 'Disney', emoji: '🏰', color: '#9B59B6' },
-  harrypotter: { name: 'Harry Potter', emoji: '⚡', color: '#AE1438' },
-  horror: { name: 'Horror', emoji: '🎃', color: '#34495E' },
-  animals: { name: 'Animals', emoji: '🐾', color: '#27AE60' },
-  tv: { name: 'TV Shows', emoji: '📺', color: '#3498DB' },
-  movies: { name: 'Movies', emoji: '🎬', color: '#E67E22' },
-  music: { name: 'Music', emoji: '🎵', color: '#E91E63' },
-  science: { name: 'Science', emoji: '🔬', color: '#00BCD4' },
-  crown: { name: 'Crown Challenge', emoji: '👑', color: '#F1C40F' },
-  wild: { name: "Gus's Wild", emoji: '🐕', color: '#FF9800' },
-};
+// Category icon component — uses generated PNGs instead of emojis
+function CatIcon({ id, size = 24, className = '' }) {
+  const src = `/images/cat-${id}.png`;
+  return (
+    <img
+      src={src}
+      alt={id}
+      width={size}
+      height={size}
+      className={`cat-icon ${className}`}
+      style={{ display: 'inline-block', verticalAlign: 'middle', objectFit: 'contain' }}
+      onError={(e) => { e.target.style.display = 'none'; }}
+    />
+  );
+}
 
 export default function Game({ socket, playerName, roomCode, gameState, setGameState, gusMessage, showToast }) {
+  // Build categories + segment map from game state (sent by server)
+  const categories = useMemo(() => gameState?.categories || [], [gameState?.categories]);
+  const SEGMENT_MAP = useMemo(() => {
+    const map = {};
+    (categories || []).forEach(c => { map[c.id] = c; });
+    return map;
+  }, [categories]);
+  const wheelSegments = useMemo(() => [...categories], [categories]);
   const wheelRef = useRef(null);
   const [phase, setPhase] = useState(gameState?.phase || 'spinning');
   const [activePlayerId, setActivePlayerId] = useState(gameState?.activePlayerId || null);
@@ -43,8 +43,6 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
   const [loading, setLoading] = useState(false);
   const [currentSegment, setCurrentSegment] = useState(null);
 
-  // Stamp chooser
-  const [choosingStamp, setChoosingStamp] = useState(false);
 
   const timerRef = useRef(null);
   const isMyTurn = activePlayerId === socket.id;
@@ -93,12 +91,9 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
       if (typeof result.streakCount === 'number') setStreakCount(result.streakCount);
     };
 
-    const onTurnUpdate = ({ activePlayerId: apId, state, choosingStamp: cs }) => {
+    const onTurnUpdate = ({ activePlayerId: apId, state }) => {
       setActivePlayerId(apId);
-      if (cs) {
-        setChoosingStamp(true);
-        setPhase('choosing');
-      } else if (state === 'SPINNING' || state === 'spinning') {
+      if (state === 'SPINNING' || state === 'spinning') {
         // Brief delay before showing next spin
         setTimeout(() => {
           setPhase('spinning');
@@ -106,29 +101,21 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
           setOptions([]);
           setSelectedAnswer(null);
           setAnswerResult(null);
-          setChoosingStamp(false);
           setCurrentSegment(null);
         }, state === 'SPINNING' && answerResult ? 2500 : 100);
       }
-    };
-
-    const onStampChosen = ({ playerName: pn, stampEarned, pawStamps }) => {
-      setChoosingStamp(false);
-      showToast(`${pn} chose the ${SEGMENT_MAP[stampEarned]?.name || stampEarned} stamp! 🐾`);
     };
 
     socket.on('wheel-result', onWheelResult);
     socket.on('question-show', onQuestionShow);
     socket.on('answer-result', onAnswerResult);
     socket.on('turn-update', onTurnUpdate);
-    socket.on('stamp-chosen', onStampChosen);
 
     return () => {
       socket.off('wheel-result', onWheelResult);
       socket.off('question-show', onQuestionShow);
       socket.off('answer-result', onAnswerResult);
       socket.off('turn-update', onTurnUpdate);
-      socket.off('stamp-chosen', onStampChosen);
       clearInterval(timerRef.current);
     };
   }, [socket, showToast]);
@@ -170,11 +157,7 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
     });
   };
 
-  const handleChooseStamp = (categoryId) => {
-    socket.emit('choose-stamp', { categoryId }, (res) => {
-      if (res.error) showToast(res.error);
-    });
-  };
+
 
   // ── Helpers ────────────────────────────────────────────
   const getActivePlayerName = () => {
@@ -201,11 +184,10 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
 
   return (
     <div className="game-screen">
-      {/* Header */}
-      <div className="game-header">
-        <div className="game-room-code">🐾 {roomCode}</div>
-        <div className="game-turn-info">
-          {isMyTurn ? "✨ Your Turn!" : `${getActivePlayerName()}'s turn`}
+      {/* Header — matches GameShell style */}
+      <div className="gs-header">
+        <div className="gs-game-title">
+          <span>Trivia Fetch!</span>
         </div>
       </div>
 
@@ -218,11 +200,9 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
       {/* ── SPINNING PHASE ── */}
       {phase === 'spinning' && (
         <div className="wheel-area">
-          <Wheel ref={wheelRef} disabled={!isMyTurn} />
+          <Wheel ref={wheelRef} disabled={!isMyTurn} onTap={handleSpin} segments={wheelSegments} />
           {isMyTurn ? (
-            <button className="btn btn-primary spin-btn" onClick={handleSpin}>
-              🎾 Spin!
-            </button>
+            <div className="tap-to-spin-text">Tap the wheel to spin!</div>
           ) : (
             <div className="waiting-spin-text">
               Waiting for {getActivePlayerName()} to spin...
@@ -239,7 +219,7 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
               className="question-category-badge bounce-in"
               style={{ background: SEGMENT_MAP[currentSegment.categoryId]?.color || currentSegment.color, display: 'inline-block', marginBottom: 12 }}
             >
-              {SEGMENT_MAP[currentSegment.categoryId]?.emoji} {SEGMENT_MAP[currentSegment.categoryId]?.name || currentSegment.name}
+              <CatIcon id={currentSegment.categoryId} size={20} /> {SEGMENT_MAP[currentSegment.categoryId]?.name || currentSegment.name}
             </div>
           )}
           <div style={{ marginTop: 8 }}>
@@ -262,23 +242,24 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
               className="question-category-badge"
               style={{ background: SEGMENT_MAP[currentSegment.categoryId]?.color || '#999' }}
             >
-              {SEGMENT_MAP[currentSegment.categoryId]?.emoji} {SEGMENT_MAP[currentSegment.categoryId]?.name}
+              <CatIcon id={currentSegment.categoryId} size={20} /> {SEGMENT_MAP[currentSegment.categoryId]?.name}
             </div>
           )}
 
           <div className="question-card">
             <div className="question-text">{question}</div>
-            <div className="timer-bar-container">
+            <div className={`gs-timer ${timeLeft <= 5 ? 'gs-timer--urgent' : ''}`}>
               <div
-                className="timer-bar"
+                className="gs-timer-bar"
                 style={{
                   width: `${(timeLeft / 20) * 100}%`,
-                  backgroundColor: getTimerColor(),
+                  background: getTimerColor(),
+                  boxShadow: `0 0 10px ${getTimerColor()}`,
                 }}
               />
-            </div>
-            <div className="timer-text" style={{ color: timeLeft <= 5 ? 'var(--error)' : 'var(--text-light)' }}>
-              {timeLeft > 0 ? `⏰ ${timeLeft}s` : "⏰ Time's up!"}
+              <span className="gs-timer-text">
+                {timeLeft > 0 ? `⏰ ${timeLeft}s` : "⏰ Time's up!"}
+              </span>
             </div>
           </div>
 
@@ -319,7 +300,7 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
 
           {answerResult.stampEarned && (
             <div className="stamp-earned-banner">
-              🐾 {SEGMENT_MAP[answerResult.stampEarned]?.emoji} {SEGMENT_MAP[answerResult.stampEarned]?.name} Stamp Earned!
+              🦴 <CatIcon id={answerResult.stampEarned} size={20} /> {SEGMENT_MAP[answerResult.stampEarned]?.name} Treat Earned!
             </div>
           )}
 
@@ -332,41 +313,19 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
 
           {answerResult.correct && !answerResult.gameWon && isMyTurn && (
             <p style={{ color: 'var(--secondary)', fontFamily: 'var(--font-heading)', marginTop: 12, fontSize: 16 }}>
-              🔥 Spin again!
+              <img src="/images/streak-fire.png" alt="fire" width={20} height={20} style={{verticalAlign:'middle'}} /> Spin again!
             </p>
           )}
         </div>
       )}
 
-      {/* ── CHOOSING STAMP (Gus's Wild reward) ── */}
-      {phase === 'choosing' && choosingStamp && isMyTurn && (
-        <div className="stamp-chooser">
-          <h3><GusMascot size={28} variant="wild" className="inline-gus" /> Pick a Paw Stamp!</h3>
-          <p style={{ textAlign: 'center', color: 'var(--text-light)', fontSize: 13, marginBottom: 12 }}>
-            Gus's Wild reward — choose any stamp you need!
-          </p>
-          <div className="stamp-chooser-grid">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat.id}
-                className="stamp-choose-btn"
-                onClick={() => handleChooseStamp(cat.id)}
-                disabled={myStamps.includes(cat.id)}
-                style={myStamps.includes(cat.id) ? {} : { borderColor: cat.color }}
-              >
-                {cat.emoji} {cat.name}
-                {myStamps.includes(cat.id) && ' ✓'}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* ── My Paw Stamps ── */}
+
+      {/* ── My Treats ── */}
       <div className="paw-stamps-area">
-        <div className="paw-stamps-title">Your Paw Stamps ({myStamps.length}/8)</div>
+        <div className="paw-stamps-title">🦴 Your Treats ({myStamps.length}/{categories.length})</div>
         <div className="paw-stamps-grid">
-          {CATEGORIES.map(cat => {
+          {categories.map(cat => {
             const earned = myStamps.includes(cat.id);
             return (
               <div
@@ -375,7 +334,7 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
                 style={earned ? { background: cat.color } : {}}
                 title={cat.name}
               >
-                {cat.emoji}
+                <span style={{ fontSize: 22 }}>{cat.emoji}</span>
               </div>
             );
           })}
@@ -383,39 +342,44 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
       </div>
 
       {/* ── Scoreboard ── */}
-      <div className="scoreboard">
-        <div className="scoreboard-title">Scoreboard</div>
+      <div className="tf-scoreboard">
+        <div className="tf-scoreboard-title">Scoreboard</div>
         {scores.map((s, i) => {
           const isActive = s.socketId === activePlayerId;
           const isMe = s.socketId === socket.id;
           return (
             <div
               key={i}
-              className={`score-item ${isActive ? 'active' : ''} ${isMe ? 'is-me' : ''}`}
+              className={`tf-score-row ${isActive ? 'tf-score-row--active' : ''} ${isMe ? 'tf-score-row--me' : ''}`}
             >
-              <div className="player-avatar" style={{ width: 28, height: 28, fontSize: 12 }}>
-                {s.name[0].toUpperCase()}
+              <div className="tf-score-rank">
+                {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
               </div>
-              <span className="score-name">
-                {s.name} {isMe ? '(you)' : ''}
-                {isActive && ' 🎯'}
-              </span>
-              <div className="score-stamps">
-                {CATEGORIES.map(cat => (
-                  <div
-                    key={cat.id}
-                    className={`score-mini-stamp ${s.pawStamps.includes(cat.id) ? '' : 'empty'}`}
-                    style={s.pawStamps.includes(cat.id) ? { background: cat.color } : {}}
-                    title={cat.name}
-                  >
-                    {s.pawStamps.includes(cat.id) ? '✓' : ''}
-                  </div>
-                ))}
+              <div className="tf-score-info">
+                <div className="tf-score-name">
+                  {s.name} {isMe && <span className="tf-you-tag">(you)</span>}
+                  {isActive && <span className="tf-turn-dot">🎯</span>}
+                  {isActive && streakCount >= 2 && (
+                    <span className="tf-streak">🔥{streakCount}</span>
+                  )}
+                </div>
+                <div className="tf-score-treats">
+                  {categories.map(cat => {
+                    const earned = s.pawStamps.includes(cat.id);
+                    return (
+                      <div
+                        key={cat.id}
+                        className={`tf-treat ${earned ? 'tf-treat--earned' : ''}`}
+                        style={earned ? { background: cat.color, borderColor: cat.color } : {}}
+                        title={cat.name}
+                      >
+                        {earned && <span style={{ fontSize: 9 }}>{cat.emoji}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <span className="score-points">{s.score}</span>
-              {isActive && streakCount >= 2 && (
-                <span className="streak-badge">🔥{streakCount}</span>
-              )}
+              <div className="tf-score-points">{s.score}</div>
             </div>
           );
         })}

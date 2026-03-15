@@ -10,5 +10,8 @@
     "start": "cd server && node index.js",
     "render-build": "cd server && npm install && cd ../client && npm install && npx vite build",
     "dev": "npm run build && cd server && node index.js"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.3"
   }
 }

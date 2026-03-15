@@ -413,7 +413,7 @@ export class BaseGame {
     if (!this.topics || this.topics.length === 0) return '';
     const topic = this.topics[Math.floor(Math.random() * this.topics.length)];
     const labels = {
-      'standard': 'nerdy filth', 'scifi': 'sci-fi & space',
+      'standard': 'standard nerdery', 'scifi': 'sci-fi & space',
       'fantasy': 'fantasy & medieval', 'nostalgia': '90s/2000s nostalgia',
       'horror': 'horror & gore', 'science': 'science & technology',
     };

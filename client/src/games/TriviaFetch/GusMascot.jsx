@@ -14,7 +14,7 @@ export default function GusMascot({ size = 80, className = '', variant = 'mascot
       className={className}
       width={size}
       height={size}
-      style={{ display: 'inline-block', verticalAlign: 'middle', objectFit: 'contain' }}
+      style={{ display: 'inline-block', verticalAlign: 'middle', objectFit: 'contain', borderRadius: '50%' }}
       onError={(e) => { e.target.style.display = 'none'; }}
     />
   );

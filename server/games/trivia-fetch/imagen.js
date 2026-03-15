@@ -14,7 +14,9 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-dotenv.config();
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 

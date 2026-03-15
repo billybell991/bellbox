@@ -38,17 +38,13 @@ export default function App() {
   // NAH game state
   const [nahGameState, setNahGameState] = useState(null);
   const [nahThemes, setNahThemes] = useState({});
-  const [nahSelectedThemes, setNahSelectedThemes] = useState(['standard']);
+  const [nahSelectedThemes, setNahSelectedThemes] = useState(['standard', 'scifi', 'fantasy', 'nostalgia', 'horror', 'science']);
 
   // Spice level (1=Family Fun, 2=Spicy, 3=Unhinged)
   const [spiceLevel, setSpiceLevel] = useState(2);
 
   // AI Bots toggle
   const [aiBots, setAiBots] = useState(false);
-
-  // Topic Packs
-  const [topicPacks, setTopicPacks] = useState({});
-  const [selectedTopics, setSelectedTopics] = useState([]);
 
   // Trivia game state
   const [triviaGameState, setTriviaGameState] = useState(null);
@@ -182,10 +178,6 @@ export default function App() {
       showToast('Back to the party! 🎉');
     });
 
-    socket.on('topics-updated', ({ selected }) => {
-      setSelectedTopics(selected);
-    });
-
     // ── NAH events ────────────────────────────────────────
     socket.on('new-round', (data) => {
       setNahGameState({
@@ -293,7 +285,6 @@ export default function App() {
       socket.off('game-over');
       socket.off('host-changed');
       socket.off('kicked');
-      socket.off('topics-updated');
     };
   }, [showToast]);
 
@@ -310,13 +301,8 @@ export default function App() {
       setChatMessages(res.chatMessages || []);
       if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
       if (res.aiBots !== undefined) setAiBots(res.aiBots);
-      if (res.selectedTopics) setSelectedTopics(res.selectedTopics);
       setScreen('lobby');
       socket.emit('get-themes', (t) => setNahThemes(t));
-      socket.emit('get-topic-packs', (t) => {
-        setTopicPacks(t.packs);
-        setSelectedTopics(t.selected);
-      });
     });
   };
 
@@ -332,7 +318,6 @@ export default function App() {
       setChatMessages(res.chatMessages || []);
       if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
       if (res.aiBots !== undefined) setAiBots(res.aiBots);
-      if (res.selectedTopics) setSelectedTopics(res.selectedTopics);
 
       if (res.state === 'IN_GAME' && res.activeGame) {
         if (res.activeGame === 'nerds-against-humanity') {
@@ -370,19 +355,17 @@ export default function App() {
     });
   };
 
-  const handleToggleTopic = (topicId) => {
-    const next = selectedTopics.includes(topicId)
-      ? selectedTopics.filter(t => t !== topicId)
-      : [...selectedTopics, topicId];
-    if (next.length === 0) return; // must keep at least one
-    setSelectedTopics(next);
-    socket.emit('set-topics', { selected: next });
-  };
 
-  const handleLaunchGame = (gameId) => {
+  const handleLaunchGame = (gameId, launchOpts = {}) => {
     const opts = { gameId };
     if (gameId === 'nerds-against-humanity') {
       opts.selectedThemes = nahSelectedThemes;
+    }
+    if (launchOpts.selectedTopics) {
+      opts.selectedTopics = launchOpts.selectedTopics;
+    }
+    if (launchOpts.selectedCategories) {
+      opts.selectedCategories = launchOpts.selectedCategories;
     }
     // Store game info for BaseGamePlayer
     const info = games.find(g => g.id === gameId);
@@ -496,9 +479,6 @@ export default function App() {
           aiBots={aiBots}
           onToggleAiBots={handleToggleAiBots}
           theme={theme}
-          topicPacks={topicPacks}
-          selectedTopics={selectedTopics}
-          onToggleTopic={handleToggleTopic}
         />
       )}
 
@@ -566,7 +546,7 @@ export default function App() {
                     <div className="final-score-row" key={i}>
                       <span className="rank">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}</span>
                       <span className="name">{s.name}</span>
-                      <span className="paws">{s.pawStamps?.length || 0} 🐾</span>
+                      <span className="paws">{s.pawStamps?.length || 0} 🦴</span>
                     </div>
                   ))}
               </div>

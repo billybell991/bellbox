@@ -1,7 +1,7 @@
 // Trivia Fetch! — Game Room Logic
-// Trivia Crack-style room management, turn flow, paw stamp collection
+// Trivia Crack-style room management, turn flow, treat collection
 
-import { CATEGORIES, WHEEL_SEGMENTS, generateQuestion, generateWildQuestion, getGusReaction } from './trivia.js';
+import { ALL_CATEGORIES, DEFAULT_CATEGORY_IDS, buildWheelSegments, generateQuestion, getGusReaction } from './trivia.js';
 
 function shuffle(arr) {
   const a = [...arr];
@@ -39,6 +39,8 @@ export class TriviaGame {
     this.roundNumber = 0;
     this.usedHashes = new Set();
     this.answerTimer = null;
+    this.categories = [];
+    this.wheelSegments = [];
 
     this.addPlayer(hostId, hostName);
   }
@@ -115,8 +117,20 @@ export class TriviaGame {
   }
 
   // ── Game Flow ─────────────────────────────────────────────
-  startGame() {
+  startGame(selectedCategoryIds) {
     if (this.playerOrder.length < 2) return { error: 'Need at least 2 players' };
+
+    // Build categories from selection or defaults
+    const ids = (selectedCategoryIds && selectedCategoryIds.length === 6)
+      ? selectedCategoryIds
+      : DEFAULT_CATEGORY_IDS;
+    this.categories = ids
+      .map(id => ALL_CATEGORIES.find(c => c.id === id))
+      .filter(Boolean);
+    if (this.categories.length !== 6) {
+      this.categories = ALL_CATEGORIES.filter(c => DEFAULT_CATEGORY_IDS.includes(c.id));
+    }
+    this.wheelSegments = buildWheelSegments(this.categories);
 
     this.state = 'SPINNING';
     this.activePlayerIndex = 0;
@@ -136,22 +150,11 @@ export class TriviaGame {
     if (this.state !== 'SPINNING') return { error: 'Not your turn to spin' };
 
     this.roundNumber++;
-    const segmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
-    const segment = WHEEL_SEGMENTS[segmentIndex];
+    const segmentIndex = Math.floor(Math.random() * this.wheelSegments.length);
+    const segment = this.wheelSegments[segmentIndex];
     this.currentSegment = segment;
 
-    if (segment.type === 'crown') {
-      const activePlayer = this.getActivePlayer();
-      if (activePlayer.pawStamps.length >= CATEGORIES.length) {
-        this.currentCategoryId = 'crown';
-      } else {
-        this.currentCategoryId = 'crown_not_ready';
-      }
-    } else if (segment.type === 'wild') {
-      this.currentCategoryId = 'wild';
-    } else {
-      this.currentCategoryId = segment.id;
-    }
+    this.currentCategoryId = segment.id;
 
     return { segmentIndex, segment, categoryId: this.currentCategoryId };
   }
@@ -159,20 +162,7 @@ export class TriviaGame {
   async fetchQuestion() {
     this.state = 'QUESTION';
 
-    let question;
-    if (this.currentCategoryId === 'wild') {
-      question = await generateWildQuestion();
-    } else if (this.currentCategoryId === 'crown') {
-      // Crown challenge — hard question from random category
-      const cat = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
-      question = await generateQuestion(cat.id, this.usedHashes);
-    } else if (this.currentCategoryId === 'crown_not_ready') {
-      // Not ready for crown — random fun question, no stamp
-      const cat = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
-      question = await generateQuestion(cat.id, this.usedHashes);
-    } else {
-      question = await generateQuestion(this.currentCategoryId, this.usedHashes);
-    }
+    const question = await generateQuestion(this.currentCategoryId, this.usedHashes);
 
     this.currentQuestion = question;
     this.usedHashes.add(question.question.substring(0, 50));
@@ -194,37 +184,20 @@ export class TriviaGame {
     const player = this.players.get(socketId);
 
     let stampEarned = null;
-    let choosingStamp = false;
     let gameWon = false;
 
     if (correct) {
       player.score++;
       this.streakCount++;
 
-      if (this.currentCategoryId === 'wild') {
-        // Wild correct — player chooses a stamp they need
-        const needed = CATEGORIES.filter(c => !player.pawStamps.includes(c.id));
-        if (needed.length > 0) {
-          choosingStamp = true;
-          this.state = 'CHOOSING_STAMP';
-        } else {
-          this.state = 'SPINNING'; // already got all stamps, just spin again
-        }
-      } else if (this.currentCategoryId !== 'crown_not_ready') {
-        // Regular category
-        if (!player.pawStamps.includes(this.currentCategoryId)) {
-          player.pawStamps.push(this.currentCategoryId);
-          stampEarned = this.currentCategoryId;
-        }
-        // Check for win — all 8 stamps!
-        if (player.pawStamps.length >= CATEGORIES.length) {
-          gameWon = true;
-          this.state = 'GAME_OVER';
-        } else {
-          this.state = 'SPINNING'; // spin again on correct!
-        }
+      if (!player.pawStamps.includes(this.currentCategoryId)) {
+        player.pawStamps.push(this.currentCategoryId);
+        stampEarned = this.currentCategoryId;
+      }
+      if (player.pawStamps.length >= this.categories.length) {
+        gameWon = true;
+        this.state = 'GAME_OVER';
       } else {
-        // Crown not ready — just spin again
         this.state = 'SPINNING';
       }
     } else {
@@ -237,7 +210,6 @@ export class TriviaGame {
       correctIndex: this.currentQuestion.correctIndex,
       funFact: this.currentQuestion.funFact,
       stampEarned,
-      choosingStamp,
       gameWon,
       winnerName: gameWon ? player.name : null,
       scores: this.getScores(),
@@ -267,34 +239,6 @@ export class TriviaGame {
       pawStamps: this.getAllPawStamps(),
       activePlayerId: this.getActivePlayerId(),
       streakCount: 0,
-    };
-  }
-
-  chooseStamp(socketId, categoryId) {
-    if (this.state !== 'CHOOSING_STAMP') return { error: 'Not choosing a stamp' };
-    if (socketId !== this.getActivePlayerId()) return { error: 'Not your turn' };
-
-    const player = this.players.get(socketId);
-    if (!CATEGORIES.find(c => c.id === categoryId)) return { error: 'Invalid category' };
-    if (player.pawStamps.includes(categoryId)) return { error: 'Already have that stamp' };
-
-    player.pawStamps.push(categoryId);
-
-    // Check for win after choosing wild stamp
-    let gameWon = false;
-    if (player.pawStamps.length >= CATEGORIES.length) {
-      gameWon = true;
-      this.state = 'GAME_OVER';
-    } else {
-      this.state = 'SPINNING';
-    }
-
-    return {
-      success: true,
-      stampEarned: categoryId,
-      pawStamps: this.getAllPawStamps(),
-      gameWon,
-      winnerName: gameWon ? player.name : null,
     };
   }
 

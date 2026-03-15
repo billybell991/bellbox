@@ -12,13 +12,13 @@ import { GameRoom as NAHRoom } from './games/nerds-against-humanity/game.js';
 import { themes as nahThemes } from './games/nerds-against-humanity/cards.js';
 import { MemeGameRoom } from './games/meme-melee/game.js';
 import { TriviaGame } from './games/trivia-fetch/game.js';
-import { CATEGORIES, WHEEL_SEGMENTS, getGusReaction } from './games/trivia-fetch/trivia.js';
+import { ALL_CATEGORIES, DEFAULT_CATEGORY_IDS, getGusReaction } from './games/trivia-fetch/trivia.js';
 
 // ── Universal Topic Packs ─────────────────────────────────
 const TOPIC_PACKS = {
-  'standard':  { id: 'standard',  name: 'Standard Nerdy Filth', emoji: '🤓', description: 'The classic catch-all pack of horrible nerdery' },
-  'scifi':     { id: 'scifi',     name: 'Sci-Fi Smut',          emoji: '🚀', description: 'Boldly going where no filth has gone before' },
-  'fantasy':   { id: 'fantasy',   name: 'Fantasy Filth',        emoji: '🐉', description: 'Swords, sorcery, and deeply questionable choices' },
+  'standard':  { id: 'standard',  name: 'Standard Nerdery',     emoji: '🤓', description: 'The classic catch-all pack of horrible nerdery' },
+  'scifi':     { id: 'scifi',     name: 'Sci-Fi Smut',          emoji: '🚀', description: 'Boldly going where no one has gone before' },
+  'fantasy':   { id: 'fantasy',   name: 'Fantasy & Fables',     emoji: '🐉', description: 'Swords, sorcery, and deeply questionable choices' },
   'nostalgia': { id: 'nostalgia', name: '90s/2000s Nostalgia',   emoji: '📼', description: 'A/S/L? The golden age of internet chaos' },
   'horror':    { id: 'horror',    name: 'Horror & Gore',        emoji: '🔪', description: 'The only thing scarier than these cards is your browser history' },
   'science':   { id: 'science',   name: 'Science & Tech',       emoji: '⚗️', description: 'When STEM majors drink too much' },
@@ -119,17 +119,20 @@ const GAMES = {
     color: '#AFFF33',
     category: 'Wordplay & Wit',
     enabled: true,
+    spicy: true,
   },
   'trivia-fetch': {
     id: 'trivia-fetch',
     name: 'Trivia Fetch!',
-    description: 'Spin the wheel, answer trivia, collect paw stamps. Hosted by Gus!',
-    howToPlay: 'Take turns spinning the wheel to land on a trivia category. Answer correctly to earn paw stamps and keep spinning! Answer wrong and your turn passes. First to collect all paw stamps wins. Hosted by Gus the dog!',
+    description: 'Spin the wheel, answer trivia, collect treats. Hosted by Gus!',
+    howToPlay: 'Take turns spinning the wheel to land on a trivia category. Answer correctly to earn treats and keep spinning! Answer wrong and your turn passes. First to collect all 6 treats wins. Hosted by Gus the dog!',
     emoji: '🐕',
     minPlayers: 2,
     maxPlayers: 6,
-    color: '#6d2c94',
+    color: '#bf6eff',
     category: 'Rapid Reactions',
+    enabled: true,
+    triviaThemes: true,
   },
   // ── Wordplay & Wit ───────────────────────────
   'caption-this': {
@@ -204,7 +207,7 @@ const GAMES = {
   'hieroglyphics': {
     id: 'hieroglyphics', name: 'High-roglyphics', emoji: '🫅',
     description: 'Decode emoji rebus puzzles! Pharaoh Punhotep demands answers!',
-    howToPlay: 'Each round, the AI creates an emoji rebus puzzle based on the topic packs your group picked. Type your best guess! The closer your answer, the more points you earn. Exact matches score big. Pharaoh Punhotep judges your wisdom!',
+    howToPlay: 'Each round, the AI creates an emoji rebus puzzle based on the topic packs you picked at launch. Type your best guess! The closer your answer, the more points you earn. Exact matches score big. Pharaoh Punhotep judges your wisdom!',
     minPlayers: 3, maxPlayers: 10, color: '#ff4081', category: 'Spark of Creation',
     enabled: true,
   },
@@ -318,11 +321,26 @@ const GAMES = {
     description: 'Match hilarious captions to meme images. The Meme Judge picks the winner!',
     howToPlay: 'Each round, a meme image is revealed. Everyone plays a caption card from their hand to match it. The Meme Judge picks the funniest combo. First to 7 points wins!',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
+    spicy: true,
   },
 };
 
 function getEnabledGames() {
-  return Object.values(GAMES).filter(g => g.enabled);
+  return Object.values(GAMES).filter(g => g.enabled).map(g => {
+    // NAH gets theme packs for pre-launch configuration
+    if (g.id === 'nerds-against-humanity') {
+      return { ...g, nahThemes };
+    }
+    // Base games get TOPIC_PACKS for pre-launch configuration
+    if (BASE_GAME_CLASSES[g.id] && !g.packs) {
+      return { ...g, packs: TOPIC_PACKS, spicy: true };
+    }
+    // Trivia Fetch gets category picker
+    if (g.triviaThemes) {
+      return { ...g, triviaCategories: ALL_CATEGORIES, defaultCategories: DEFAULT_CATEGORY_IDS };
+    }
+    return g;
+  });
 }
 
 // ─── BellBox Lobby Room ───────────────────────────────────────
@@ -342,7 +360,7 @@ class BellBoxRoom {
     this.spiceLevel = 2; // 1=Family Fun, 2=Spicy, 3=Unhinged
     this.aiBots = false; // Whether AI opponents are enabled
     this.nextAvatar = 1; // cycles 1-10 for avatar assignment
-    this.selectedTopics = Object.keys(TOPIC_PACKS); // all enabled by default
+    this.lastSelectedTopics = Object.keys(TOPIC_PACKS); // stored from last launch
 
     this.addPlayer(hostId, hostName);
   }
@@ -538,7 +556,7 @@ class BellBoxRoom {
       chatMessages: this.chatMessages.slice(-20),
       spiceLevel: this.spiceLevel,
       aiBots: this.aiBots,
-      selectedTopics: this.selectedTopics,
+
     };
 
     // Include game-specific state for reconnection
@@ -840,7 +858,8 @@ io.on('connection', (socket) => {
   });
 
   // ── Launch Game ─────────────────────────────────────────
-  socket.on('launch-game', async ({ gameId, selectedThemes } = {}, callback) => {
+  socket.on('launch-game', async (opts = {}, callback) => {
+    const { gameId, selectedThemes } = opts;
     const room = getRoomByPlayer(socket.id);
     if (!room) return callback({ error: 'Not in a room' });
     if (socket.id !== room.hostId) return callback({ error: 'Only the host can launch' });
@@ -939,7 +958,8 @@ io.on('connection', (socket) => {
         room.gameInstance.playerIdMap.set(pid, sid);
       }
 
-      const startResult = room.gameInstance.startGame();
+      const selectedCategories = opts.selectedCategories;
+      const startResult = room.gameInstance.startGame(selectedCategories);
       if (startResult.error) {
         room.state = 'LOBBY';
         room.activeGame = null;
@@ -953,12 +973,15 @@ io.on('connection', (socket) => {
       io.to(room.roomCode).emit('game-started', {
         players: room.gameInstance.getPlayerList(),
         activePlayerId: room.gameInstance.getActivePlayerId(),
-        categories: CATEGORIES,
+        categories: room.gameInstance.categories,
       });
 
       sendGusReaction(room, 'game_start', {
         detail: `Game starting with ${room.playerOrder.length} players!`,
       });
+
+      // Kick off bot turn if first player is a bot
+      scheduleTriviaBotTurn(room);
 
     } else if (BASE_GAME_CLASSES[gameId]) {
       // ── Generic BaseGame launch ─────────────────────────
@@ -976,7 +999,13 @@ io.on('connection', (socket) => {
       io.to(room.roomCode).emit('game-launched', { game: gameId });
       io.to(room.roomCode).emit('bg-preparing', { message: 'Generating round...' });
 
-      const startResult = await room.gameInstance.startGame(room.spiceLevel, room.selectedTopics);
+      // Use selectedTopics from launch opts, or fall back to all packs
+      const topics = opts.selectedTopics && opts.selectedTopics.length > 0
+        ? opts.selectedTopics.filter(id => TOPIC_PACKS[id])
+        : Object.keys(TOPIC_PACKS);
+      room.lastSelectedTopics = topics;
+
+      const startResult = await room.gameInstance.startGame(room.spiceLevel, topics);
       if (startResult?.error) {
         room.state = 'LOBBY';
         room.activeGame = null;
@@ -1023,26 +1052,7 @@ io.on('connection', (socket) => {
     callback(nahThemes);
   });
 
-  // ── Topic Packs ─────────────────────────────────────────
-  socket.on('get-topic-packs', (callback) => {
-    const room = getRoomByPlayer(socket.id);
-    callback({
-      packs: TOPIC_PACKS,
-      selected: room ? room.selectedTopics : Object.keys(TOPIC_PACKS),
-    });
-  });
-
-  socket.on('set-topics', ({ selected }, callback) => {
-    const room = getRoomByPlayer(socket.id);
-    if (!room) return callback?.({ error: 'Not in a room' });
-    if (socket.id !== room.hostId) return callback?.({ error: 'Only the host can change topics' });
-    if (!Array.isArray(selected) || selected.length === 0) return callback?.({ error: 'Select at least one topic' });
-    // Validate all are real topic IDs
-    room.selectedTopics = selected.filter(id => TOPIC_PACKS[id]);
-    if (room.selectedTopics.length === 0) room.selectedTopics = Object.keys(TOPIC_PACKS);
-    callback?.({ success: true, selected: room.selectedTopics });
-    socket.to(room.roomCode).emit('topics-updated', { selected: room.selectedTopics });
-  });
+  // ── Topic Packs (removed from lobby — now per-game at launch) ──
 
   socket.on('submit-cards', ({ cardIndices }, callback) => {
     const room = getRoomByPlayer(socket.id);
@@ -1202,6 +1212,8 @@ io.on('connection', (socket) => {
       emitNAHNewRound(room);
 
     } else if (gameId === 'trivia-fetch') {
+      // Save last categories before creating new instance
+      const lastCategories = room.gameInstance?.categories?.map(c => c.id);
       room.gameInstance = new TriviaGame(room.roomCode, room.hostId, room.players.get(room.hostId).name);
       for (const socketId of room.playerOrder) {
         if (socketId !== room.hostId) {
@@ -1212,7 +1224,7 @@ io.on('connection', (socket) => {
       for (const [pid, sid] of room.playerIdMap) {
         room.gameInstance.playerIdMap.set(pid, sid);
       }
-      const startResult = room.gameInstance.startGame();
+      const startResult = room.gameInstance.startGame(lastCategories);
       if (startResult.error) return callback(startResult);
 
       callback({ success: true, game: gameId });
@@ -1220,7 +1232,7 @@ io.on('connection', (socket) => {
       io.to(room.roomCode).emit('game-started', {
         players: room.gameInstance.getPlayerList(),
         activePlayerId: room.gameInstance.getActivePlayerId(),
-        categories: CATEGORIES,
+        categories: room.gameInstance.categories,
       });
 
     } else if (BASE_GAME_CLASSES[gameId]) {
@@ -1235,7 +1247,7 @@ io.on('connection', (socket) => {
       io.to(room.roomCode).emit('game-launched', { game: gameId });
       io.to(room.roomCode).emit('bg-preparing', { message: 'Generating round...' });
 
-      const startResult = await room.gameInstance.startGame(room.spiceLevel, room.selectedTopics);
+      const startResult = await room.gameInstance.startGame(room.spiceLevel, room.lastSelectedTopics || Object.keys(TOPIC_PACKS));
       if (startResult?.error) {
         room.state = 'LOBBY';
         room.activeGame = null;
@@ -1258,7 +1270,11 @@ io.on('connection', (socket) => {
   // ═══════════════════════════════════════════════════════════
 
   socket.on('get-categories', (callback) => {
-    callback({ categories: CATEGORIES, segments: WHEEL_SEGMENTS });
+    const room = getRoomByPlayer(socket.id);
+    const gi = room?.gameInstance;
+    const cats = gi?.categories || ALL_CATEGORIES.filter(c => DEFAULT_CATEGORY_IDS.includes(c.id));
+    const segs = gi?.wheelSegments || cats;
+    callback({ categories: cats, segments: segs });
   });
 
   socket.on('spin-wheel', async (callback) => {
@@ -1314,6 +1330,7 @@ io.on('connection', (socket) => {
             activePlayerId: gi.getActivePlayerId(),
             state: gi.state,
           });
+          scheduleTriviaBotTurn(room);
         }
       }, (question.timeLimit + 1) * 1000);
     } catch (e) {
@@ -1356,44 +1373,10 @@ io.on('connection', (socket) => {
     io.to(room.roomCode).emit('turn-update', {
       activePlayerId: gi.getActivePlayerId(),
       state: gi.state,
-      choosingStamp: result.choosingStamp,
-    });
-  });
-
-  socket.on('choose-stamp', ({ categoryId }, callback) => {
-    const room = getRoomByPlayer(socket.id);
-    if (!room || room.activeGame !== 'trivia-fetch') return callback({ error: 'Not in Trivia game' });
-
-    const gi = room.gameInstance;
-    const result = gi.chooseStamp(socket.id, categoryId);
-    if (result.error) return callback(result);
-
-    callback({ success: true, ...result });
-
-    const player = gi.players.get(socket.id);
-    io.to(room.roomCode).emit('stamp-chosen', {
-      playerName: player?.name,
-      stampEarned: result.stampEarned,
-      pawStamps: result.pawStamps,
     });
 
-    if (result.gameWon) {
-      sendGusReaction(room, 'win', { playerName: player?.name });
-      io.to(room.roomCode).emit('game-over', {
-        winnerName: result.winnerName,
-        scores: gi.getScores(),
-      });
-    } else {
-      sendGusReaction(room, 'stamp', {
-        playerName: player?.name,
-        detail: `chose the ${result.stampEarned} stamp from Gus's Wild!`,
-      });
-    }
-
-    io.to(room.roomCode).emit('turn-update', {
-      activePlayerId: gi.getActivePlayerId(),
-      state: gi.state,
-    });
+    // If next player is a bot, auto-play their turn
+    scheduleTriviaBotTurn(room);
   });
 
   socket.on('answer-timeout', (callback) => {
@@ -1412,6 +1395,8 @@ io.on('connection', (socket) => {
       activePlayerId: gi.getActivePlayerId(),
       state: gi.state,
     });
+
+    scheduleTriviaBotTurn(room);
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -1873,6 +1858,111 @@ async function sendGusReaction(room, event, context = {}) {
     const msg = await getGusReaction(event, context);
     io.to(room.roomCode).emit('gus-says', { message: msg });
   } catch { /* non-critical */ }
+}
+
+// ── Trivia Fetch Bot Auto-Play ────────────────────────────────
+function scheduleTriviaBotTurn(room) {
+  if (!room.aiBots) return;
+  const gi = room.gameInstance;
+  if (!gi || gi.state === 'GAME_OVER' || gi.state === 'LOBBY') return;
+
+  const botId = gi.getActivePlayerId();
+  if (!room.isBot(botId)) return;
+
+  const player = gi.players.get(botId);
+  if (!player) return;
+
+  // Step 1: Spin the wheel after a short delay
+  setTimeout(async () => {
+    if (gi.state !== 'SPINNING') return;
+    if (gi.getActivePlayerId() !== botId) return;
+
+    const spinResult = gi.spinWheel();
+    if (spinResult.error) return;
+
+    io.to(room.roomCode).emit('wheel-result', {
+      segmentIndex: spinResult.segmentIndex,
+      segment: spinResult.segment,
+      categoryId: spinResult.categoryId,
+      spinnerName: player.name,
+    });
+
+    if (spinResult.categoryId === 'crown') {
+      sendGusReaction(room, 'crown_attempt', { playerName: player.name });
+    } else if (spinResult.categoryId === 'crown_not_ready') {
+      sendGusReaction(room, 'crown_not_ready', { playerName: player.name });
+    } else if (spinResult.categoryId === 'wild') {
+      sendGusReaction(room, 'wild', { playerName: player.name });
+    }
+
+    // Step 2: Fetch question after wheel animation
+    setTimeout(async () => {
+      if (gi.getActivePlayerId() !== botId) return;
+
+      try {
+        const question = await gi.fetchQuestion();
+
+        io.to(room.roomCode).emit('question-show', {
+          question: question.question,
+          options: question.options,
+          timeLimit: question.timeLimit,
+          activePlayerId: botId,
+        });
+
+        // Step 3: Submit answer after "thinking"
+        setTimeout(() => {
+          if (gi.state !== 'QUESTION') return;
+          if (gi.getActivePlayerId() !== botId) return;
+
+          // Bots get it right ~60% of the time
+          const correct = Math.random() < 0.6;
+          const answerIndex = correct
+            ? gi.currentQuestion.correctIndex
+            : [0, 1, 2, 3].filter(i => i !== gi.currentQuestion.correctIndex)[Math.floor(Math.random() * 3)];
+
+          const result = gi.submitAnswer(botId, answerIndex);
+          if (result.error) return;
+
+          io.to(room.roomCode).emit('answer-result', result);
+
+          if (result.gameWon) {
+            sendGusReaction(room, 'win', { playerName: player.name });
+            io.to(room.roomCode).emit('game-over', {
+              winnerName: result.winnerName,
+              scores: result.scores,
+            });
+            return;
+          } else if (result.correct) {
+            if (result.stampEarned) {
+              sendGusReaction(room, 'stamp', { playerName: player.name, detail: `earned the ${result.stampEarned} treat` });
+            } else {
+              sendGusReaction(room, 'correct', { playerName: player.name });
+            }
+          } else {
+            sendGusReaction(room, 'wrong', { playerName: player.name });
+          }
+
+          io.to(room.roomCode).emit('turn-update', {
+            activePlayerId: gi.getActivePlayerId(),
+            state: gi.state,
+          });
+
+          // If correct (and not choosing stamp), bot spins again — schedule next action
+          // If wrong, turn passed — check if new active player is a bot
+          scheduleTriviaBotTurn(room);
+        }, 2000 + Math.random() * 2000);
+
+      } catch {
+        // Question generation failed — skip turn
+        gi.nextTurn();
+        io.to(room.roomCode).emit('turn-update', {
+          activePlayerId: gi.getActivePlayerId(),
+          state: gi.state,
+        });
+        scheduleTriviaBotTurn(room);
+      }
+    }, 4000); // Wait for wheel animation
+  }, 1500 + Math.random() * 1500);
 }
 
 // ── BaseGame reveal + scoring helpers ─────────────────────────

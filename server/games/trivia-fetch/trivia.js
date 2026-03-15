@@ -3,28 +3,134 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
-// ─── Categories ───────────────────────────────────────────────
-export const CATEGORIES = [
-  { id: 'disney',      name: 'Disney',       emoji: '🏰', color: '#9B59B6' },
-  { id: 'harrypotter', name: 'Harry Potter',  emoji: '⚡', color: '#AE1438' },
-  { id: 'horror',      name: 'Horror',        emoji: '🎃', color: '#34495E' },
-  { id: 'animals',     name: 'Animals',       emoji: '🐾', color: '#27AE60' },
-  { id: 'tv',          name: 'TV Shows',      emoji: '📺', color: '#3498DB' },
-  { id: 'movies',      name: 'Movies',        emoji: '🎬', color: '#E67E22' },
-  { id: 'music',       name: 'Music',         emoji: '🎵', color: '#E91E63' },
-  { id: 'science',     name: 'Science',       emoji: '🔬', color: '#00BCD4' },
+// ─── Full Category Pool ───────────────────────────────────────
+export const ALL_CATEGORIES = [
+  // ── Trivial Pursuit Defaults (first 6) ──
+  { id: 'geography',   name: 'Geography',       emoji: '🌍', color: '#2980B9' },
+  { id: 'entertainment', name: 'Entertainment', emoji: '🎭', color: '#E91E63' },
+  { id: 'history',     name: 'History',          emoji: '📜', color: '#8D6E63' },
+  { id: 'art',         name: 'Art & Literature', emoji: '🎨', color: '#E67E22' },
+  { id: 'science',     name: 'Science & Nature', emoji: '🔬', color: '#00BCD4' },
+  { id: 'sports',      name: 'Sports & Leisure', emoji: '⚽', color: '#27AE60' },
+  // ── Bonus Categories ──
+  { id: 'disney',      name: 'Disney',           emoji: '🏰', color: '#9B59B6' },
+  { id: 'harrypotter', name: 'Harry Potter',     emoji: '⚡', color: '#AE1438' },
+  { id: 'horror',      name: 'Horror',           emoji: '🎃', color: '#34495E' },
+  { id: 'animals',     name: 'Animals',          emoji: '🐾', color: '#4CAF50' },
+  { id: 'tv',          name: 'TV Shows',         emoji: '📺', color: '#3498DB' },
+  { id: 'movies',      name: 'Movies',           emoji: '🎬', color: '#FF5722' },
+  { id: 'music',       name: 'Music',            emoji: '🎵', color: '#E91E63' },
+  { id: 'videogames',  name: 'Video Games',      emoji: '🎮', color: '#7C4DFF' },
+  { id: 'food',        name: 'Food & Drink',     emoji: '🍕', color: '#FF9800' },
+  { id: 'mythology',   name: 'Mythology',        emoji: '⚔️', color: '#795548' },
+  { id: 'space',       name: 'Space',            emoji: '🚀', color: '#1A237E' },
+  { id: 'technology',  name: 'Technology',       emoji: '💻', color: '#607D8B' },
+  { id: 'comics',      name: 'Comics & Anime',   emoji: '💥', color: '#F44336' },
+  { id: 'nostalgia',   name: '90s & 2000s',      emoji: '📼', color: '#FF4081' },
 ];
 
-export const WHEEL_SEGMENTS = [
-  ...CATEGORIES,
-  { id: 'crown', name: 'Crown Challenge', emoji: '👑', color: '#F1C40F', type: 'crown' },
-  { id: 'wild',  name: "Gus's Wild",      emoji: '🐕', color: '#FF9800', type: 'wild' },
-];
+export const DEFAULT_CATEGORY_IDS = ['geography', 'entertainment', 'history', 'art', 'science', 'sports'];
+
+// Legacy: keep CATEGORIES as default set for backward compat
+export const CATEGORIES = ALL_CATEGORIES.filter(c => DEFAULT_CATEGORY_IDS.includes(c.id));
+
+export function buildWheelSegments(categories) {
+  return [...categories];
+}
+
+export const WHEEL_SEGMENTS = buildWheelSegments(CATEGORIES);
 
 // ─── Fallback Questions (when Gemini is unavailable) ──────────
 const FALLBACK = {
+  geography: [
+    { question: "What is the smallest country in the world by area?", options: ["Monaco", "Vatican City", "San Marino", "Liechtenstein"], correctIndex: 1, funFact: "Vatican City is only about 0.17 square miles — smaller than most golf courses!", difficulty: "medium" },
+    { question: "Which river is the longest in the world?", options: ["Amazon", "Mississippi", "Nile", "Yangtze"], correctIndex: 2, funFact: "The Nile stretches about 4,130 miles through northeastern Africa!", difficulty: "easy" },
+    { question: "What country has the most time zones?", options: ["Russia", "USA", "China", "France"], correctIndex: 3, funFact: "France has 12 time zones due to its overseas territories around the world!", difficulty: "hard" },
+    { question: "Which desert is the largest in the world?", options: ["Sahara", "Gobi", "Antarctic", "Arabian"], correctIndex: 2, funFact: "Antarctica is technically a desert — it receives less precipitation than the Sahara!", difficulty: "hard" },
+    { question: "What is the capital of Australia?", options: ["Sydney", "Melbourne", "Canberra", "Brisbane"], correctIndex: 2, funFact: "Canberra was chosen as a compromise because Sydney and Melbourne couldn't stop arguing!", difficulty: "medium" },
+  ],
+  entertainment: [
+    { question: "What board game involves buying and trading properties?", options: ["Risk", "Clue", "Monopoly", "Life"], correctIndex: 2, funFact: "A standard Monopoly game contains $20,580 in play money!", difficulty: "easy" },
+    { question: "Which streaming service produced Stranger Things?", options: ["Hulu", "Disney+", "Netflix", "HBO Max"], correctIndex: 2, funFact: "Stranger Things was rejected by over 15 networks before Netflix picked it up!", difficulty: "easy" },
+    { question: "What card game's name means 'one' in Italian?", options: ["Poker", "Uno", "Rummy", "Solitaire"], correctIndex: 1, funFact: "UNO was created in 1971 by a barber from Ohio!", difficulty: "easy" },
+    { question: "Who created Mickey Mouse?", options: ["Chuck Jones", "Walt Disney", "Jim Henson", "Hanna-Barbera"], correctIndex: 1, funFact: "Mickey Mouse was originally going to be named 'Mortimer Mouse'!", difficulty: "easy" },
+    { question: "What reality show has contestants survive on an island?", options: ["Big Brother", "The Amazing Race", "Survivor", "Fear Factor"], correctIndex: 2, funFact: "Survivor has been airing since 2000 with over 45 seasons!", difficulty: "easy" },
+  ],
+  history: [
+    { question: "In what year did World War II end?", options: ["1943", "1944", "1945", "1946"], correctIndex: 2, funFact: "V-J Day, September 2, 1945, is when Japan formally surrendered!", difficulty: "easy" },
+    { question: "Who was the first person to walk on the moon?", options: ["Buzz Aldrin", "John Glenn", "Neil Armstrong", "Yuri Gagarin"], correctIndex: 2, funFact: "Armstrong's famous 'one small step' quote may have been misheard — he said he planned to say 'a man'!", difficulty: "easy" },
+    { question: "What ancient civilization built the pyramids at Giza?", options: ["Romans", "Greeks", "Egyptians", "Persians"], correctIndex: 2, funFact: "The Great Pyramid was the tallest man-made structure for over 3,800 years!", difficulty: "easy" },
+    { question: "What ship sank on its maiden voyage in 1912?", options: ["Lusitania", "Titanic", "Britannic", "Olympic"], correctIndex: 1, funFact: "The Titanic's musicians famously kept playing as the ship went down!", difficulty: "easy" },
+    { question: "Which wall divided Berlin from 1961 to 1989?", options: ["Iron Curtain", "Hadrian's Wall", "Berlin Wall", "Great Wall"], correctIndex: 2, funFact: "The Berlin Wall was 96 miles long including barriers around West Berlin!", difficulty: "easy" },
+  ],
+  art: [
+    { question: "Who painted the Mona Lisa?", options: ["Michelangelo", "Leonardo da Vinci", "Raphael", "Caravaggio"], correctIndex: 1, funFact: "The Mona Lisa has no eyebrows — it was fashionable to shave them in Renaissance Florence!", difficulty: "easy" },
+    { question: "Who wrote Romeo and Juliet?", options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"], correctIndex: 1, funFact: "Shakespeare invented over 1,700 words including 'eyeball', 'bedroom', and 'lonely'!", difficulty: "easy" },
+    { question: "Which art movement is Salvador Dalí associated with?", options: ["Impressionism", "Cubism", "Surrealism", "Pop Art"], correctIndex: 2, funFact: "Dalí once arrived at an art show in a limousine filled with cauliflower!", difficulty: "medium" },
+    { question: "What novel begins with 'Call me Ishmael'?", options: ["Moby Dick", "Treasure Island", "Robinson Crusoe", "The Old Man and the Sea"], correctIndex: 0, funFact: "Herman Melville's Moby Dick was a commercial failure — it sold only 3,000 copies in his lifetime!", difficulty: "medium" },
+    { question: "Which artist is famous for painting the ceiling of the Sistine Chapel?", options: ["Leonardo da Vinci", "Raphael", "Michelangelo", "Donatello"], correctIndex: 2, funFact: "Michelangelo painted the entire ceiling while standing up, not lying down as commonly believed!", difficulty: "easy" },
+  ],
+  sports: [
+    { question: "How many players are on a standard soccer team?", options: ["9", "10", "11", "12"], correctIndex: 2, funFact: "A soccer ball is actually an 'icosahedron' — made of 20 hexagons and 12 pentagons!", difficulty: "easy" },
+    { question: "In what sport would you perform a 'slam dunk'?", options: ["Volleyball", "Tennis", "Basketball", "Baseball"], correctIndex: 2, funFact: "The NBA banned dunking during free throws after Wilt Chamberlain was too dominant!", difficulty: "easy" },
+    { question: "Which country has won the most FIFA World Cups?", options: ["Germany", "Argentina", "Italy", "Brazil"], correctIndex: 3, funFact: "Brazil has won the World Cup 5 times and is the only team to play in every tournament!", difficulty: "medium" },
+    { question: "How long is a marathon in miles?", options: ["24.2", "25.2", "26.2", "27.2"], correctIndex: 2, funFact: "The extra 0.2 miles was added in 1908 so the race could finish in front of the royal box!", difficulty: "medium" },
+    { question: "In which sport is the term 'love' used to mean zero?", options: ["Badminton", "Golf", "Tennis", "Cricket"], correctIndex: 2, funFact: "The term 'love' likely comes from the French 'l'oeuf' meaning egg — shaped like a zero!", difficulty: "easy" },
+  ],
+  videogames: [
+    { question: "What is the best-selling video game of all time?", options: ["GTA V", "Minecraft", "Tetris", "Wii Sports"], correctIndex: 1, funFact: "Minecraft has sold over 300 million copies since its release in 2011!", difficulty: "medium" },
+    { question: "What plumber stars in Nintendo's most famous franchise?", options: ["Luigi", "Wario", "Mario", "Toad"], correctIndex: 2, funFact: "Mario was originally called 'Jumpman' and was a carpenter, not a plumber!", difficulty: "easy" },
+    { question: "In what game do you catch creatures and battle with them?", options: ["Digimon", "Pokémon", "Yu-Gi-Oh", "Monster Hunter"], correctIndex: 1, funFact: "Pikachu's name comes from the Japanese words 'pika' (sparkle) and 'chu' (squeak)!", difficulty: "easy" },
+    { question: "What color is Pac-Man?", options: ["Red", "Blue", "Yellow", "Green"], correctIndex: 2, funFact: "Pac-Man was originally called 'Puck-Man' but was changed to avoid vandalism!", difficulty: "easy" },
+    { question: "Which game features a battle royale on an island?", options: ["Minecraft", "Overwatch", "Fortnite", "Apex Legends"], correctIndex: 2, funFact: "Fortnite earned $5.1 billion in its first year — more than any movie or game in history!", difficulty: "easy" },
+  ],
+  food: [
+    { question: "What country is sushi originally from?", options: ["China", "Korea", "Japan", "Thailand"], correctIndex: 2, funFact: "Sushi was originally a way to preserve fish using fermented rice — the rice was thrown away!", difficulty: "easy" },
+    { question: "What is the world's most popular spice by weight sold?", options: ["Cinnamon", "Pepper", "Cumin", "Paprika"], correctIndex: 1, funFact: "Black pepper was once so valuable it was used as currency and called 'black gold'!", difficulty: "medium" },
+    { question: "What fruit is on top of a traditional Hawaiian pizza?", options: ["Mango", "Coconut", "Pineapple", "Papaya"], correctIndex: 2, funFact: "Hawaiian pizza was actually invented in Canada by a Greek immigrant!", difficulty: "easy" },
+    { question: "What nut is used to make marzipan?", options: ["Walnut", "Cashew", "Pistachio", "Almond"], correctIndex: 3, funFact: "Marzipan has been around since the Middle Ages and was once considered medicine!", difficulty: "medium" },
+    { question: "Which country produces the most coffee?", options: ["Colombia", "Vietnam", "Ethiopia", "Brazil"], correctIndex: 3, funFact: "Brazil produces about one-third of all the world's coffee!", difficulty: "medium" },
+  ],
+  mythology: [
+    { question: "Who is the Greek god of the sea?", options: ["Zeus", "Poseidon", "Hades", "Apollo"], correctIndex: 1, funFact: "Poseidon was said to have created horses by striking the ground with his trident!", difficulty: "easy" },
+    { question: "What hammer-wielding god is from Norse mythology?", options: ["Odin", "Loki", "Thor", "Freya"], correctIndex: 2, funFact: "Thor's hammer Mjolnir was so heavy that only he could lift it!", difficulty: "easy" },
+    { question: "What creature has the body of a lion and head of a human?", options: ["Griffin", "Sphinx", "Manticore", "Chimera"], correctIndex: 1, funFact: "The Great Sphinx of Giza is the oldest known monumental sculpture — over 4,500 years old!", difficulty: "easy" },
+    { question: "In Greek myth, who flew too close to the sun?", options: ["Perseus", "Theseus", "Icarus", "Daedalus"], correctIndex: 2, funFact: "Icarus's father Daedalus built the wings from feathers and wax!", difficulty: "easy" },
+    { question: "What is the name of the Norse realm of the dead?", options: ["Valhalla", "Midgard", "Helheim", "Asgard"], correctIndex: 2, funFact: "Helheim is ruled by Hel, Loki's daughter — half her face is alive, half is dead!", difficulty: "medium" },
+  ],
+  space: [
+    { question: "What planet is known as the 'Red Planet'?", options: ["Jupiter", "Venus", "Mars", "Saturn"], correctIndex: 2, funFact: "Mars has the largest volcano in the solar system — Olympus Mons is three times taller than Everest!", difficulty: "easy" },
+    { question: "What is the closest star to Earth?", options: ["Proxima Centauri", "Sirius", "The Sun", "Alpha Centauri"], correctIndex: 2, funFact: "The Sun is about 93 million miles away and light takes 8 minutes to reach us!", difficulty: "easy" },
+    { question: "How many planets in our solar system have rings?", options: ["1", "2", "3", "4"], correctIndex: 3, funFact: "Jupiter, Saturn, Uranus, and Neptune all have ring systems!", difficulty: "hard" },
+    { question: "What was the first animal sent into space?", options: ["Dog", "Monkey", "Fruit flies", "Cat"], correctIndex: 2, funFact: "Fruit flies were launched into space in 1947 on a V-2 rocket — they survived!", difficulty: "hard" },
+    { question: "What is the largest planet in our solar system?", options: ["Saturn", "Neptune", "Jupiter", "Uranus"], correctIndex: 2, funFact: "Jupiter is so big that over 1,300 Earths could fit inside it!", difficulty: "easy" },
+  ],
+  technology: [
+    { question: "What does 'HTTP' stand for?", options: ["HyperText Transfer Protocol", "High Tech Transfer Process", "HyperText Transmission Program", "Home Tool Transfer Protocol"], correctIndex: 0, funFact: "The first website ever created is still online: info.cern.ch!", difficulty: "medium" },
+    { question: "Who co-founded Apple with Steve Jobs?", options: ["Bill Gates", "Steve Wozniak", "Jeff Bezos", "Larry Page"], correctIndex: 1, funFact: "Wozniak hand-built the Apple I computer in Steve Jobs' garage!", difficulty: "easy" },
+    { question: "What year was the first iPhone released?", options: ["2005", "2006", "2007", "2008"], correctIndex: 2, funFact: "The first iPhone had only 2 megapixels and no app store!", difficulty: "medium" },
+    { question: "What programming language was created by Guido van Rossum?", options: ["Java", "Python", "Ruby", "C++"], correctIndex: 1, funFact: "Python is named after Monty Python's Flying Circus, not the snake!", difficulty: "medium" },
+    { question: "What does 'Wi-Fi' stand for?", options: ["Wireless Fidelity", "Nothing — it's a brand name", "Wide Frequency", "Wireless Finder"], correctIndex: 1, funFact: "Wi-Fi doesn't actually stand for anything — it was coined as a catchy brand name!", difficulty: "hard" },
+  ],
+  comics: [
+    { question: "Who is the alter ego of Spider-Man?", options: ["Bruce Wayne", "Clark Kent", "Peter Parker", "Tony Stark"], correctIndex: 2, funFact: "Spider-Man was rejected by Marvel's publisher who thought kids hate spiders!", difficulty: "easy" },
+    { question: "What is the name of the Dragon Ball series' main character?", options: ["Vegeta", "Goku", "Naruto", "Luffy"], correctIndex: 1, funFact: "Goku's Japanese name is based on Sun Wukong, the Monkey King from Chinese mythology!", difficulty: "easy" },
+    { question: "Which superhero carries an indestructible shield?", options: ["Thor", "Iron Man", "Captain America", "Black Panther"], correctIndex: 2, funFact: "Captain America's shield is made of vibranium — the rarest metal in the Marvel universe!", difficulty: "easy" },
+    { question: "What anime features pirates searching for the 'One Piece'?", options: ["Naruto", "Bleach", "One Piece", "Dragon Ball"], correctIndex: 2, funFact: "One Piece has been running since 1997 with over 1,100 chapters!", difficulty: "easy" },
+    { question: "What superhero is known as the 'Dark Knight'?", options: ["Superman", "Batman", "Green Arrow", "Moon Knight"], correctIndex: 1, funFact: "Batman first appeared in Detective Comics #27 in 1939!", difficulty: "easy" },
+  ],
+  nostalgia: [
+    { question: "What virtual pet toy was a 90s phenomenon?", options: ["Furby", "Tamagotchi", "Giga Pet", "Neopet"], correctIndex: 1, funFact: "Over 82 million Tamagotchis were sold worldwide by 2017!", difficulty: "easy" },
+    { question: "What search engine was the most popular before Google?", options: ["Yahoo", "AltaVista", "Lycos", "AskJeeves"], correctIndex: 0, funFact: "Yahoo was originally called 'Jerry and David's Guide to the World Wide Web'!", difficulty: "medium" },
+    { question: "Which boy band sang 'Bye Bye Bye'?", options: ["Backstreet Boys", "*NSYNC", "98 Degrees", "New Kids on the Block"], correctIndex: 1, funFact: "Justin Timberlake's mom came up with the name *NSYNC!", difficulty: "easy" },
+    { question: "What was the name of the portable CD player?", options: ["Walkman", "Discman", "iPod", "Zune"], correctIndex: 1, funFact: "The Discman was invented by Sony in 1984 and changed how people listened to music!", difficulty: "easy" },
+    { question: "What instant messaging service used 'a]S/L?' as a greeting?", options: ["MSN Messenger", "ICQ", "AOL Instant Messenger", "Yahoo Messenger"], correctIndex: 2, funFact: "At its peak, AIM had over 100 million active users!", difficulty: "medium" },
+  ],
   disney: [
     { question: "What year did Disneyland first open its gates?", options: ["1945", "1955", "1965", "1975"], correctIndex: 1, funFact: "Disneyland opened on July 17, 1955 in Anaheim, California!", difficulty: "medium" },
     { question: "What is the name of Simba's father in The Lion King?", options: ["Scar", "Mufasa", "Rafiki", "Zazu"], correctIndex: 1, funFact: "Mufasa means 'King' in the Manazoto language!", difficulty: "easy" },
@@ -180,7 +286,7 @@ function getRandomFallback(categoryId, usedHashes) {
 }
 
 export async function generateQuestion(categoryId, usedHashes = new Set()) {
-  const category = CATEGORIES.find(c => c.id === categoryId);
+  const category = ALL_CATEGORIES.find(c => c.id === categoryId);
   const catName = category ? category.name : categoryId;
 
   if (!model) return getRandomFallback(categoryId, usedHashes);
@@ -281,17 +387,17 @@ const GUS_DEFAULTS = {
     "🔥 STREAK! Whatever. I could do this too if I had thumbs. And cared. 🐾",
   ],
   stamp: [
-    "NEW PAW STAMP! *reluctantly impressed* ...I could've gotten that too. 🐾",
-    "STAMP! One step closer. Unlike me getting one step closer to the car. Never. 🚗🚫",
-    "You earned a stamp. I'm gonna go celebrate by eating something I shouldn't. 🧦🗑️",
+    "NEW TREAT! *reluctantly impressed* ...I could've gotten that too. 🦴",
+    "TREAT! One step closer. Unlike me getting one step closer to the car. Never. 🚗🚳",
+    "You earned a treat. I'm gonna go celebrate by eating something I shouldn't. 🧦🗑️",
   ],
   crown_attempt: [
     "👑 CROWN TIME! Don't blow it. I've got a sock riding on this.",
     "👑 THE BIG ONE! *nervously chews on trash* You better not embarrass me!",
   ],
   crown_not_ready: [
-    "Nice try, but you need more stamps. Now go fetch! ...get it? Fetch? I'm hilarious. 🐾",
-    "Not enough stamps yet! Keep playing or I'll eat your socks. ALL of them. 🧦",
+    "Nice try, but you need more treats. Now go fetch! ...get it? Fetch? I'm hilarious. 🦴",
+    "Not enough treats yet! Keep playing or I'll eat your socks. ALL of them. 🧦",
   ],
   wild: [
     "🐕 GUS'S WILD CARD! I picked this one myself. Between bites of garbage. 🗑️",
@@ -343,16 +449,16 @@ const GUS_CLEAN = {
     "🔥 Streak! You're fetching answers like a pro! 🎾",
   ],
   stamp: [
-    "NEW PAW STAMP! I'd give you a paw bump if I could! 🐾✨",
-    "STAMP! You're collecting them like I collect tennis balls! 🎾🐾",
+    "NEW TREAT! I'd give you a paw bump if I could! 🦴✨",
+    "TREAT! You're collecting them like I collect tennis balls! 🎾🦴",
   ],
   crown_attempt: [
-    "👑 THE BIG ONE! You've got this! I believe in you! 🐾",
+    "👑 THE BIG ONE! You've got this! I believe in you! 🦴",
     "👑 CROWN CHALLENGE! Time to shine! *wags tail excitedly*",
   ],
   crown_not_ready: [
-    "Not enough stamps yet! Keep fetching those answers! 🐾🎾",
-    "You need more stamps first! Go get 'em! I'll be right here cheering! 🐕",
+    "Not enough treats yet! Keep fetching those answers! 🦴🎾",
+    "You need more treats first! Go get 'em! I'll be right here cheering! 🐕",
   ],
   wild: [
     "🐕 GUS'S WILD CARD! I picked this one just for you! 🎾",

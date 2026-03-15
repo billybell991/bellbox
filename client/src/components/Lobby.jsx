@@ -14,9 +14,7 @@ export default function Lobby({
   spiceLevel, onSetSpice,
   aiBots, onToggleAiBots,
   theme,
-  topicPacks, selectedTopics, onToggleTopic,
 }) {
-  const currentSpice = SPICE_LEVELS.find(s => s.level === spiceLevel) || SPICE_LEVELS[1];
 
   return (
     <div className="lobby-screen">
@@ -55,37 +53,6 @@ export default function Lobby({
         </div>
       </div>
 
-      {/* ── Spice-O-Meter (host only) ─────────────────────── */}
-      {isHost && (
-      <div className="spice-meter pop-in">
-        <h3>🌡️ Spice-O-Meter</h3>
-        <div className="spice-track">
-          <div
-            className="spice-indicator"
-            style={{
-              '--spice-color': currentSpice.color,
-              left: `${((spiceLevel - 1) / 2) * 100}%`,
-            }}
-          />
-          {SPICE_LEVELS.map((s) => (
-            <button
-              key={s.level}
-              className={`spice-btn ${spiceLevel === s.level ? 'active' : ''}`}
-              style={{ '--spice-color': s.color }}
-              onClick={() => onSetSpice(s.level)}
-              title={s.description}
-            >
-              <span className="spice-emoji">{s.emoji}</span>
-              <span className="spice-label">{s.label}</span>
-            </button>
-          ))}
-        </div>
-        <div className="spice-description" style={{ color: currentSpice.color }}>
-          {currentSpice.emoji} {currentSpice.description}
-        </div>
-      </div>
-      )}
-
       {/* ── AI Opponents Toggle (host only) ───────────────── */}
       {isHost && (
       <div className="ai-bots-toggle pop-in">
@@ -101,30 +68,6 @@ export default function Lobby({
       </div>
       )}
 
-      {/* ── Topic Packs (host only) ───────────────────────── */}
-      {isHost && topicPacks && Object.keys(topicPacks).length > 0 && (
-      <div className="topic-packs pop-in">
-        <h3>📦 Topic Packs</h3>
-        <div className="topic-grid">
-          {Object.values(topicPacks).map(pack => {
-            const isSelected = selectedTopics?.includes(pack.id);
-            return (
-              <button
-                key={pack.id}
-                className={`topic-chip ${isSelected ? 'active' : ''}`}
-                onClick={() => onToggleTopic(pack.id)}
-                title={pack.description}
-              >
-                <span className="topic-emoji">{pack.emoji}</span>
-                <span className="topic-name">{pack.name}</span>
-              </button>
-            );
-          })}
-        </div>
-        <div className="topic-hint">Tap to toggle — games will use selected topics</div>
-      </div>
-      )}
-
       {/* Game Selector */}
       <GameList
         games={games}
@@ -133,6 +76,10 @@ export default function Lobby({
         isHost={isHost}
         onVote={onVote}
         onLaunch={onLaunch}
+        spiceLevel={spiceLevel}
+        onSetSpice={onSetSpice}
+        nahSelectedThemes={nahSelectedThemes}
+        onToggleTheme={onToggleTheme}
       />
 
 
@@ -157,13 +104,16 @@ const categoryMeta = {
   'Rapid Reactions':     { emoji: '⚡', color: '#FFE02F', desc: 'Fast-paced rounds that test your reflexes' },
 };
 
-function GameList({ games, votes, players, isHost, onVote, onLaunch }) {
+function GameList({ games, votes, players, isHost, onVote, onLaunch, spiceLevel, onSetSpice, nahSelectedThemes, onToggleTheme }) {
   const [collapsed, setCollapsed] = useState(() => {
     const init = {};
     categoryOrder.forEach(c => { init[c] = true; });
     return init;
   });
   const [infoGame, setInfoGame] = useState(null);
+  const [preLaunchGame, setPreLaunchGame] = useState(null);
+  const [selectedPacks, setSelectedPacks] = useState([]);
+  const [selectedTriviaCats, setSelectedTriviaCats] = useState([]);
 
   const toggle = (cat) => setCollapsed(prev => {
     const wasCollapsed = prev[cat];
@@ -226,7 +176,18 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch }) {
                       key={game.id}
                       className={`game-row ${isHost ? 'game-row--host' : ''}`}
                       style={{ '--card-accent': game.color || meta.color }}
-                      onClick={() => isHost && onLaunch(game.id)}
+                      onClick={() => {
+                        if (!isHost) return;
+                        if (game.triviaCategories) {
+                          setPreLaunchGame(game);
+                          setSelectedTriviaCats([...(game.defaultCategories || [])]);
+                        } else if (game.nahThemes || game.packs || game.spicy) {
+                          setPreLaunchGame(game);
+                          if (game.packs) setSelectedPacks(Object.keys(game.packs));
+                        } else {
+                          onLaunch(game.id);
+                        }
+                      }}
                     >
                       <div className="game-row-emoji">{game.emoji}</div>
                       <div className="game-row-info">
@@ -273,6 +234,161 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch }) {
               </>
             )}
             <div className="game-info-dismiss">tap anywhere to close</div>
+          </div>
+        </div>
+      )}
+
+      {/* Pre-Launch Picker */}
+      {preLaunchGame && (
+        <div className="game-info-overlay" onClick={() => setPreLaunchGame(null)}>
+          <div className="prelaunch-modal pop-in" onClick={(e) => e.stopPropagation()}>
+            <div className="prelaunch-header">
+              <span className="prelaunch-emoji">{preLaunchGame.emoji}</span>
+              <h2 className="prelaunch-title">{preLaunchGame.name}</h2>
+            </div>
+
+            {/* ── Spice-O-Meter (spicy games only) ── */}
+            {preLaunchGame.spicy && (
+              <div className="prelaunch-section">
+                <h3>🌡️ Spice-O-Meter</h3>
+                <div className="spice-track">
+                  <div
+                    className="spice-indicator"
+                    style={{
+                      '--spice-color': (SPICE_LEVELS.find(s => s.level === spiceLevel) || SPICE_LEVELS[1]).color,
+                      left: `${((spiceLevel - 1) / 2) * 100}%`,
+                    }}
+                  />
+                  {SPICE_LEVELS.map((s) => (
+                    <button
+                      key={s.level}
+                      className={`spice-btn ${spiceLevel === s.level ? 'active' : ''}`}
+                      style={{ '--spice-color': s.color }}
+                      onClick={() => onSetSpice(s.level)}
+                      title={s.description}
+                    >
+                      <span className="spice-emoji">{s.emoji}</span>
+                      <span className="spice-label">{s.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="spice-description" style={{ color: (SPICE_LEVELS.find(s => s.level === spiceLevel) || SPICE_LEVELS[1]).color }}>
+                  {(SPICE_LEVELS.find(s => s.level === spiceLevel) || SPICE_LEVELS[1]).emoji}{' '}
+                  {(SPICE_LEVELS.find(s => s.level === spiceLevel) || SPICE_LEVELS[1]).description}
+                </div>
+              </div>
+            )}
+
+            {/* ── Trivia Category Picker ── */}
+            {preLaunchGame.triviaCategories && (
+              <div className="prelaunch-section">
+                <h3>🎯 Pick 6 Categories</h3>
+                <div className="trivia-cat-grid">
+                  {preLaunchGame.triviaCategories.map((cat, i) => {
+                    const isSelected = selectedTriviaCats.includes(cat.id);
+                    const isDefault = (preLaunchGame.defaultCategories || []).includes(cat.id);
+                    return (
+                      <button
+                        key={cat.id}
+                        className={`trivia-cat-chip ${isSelected ? 'active' : ''}`}
+                        style={isSelected ? { borderColor: cat.color, background: `${cat.color}22` } : {}}
+                        onClick={() => {
+                          setSelectedTriviaCats(prev => {
+                            if (prev.includes(cat.id)) {
+                              if (prev.length <= 1) return prev;
+                              return prev.filter(c => c !== cat.id);
+                            }
+                            if (prev.length >= 6) return prev;
+                            return [...prev, cat.id];
+                          });
+                        }}
+                      >
+                        <span className="trivia-cat-emoji">{cat.emoji}</span>
+                        <span className="trivia-cat-name">{cat.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="topic-hint">
+                  {selectedTriviaCats.length}/6 selected
+                  {selectedTriviaCats.length < 6 && ` — pick ${6 - selectedTriviaCats.length} more`}
+                </div>
+              </div>
+            )}
+
+            {/* ── Topic Pack Picker (base games) ── */}
+            {preLaunchGame.packs && !preLaunchGame.triviaCategories && (
+              <div className="prelaunch-section">
+                <h3>📦 Topic Packs</h3>
+                <div className="topic-grid">
+                  {Object.values(preLaunchGame.packs).map(pack => {
+                    const isSelected = selectedPacks.includes(pack.id);
+                    return (
+                      <button
+                        key={pack.id}
+                        className={`topic-chip ${isSelected ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedPacks(prev => {
+                            if (prev.includes(pack.id)) {
+                              if (prev.length <= 1) return prev;
+                              return prev.filter(p => p !== pack.id);
+                            }
+                            return [...prev, pack.id];
+                          });
+                        }}
+                        title={pack.description}
+                      >
+                        <span className="topic-emoji">{pack.emoji}</span>
+                        <span className="topic-name">{pack.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="topic-hint">Tap to toggle — at least one required</div>
+              </div>
+            )}
+
+            {/* ── NAH Theme Pack Picker ── */}
+            {preLaunchGame.nahThemes && (
+              <div className="prelaunch-section">
+                <h3>📦 Card Packs</h3>
+                <div className="topic-grid">
+                  {Object.entries(preLaunchGame.nahThemes).map(([id, theme]) => {
+                    const isSelected = nahSelectedThemes.includes(id);
+                    return (
+                      <button
+                        key={id}
+                        className={`topic-chip ${isSelected ? 'active' : ''}`}
+                        onClick={() => onToggleTheme(id)}
+                        title={theme.description}
+                      >
+                        <span className="topic-emoji">{theme.icon}</span>
+                        <span className="topic-name">{theme.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="topic-hint">Tap to toggle — at least one required</div>
+              </div>
+            )}
+
+            <button
+              className="prelaunch-go-btn"
+              disabled={preLaunchGame.triviaCategories && selectedTriviaCats.length !== 6}
+              onClick={() => {
+                if (preLaunchGame.triviaCategories) {
+                  onLaunch(preLaunchGame.id, { selectedCategories: selectedTriviaCats });
+                } else {
+                  onLaunch(preLaunchGame.id, { selectedTopics: selectedPacks });
+                }
+                setPreLaunchGame(null);
+              }}
+            >
+              {preLaunchGame.id === 'trivia-fetch' ? '🎾 Throw the Ball!' : '🚀 Launch!'}
+            </button>
+            <div className="game-info-dismiss" onClick={() => setPreLaunchGame(null)}>
+              tap outside to cancel
+            </div>
           </div>
         </div>
       )}

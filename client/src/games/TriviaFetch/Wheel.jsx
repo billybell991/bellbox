@@ -1,25 +1,12 @@
 import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 
-const SEGMENTS = [
-  { id: 'disney',      name: 'Disney',       emoji: '🏰', color: '#9B59B6' },
-  { id: 'harrypotter', name: 'Harry Potter',  emoji: '⚡', color: '#AE1438' },
-  { id: 'horror',      name: 'Horror',        emoji: '🎃', color: '#34495E' },
-  { id: 'animals',     name: 'Animals',       emoji: '🐾', color: '#27AE60' },
-  { id: 'tv',          name: 'TV Shows',      emoji: '📺', color: '#3498DB' },
-  { id: 'movies',      name: 'Movies',        emoji: '🎬', color: '#E67E22' },
-  { id: 'music',       name: 'Music',         emoji: '🎵', color: '#E91E63' },
-  { id: 'science',     name: 'Science',       emoji: '🔬', color: '#00BCD4' },
-  { id: 'crown',       name: 'Crown',         emoji: '👑', color: '#F1C40F' },
-  { id: 'wild',        name: "Gus's Wild",    emoji: '🐕', color: '#FF9800' },
-];
-
 function easeOutCubic(t) {
   return 1 - Math.pow(1 - t, 3);
 }
 
-const WHEEL_SIZE = 290;
+const WHEEL_SIZE = 300;
 
-const Wheel = forwardRef(({ onSpinComplete, disabled }, ref) => {
+const Wheel = forwardRef(({ onSpinComplete, disabled, onTap, segments = [] }, ref) => {
   const canvasRef = useRef(null);
   const rotationRef = useRef(0);
   const [spinning, setSpinning] = useState(false);
@@ -40,18 +27,21 @@ const Wheel = forwardRef(({ onSpinComplete, disabled }, ref) => {
 
     const cx = size / 2;
     const cy = size / 2;
-    const radius = cx - 8;
-    const segCount = SEGMENTS.length;
+    const radius = cx - 10;
+    const segCount = segments.length;
     const segAngle = (2 * Math.PI) / segCount;
 
     ctx.clearRect(0, 0, size, size);
 
-    // Outer glow
+    // Outer ring glow
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, radius + 4, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(255, 179, 71, 0.15)';
-    ctx.fill();
+    ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
+    ctx.shadowColor = 'rgba(255, 200, 80, 0.4)';
+    ctx.shadowBlur = 12;
+    ctx.strokeStyle = 'rgba(255, 200, 80, 0.35)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
     ctx.restore();
 
     ctx.save();
@@ -60,78 +50,92 @@ const Wheel = forwardRef(({ onSpinComplete, disabled }, ref) => {
 
     // Draw segments
     for (let i = 0; i < segCount; i++) {
-      const seg = SEGMENTS[i];
+      const seg = segments[i];
       const startAngle = i * segAngle - Math.PI / 2;
       const endAngle = startAngle + segAngle;
+      const midAngle = startAngle + segAngle / 2;
 
-      // Segment fill
+      // Segment fill with gradient
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.arc(0, 0, radius, startAngle, endAngle);
       ctx.closePath();
 
-      // Gradient fill for each segment
-      const midAngle = startAngle + segAngle / 2;
       const gx = Math.cos(midAngle) * radius * 0.5;
       const gy = Math.sin(midAngle) * radius * 0.5;
-      const grad = ctx.createRadialGradient(0, 0, radius * 0.2, gx, gy, radius);
-      grad.addColorStop(0, lightenColor(seg.color, 30));
-      grad.addColorStop(1, seg.color);
+      const grad = ctx.createRadialGradient(0, 0, radius * 0.15, gx, gy, radius);
+      grad.addColorStop(0, lightenColor(seg.color, 40));
+      grad.addColorStop(0.7, seg.color);
+      grad.addColorStop(1, darkenColor(seg.color, 20));
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Segment border
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-      ctx.lineWidth = 2;
+      // Segment divider lines
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(startAngle) * radius, Math.sin(startAngle) * radius);
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Emoji
+      // Emoji — large and centered in the segment
       ctx.save();
       ctx.rotate(midAngle);
-      ctx.font = '24px serif';
+      ctx.font = '30px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(seg.emoji, radius * 0.62, 0);
-
-      // Short name
-      ctx.font = 'bold 8px Fredoka, sans-serif';
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.fillText(seg.name.length > 10 ? seg.name.substring(0, 9) + '…' : seg.name, radius * 0.38, 0);
+      ctx.fillText(seg.emoji, radius * 0.6, 0);
       ctx.restore();
     }
 
-    ctx.restore();
-
-    // Center circle
+    // Outer rim
     ctx.beginPath();
-    ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
-    const centerGrad = ctx.createRadialGradient(cx, cy, 5, cx, cy, 28);
-    centerGrad.addColorStop(0, '#FFD580');
-    centerGrad.addColorStop(1, '#FFB347');
-    ctx.fillStyle = centerGrad;
-    ctx.fill();
-    ctx.strokeStyle = '#F0A500';
-    ctx.lineWidth = 3;
+    ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
     ctx.stroke();
 
+    ctx.restore();
+
+    // Center hub
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 30, 0, 2 * Math.PI);
+    const centerGrad = ctx.createRadialGradient(cx, cy - 4, 4, cx, cy, 30);
+    centerGrad.addColorStop(0, '#FFE4A8');
+    centerGrad.addColorStop(0.6, '#FFB347');
+    centerGrad.addColorStop(1, '#E8951C');
+    ctx.fillStyle = centerGrad;
+    ctx.fill();
+    ctx.shadowColor = 'rgba(255, 179, 71, 0.5)';
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = '#D48A15';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.restore();
+
     // Gus emoji in center
-    ctx.font = '22px serif';
+    ctx.font = '24px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('🐕', cx, cy);
 
-    // Pointer triangle at top (pointing DOWN into the wheel)
+    // Pointer triangle at top
+    ctx.save();
+    ctx.shadowColor = 'rgba(255, 80, 80, 0.6)';
+    ctx.shadowBlur = 8;
     ctx.beginPath();
-    ctx.moveTo(cx, 24);
-    ctx.lineTo(cx - 14, 2);
-    ctx.lineTo(cx + 14, 2);
+    ctx.moveTo(cx, 26);
+    ctx.lineTo(cx - 13, 4);
+    ctx.lineTo(cx + 13, 4);
     ctx.closePath();
-    ctx.fillStyle = '#FF6B6B';
+    ctx.fillStyle = '#FF5252';
     ctx.fill();
-    ctx.strokeStyle = '#E55A5A';
+    ctx.strokeStyle = '#D43F3F';
     ctx.lineWidth = 2;
     ctx.stroke();
-  }, []);
+    ctx.restore();
+  }, [segments]);
 
   useEffect(() => {
     drawWheel(rotationRef.current);
@@ -141,8 +145,8 @@ const Wheel = forwardRef(({ onSpinComplete, disabled }, ref) => {
     spinTo(segmentIndex) {
       setSpinning(true);
 
-      const segAngle = 360 / SEGMENTS.length;
-      const targetStopAngle = segmentIndex * segAngle + segAngle / 2;
+      const segAngle = 360 / segments.length;
+      const targetStopAngle = (360 - (segmentIndex * segAngle + segAngle / 2)) % 360;
       const currentAngle = rotationRef.current;
       const currentMod = ((currentAngle % 360) + 360) % 360;
 
@@ -176,8 +180,12 @@ const Wheel = forwardRef(({ onSpinComplete, disabled }, ref) => {
     },
   }));
 
+  const handleClick = () => {
+    if (!spinning && !disabled && onTap) onTap();
+  };
+
   return (
-    <div className="wheel-container">
+    <div className="wheel-container" onClick={handleClick} style={{ cursor: (!spinning && !disabled) ? 'pointer' : 'default' }}>
       <canvas
         ref={canvasRef}
         style={{ borderRadius: '50%', display: 'block' }}
@@ -191,6 +199,14 @@ function lightenColor(hex, amount) {
   const r = Math.min(255, (num >> 16) + amount);
   const g = Math.min(255, ((num >> 8) & 0xFF) + amount);
   const b = Math.min(255, (num & 0xFF) + amount);
+  return `rgb(${r},${g},${b})`;
+}
+
+function darkenColor(hex, amount) {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.max(0, (num >> 16) - amount);
+  const g = Math.max(0, ((num >> 8) & 0xFF) - amount);
+  const b = Math.max(0, (num & 0xFF) - amount);
   return `rgb(${r},${g},${b})`;
 }
 

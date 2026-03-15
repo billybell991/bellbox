@@ -105,125 +105,81 @@ const categoryMeta = {
 };
 
 function GameList({ games, votes, players, isHost, onVote, onLaunch, spiceLevel, onSetSpice, nahSelectedThemes, onToggleTheme }) {
-  const [collapsed, setCollapsed] = useState(() => {
-    const init = {};
-    categoryOrder.forEach(c => { init[c] = true; });
-    return init;
-  });
   const [infoGame, setInfoGame] = useState(null);
   const [preLaunchGame, setPreLaunchGame] = useState(null);
   const [selectedPacks, setSelectedPacks] = useState([]);
   const [selectedTriviaCats, setSelectedTriviaCats] = useState([]);
   const [triviaCatsOpen, setTriviaCatsOpen] = useState(false);
   const [notEnoughMsg, setNotEnoughMsg] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
 
-  const toggle = (cat) => setCollapsed(prev => {
-    const wasCollapsed = prev[cat];
-    const next = { ...prev, [cat]: !wasCollapsed };
-    if (wasCollapsed) {
-      // Opening — scroll the category into view after render
-      setTimeout(() => {
-        const el = document.getElementById(`cat-${cat}`);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 50);
+  const handlePosterTap = (game) => {
+    if (!isHost) return;
+
+    // First tap — highlight
+    if (selectedId !== game.id) {
+      setSelectedId(game.id);
+      return;
     }
-    return next;
-  });
 
-  // Group games by category
-  const categories = {};
-  games.forEach(game => {
-    const cat = game.category || 'Other';
-    if (!categories[cat]) categories[cat] = [];
-    categories[cat].push(game);
-  });
-
-  const orderedCats = categoryOrder.filter(c => categories[c]);
-  Object.keys(categories).forEach(c => {
-    if (!orderedCats.includes(c)) orderedCats.push(c);
-  });
+    // Second tap — launch (same logic as before)
+    const canLaunch = players.length >= game.minPlayers;
+    if (!canLaunch) {
+      setNotEnoughMsg(`${game.name} needs at least ${game.minPlayers} players (you have ${players.length})`);
+      setTimeout(() => setNotEnoughMsg(null), 3000);
+      return;
+    }
+    if (game.triviaCategories) {
+      setPreLaunchGame(game);
+      setSelectedTriviaCats([...(game.defaultCategories || [])]);
+    } else if (game.nahThemes || game.packs || game.spicy) {
+      setPreLaunchGame(game);
+      if (game.packs) setSelectedPacks(Object.keys(game.packs));
+    } else {
+      onLaunch(game.id);
+    }
+    setSelectedId(null);
+  };
 
   return (
     <div className="game-selector">
       <h3>{isHost ? 'Pick a Game!' : 'The host is picking a game'}</h3>
-      {orderedCats.map(cat => {
-        const meta = categoryMeta[cat] || { emoji: '🎮', color: '#888' };
-        const isCollapsed = collapsed[cat];
-        return (
-          <div key={cat} id={`cat-${cat}`} className="game-category">
-            <button
-              className="game-category-header"
-              style={{ '--cat-color': meta.color }}
-              onClick={() => toggle(cat)}
+      <div className="poster-grid">
+        {games.map((game) => {
+          const voteCount = votes[game.id] || 0;
+          const playerVoted = players.find(p => p.id === socket.id)?.vote === game.id;
+          const isSelected = selectedId === game.id;
+          const posterSrc = `/images/posters/${game.id}.png`;
+
+          return (
+            <div
+              key={game.id}
+              className={`poster-card ${isSelected ? 'poster-card--selected' : ''} ${isHost ? 'poster-card--host' : ''}`}
+              onClick={() => handlePosterTap(game)}
             >
-              <span className="game-category-emoji">{meta.emoji}</span>
-              <div className="game-category-text">
-                <div className="game-category-name-row">
-                  <span className="game-category-name">{cat}</span>
-                  <span className="game-category-count">{categories[cat].length} games</span>
+              <img src={posterSrc} alt={game.name} className="poster-img" loading="lazy" />
+              <div className="poster-bottom">
+                <div className="poster-actions">
+                  <button
+                    className="poster-info-btn"
+                    onClick={(e) => { e.stopPropagation(); setInfoGame(game); }}
+                    title="How to play"
+                  >?</button>
+                  <button
+                    className={`poster-vote-btn ${playerVoted ? 'voted' : ''}`}
+                    onClick={(e) => { e.stopPropagation(); onVote(game.id); }}
+                  >
+                    ❤️ {voteCount > 0 ? voteCount : ''}
+                  </button>
                 </div>
-                {meta.desc && <div className="game-category-desc">{meta.desc}</div>}
+                {isSelected && (
+                  <span className="tap-to-submit">tap to launch</span>
+                )}
               </div>
-              <span className={`game-category-chevron ${isCollapsed ? 'collapsed' : ''}`}>▾</span>
-            </button>
-            {!isCollapsed && (
-              <div className="game-list">
-                {categories[cat].map((game) => {
-                  const voteCount = votes[game.id] || 0;
-                  const playerVoted = players.find(p => p.id === socket.id)?.vote === game.id;
-                  const canLaunch = players.length >= game.minPlayers;
-
-                  return (
-                    <div
-                      key={game.id}
-                      className={`game-row ${isHost ? 'game-row--host' : ''}`}
-                      style={{ '--card-accent': game.color || meta.color }}
-                      onClick={() => {
-                        if (!isHost) return;
-                        if (!canLaunch) {
-                          setNotEnoughMsg(`${game.name} needs at least ${game.minPlayers} players (you have ${players.length})`);
-                          setTimeout(() => setNotEnoughMsg(null), 3000);
-                          return;
-                        }
-                        if (game.triviaCategories) {
-                          setPreLaunchGame(game);
-                          setSelectedTriviaCats([...(game.defaultCategories || [])]);
-                        } else if (game.nahThemes || game.packs || game.spicy) {
-                          setPreLaunchGame(game);
-                          if (game.packs) setSelectedPacks(Object.keys(game.packs));
-                        } else {
-                          onLaunch(game.id);
-                        }
-                      }}
-                    >
-                      <div className="game-row-emoji">{game.emoji}</div>
-                      <div className="game-row-info">
-                        <div className="game-row-title">{game.name}</div>
-                        <div className="game-row-desc">{game.description}</div>
-                        <div className="game-row-players">{game.minPlayers}-{game.maxPlayers} players</div>
-                      </div>
-                      <div className="game-row-actions">
-                        <button
-                          className="game-info-btn"
-                          onClick={(e) => { e.stopPropagation(); setInfoGame(game); }}
-                          title="How to play"
-                        >?</button>
-                        <button
-                          className={`vote-btn vote-btn--compact ${playerVoted ? 'voted' : ''}`}
-                          onClick={(e) => { e.stopPropagation(); onVote(game.id); }}
-                        >
-                          ❤️ {voteCount}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
-
+            </div>
+          );
+        })}
+      </div>
       {/* Game Info Popup */}
       {infoGame && (
         <div className="game-info-overlay" onClick={() => setInfoGame(null)}>

@@ -310,6 +310,7 @@ export class TriviaGame {
         streakCount: this.streakCount,
         currentSegment: this.currentSegment,
         currentCategoryId: this.currentCategoryId,
+        categories: this.categories,
       } : null,
     };
   }

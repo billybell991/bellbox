@@ -58,7 +58,7 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
     <div className={`black-card ${!isCzar && phase === 'picking' ? 'compact' : ''} ${isCzar && phase === 'picking' ? 'czar-waiting' : ''}`}>
       <div className="black-card-text">{blackCard.text}</div>
       <div className="black-card-meta">
-        Pick {blackCard.pick} &bull; Rd {roundNumber}
+        Pick {blackCard.pick}
       </div>
     </div>
   );
@@ -234,10 +234,11 @@ export default function Game({ gameState, myId, onSubmit, onJudge, onNextRound, 
 
   return (
     <div className="game">
-      <div className="game-header">
-        <span className="round-indicator">Rd {roundNumber}</span>
-        <span className="czar-indicator">Czar: {czarName} {isCzar ? '(You!)' : ''}</span>
-
+      <div className="nah-header">
+        <div className="nah-title">Nerds Against Humanity</div>
+        <div className="nah-czar-line">
+          Round {roundNumber} &bull; {isCzar ? "You're the Card Czar!" : `Card Czar: ${czarName}`}
+        </div>
       </div>
 
       {renderBlackCard()}

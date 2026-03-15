@@ -1916,6 +1916,28 @@ h1, h2, h3 {
    ═══════════════════════════════════════════════════════════ */
 .game { padding: 12px; min-height: 100vh; }
 
+/* NAH-specific header */
+.nah-header {
+  text-align: center;
+  padding: 10px 56px 6px;
+  margin-bottom: 8px;
+}
+
+.nah-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  color: var(--cream);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.nah-czar-line {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  color: var(--yellow);
+  margin-top: 2px;
+}
+
 .game-header {
   display: flex;
   align-items: center;

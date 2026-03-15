@@ -1368,6 +1368,27 @@ h1, h2, h3 {
   color: rgba(255,255,255,0.7);
 }
 
+.not-enough-toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff4444;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  text-align: center;
+  z-index: 999;
+  animation: toastSlideUp 0.3s ease;
+  box-shadow: 0 4px 20px rgba(255,68,68,0.4);
+}
+@keyframes toastSlideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 .prelaunch-customize-btn {
   display: flex;
   align-items: center;
@@ -4408,53 +4429,389 @@ h1, h2, h3 {
 }
 
 /* ═════════════════════════════════════════════════════════════
-   MEME MELEE
+   MEME MELEE — Social Media Feed Theme
    ═════════════════════════════════════════════════════════════ */
-.meme-card {
-  background: #111;
-  color: white;
-  border-radius: 16px;
-  padding: 12px;
-  margin-bottom: 16px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-  border: 2px solid #333;
-  text-align: center;
+.mm-game {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 8px 8px 20px;
 }
-.meme-card.compact { padding: 8px; }
-.meme-card.compact .meme-card-image { max-height: 180px; }
-.meme-card-image {
-  width: 100%;
-  max-height: 340px;
-  object-fit: contain;
-  border-radius: 10px;
-  margin-bottom: 8px;
+
+/* ── Post Card (the meme) ── */
+.mm-post {
+  background: #16162a;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
-.meme-card-text {
+.mm-post--czar {
+  border: 2px solid rgba(255,215,0,0.25);
+  box-shadow: 0 4px 24px rgba(255,215,0,0.08), 0 0 0 1px rgba(255,215,0,0.1);
+}
+
+/* Post header — IG style */
+.mm-post-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  gap: 10px;
+}
+.mm-post-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.1rem;
-  font-weight: 700;
-  line-height: 1.4;
-  padding: 8px;
+  flex-shrink: 0;
+  /* IG "story ring with gap" effect — inner dark ring */
+  padding: 2.5px;
+  position: relative;
 }
-.meme-card-meta {
-  font-size: 0.7rem;
-  opacity: 0.5;
-  margin-top: 4px;
+.mm-post-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 2.5px;
+  border-radius: 50%;
+  border: 2px solid #16162a;
+  pointer-events: none;
 }
-.meme-card.czar-waiting {
-  min-height: 50vh;
+.mm-post-user-info {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+.mm-post-username {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--cream);
+  letter-spacing: 0.3px;
+}
+.mm-post-location {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.35);
+  margin-top: 1px;
+}
+.mm-score-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.2s, transform 0.15s;
+}
+.mm-score-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+.mm-score-btn:active {
+  transform: scale(0.9);
+}
+
+/* Post image */
+.mm-post-image-wrap {
+  width: 100%;
+  background: #0a0a14;
+  display: flex;
   align-items: center;
-  padding: 24px;
-  border-radius: 24px;
-  border: 3px solid #444;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,0,0,0.3);
+  justify-content: center;
+  min-height: 200px;
+  max-height: 420px;
 }
-.meme-card.czar-waiting .meme-card-image {
-  max-height: 60vh;
+.mm-post-image {
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  display: block;
 }
-.meme-card.czar-waiting .meme-card-meta {
+.mm-post-placeholder {
+  padding: 60px 20px;
+  font-size: 1.3rem;
+  color: rgba(255,255,255,0.3);
+  text-align: center;
+}
+
+/* Caption area */
+.mm-post-caption {
+  padding: 8px 14px 6px;
+  font-size: 0.85rem;
+  color: var(--cream);
+  line-height: 1.4;
+}
+.mm-caption-bold {
+  font-weight: 700;
+  margin-right: 4px;
+}
+.mm-post-comments {
+  padding: 0 14px 4px;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.3);
+  cursor: default;
+}
+.mm-post-judge {
+  padding: 6px 14px 10px;
+  font-size: 0.8rem;
+  color: var(--yellow);
+  letter-spacing: 0.3px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  margin-top: 2px;
+}
+
+/* ── Caption Cards (Hand) ── */
+.mm-hand-section {
+  margin-bottom: 14px;
+}
+.mm-hand-label {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  color: var(--yellow);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 0 6px 8px;
+}
+.mm-hand {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 80px;
+}
+.mm-caption-card {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-left: 3px solid transparent;
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+.mm-caption-card:hover {
+  background: #f0f0f0;
+  border-color: rgba(0,0,0,0.2);
+  border-left-color: rgba(0,0,0,0.2);
+}
+.mm-caption-card:active {
+  transform: scale(0.98);
+}
+.mm-caption-card--selected {
+  background: #e8f0fe;
+  border-color: #4a9eff;
+  border-left-color: #4a9eff;
+  box-shadow: 0 0 16px rgba(74,158,255,0.15);
+}
+.mm-caption-card--disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.mm-caption-card-text {
   font-size: 0.9rem;
-  margin-top: 16px;
+  color: #1a1a2e;
+  line-height: 1.35;
+}
+/* tap-to-submit uses the shared NAH .tap-to-submit class */
+.mm-caption-card .tap-to-submit,
+.mm-submission .tap-to-submit {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  display: block;
+  margin: 6px auto 0;
+  width: fit-content;
+}
+
+/* ── Judging — Comment-style submissions ── */
+.mm-judging-section {
+  margin-top: 4px;
+}
+.mm-judging-label {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  color: var(--yellow);
+  padding: 0 6px 8px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.mm-submissions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mm-submission {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #1e1e36;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 12px 14px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+.mm-submission--judgeable {
+  cursor: pointer;
+}
+.mm-submission--judgeable:hover {
+  background: #262648;
+  border-color: rgba(255,255,255,0.15);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.mm-submission--judgeable:active {
+  transform: scale(0.98);
+}
+.mm-submission--selected {
+  border-color: #4a9eff;
+  background: linear-gradient(135deg, #1a3a5c, #1a2a4a);
+  box-shadow: 0 0 16px rgba(74,158,255,0.15);
+}
+.mm-submission-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.mm-submission-body {
+  flex: 1;
+  min-width: 0;
+}
+.mm-submission-user {
+  display: block;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 2px;
+}
+.mm-submission-text {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--cream);
+  line-height: 1.3;
+}
+
+/* ── Overlays (round end, game over, scoreboard) ── */
+.mm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000;
+  padding: 20px;
+  animation: mm-fade-in 0.25s ease-out;
+}
+@keyframes mm-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.mm-overlay-content {
+  background: #16162a;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 28px 24px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  animation: mm-slide-up 0.3s ease-out;
+}
+@keyframes mm-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mm-overlay-emoji {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+}
+.mm-overlay-title {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  color: var(--cream);
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.mm-overlay-winner {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  color: var(--yellow);
+  margin: 0 0 16px;
+}
+
+/* Winning post mini */
+.mm-winning-post {
+  background: #111;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0 auto 16px;
+  max-width: 300px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.mm-winning-img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  display: block;
+  background: #000;
+}
+.mm-winning-captions {
+  padding: 10px 12px;
+}
+.mm-winning-caption {
+  font-size: 0.85rem;
+  color: var(--cream);
+  line-height: 1.3;
+  padding: 4px 0;
+}
+
+/* Result scores */
+.mm-result-scores {
+  margin: 12px 0;
+}
+.mm-result-score-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.mm-result-name {
+  font-size: 0.85rem;
+  color: var(--cream);
+}
+.mm-result-pts {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  color: var(--yellow);
+}
+.mm-next-btn {
+  margin-top: 12px;
+  width: 100%;
+}
+.mm-gameover-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  justify-content: center;
+}
+.mm-dismiss-hint {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.25);
+  margin-top: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }

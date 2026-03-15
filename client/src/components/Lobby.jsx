@@ -115,6 +115,7 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch, spiceLevel,
   const [selectedPacks, setSelectedPacks] = useState([]);
   const [selectedTriviaCats, setSelectedTriviaCats] = useState([]);
   const [triviaCatsOpen, setTriviaCatsOpen] = useState(false);
+  const [notEnoughMsg, setNotEnoughMsg] = useState(null);
 
   const toggle = (cat) => setCollapsed(prev => {
     const wasCollapsed = prev[cat];
@@ -179,6 +180,11 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch, spiceLevel,
                       style={{ '--card-accent': game.color || meta.color }}
                       onClick={() => {
                         if (!isHost) return;
+                        if (!canLaunch) {
+                          setNotEnoughMsg(`${game.name} needs at least ${game.minPlayers} players (you have ${players.length})`);
+                          setTimeout(() => setNotEnoughMsg(null), 3000);
+                          return;
+                        }
                         if (game.triviaCategories) {
                           setPreLaunchGame(game);
                           setSelectedTriviaCats([...(game.defaultCategories || [])]);
@@ -423,6 +429,10 @@ function GameList({ games, votes, players, isHost, onVote, onLaunch, spiceLevel,
             </div>
           </div>
         </div>
+      )}
+
+      {notEnoughMsg && (
+        <div className="not-enough-toast">{notEnoughMsg}</div>
       )}
     </div>
   );

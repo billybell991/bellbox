@@ -321,7 +321,7 @@ const GAMES = {
     description: 'Match hilarious captions to meme images. The Meme Judge picks the winner!',
     howToPlay: 'Each round, a meme image is revealed. Everyone plays a caption card from their hand to match it. The Meme Judge picks the funniest combo. First to 7 points wins!',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
-    spicy: true,
+    spicy: true, enabled: true,
   },
 };
 
@@ -1996,7 +1996,6 @@ async function emitBaseGameReveals(room) {
   } else {
     // Brief delay for players to see reveals, then tally
     setTimeout(() => {
-      io.to(room.roomCode).emit('bg-preparing', { message: 'Judging submissions...' });
       tallyBaseGameScores(room);
     }, 5000);
   }

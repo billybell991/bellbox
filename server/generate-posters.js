@@ -31,6 +31,10 @@ const POSTERS = [
     id: 'meme-melee',
     prompt: `Create a game poster image in portrait 3:4 format. At the top, display the title "MEME MELEE" in medium-sized bold white capital letters with a heavy black outline — use a smaller font size so the entire title fits comfortably within the image width with plenty of space on both sides. Below, a dramatic face-off between a surprised cat and a dramatic dog in comic-book style with bold outlines. Simple bold color background (red vs blue split). Clean and punchy, no tiny scattered elements.`,
   },
+  {
+    id: 'super-sketchy',
+    prompt: `A vibrant game poster in portrait 3:4 format with bold neon colors. The title "SUPER SKETCHY" appears at the top in large thick white block letters with a bright pink glow. Center the image on a giant pencil drawing a funny wobbly stick figure on white paper. The background is deep purple with scattered colorful question marks. Bold, clean, eye-catching design with strong contrast. Digital illustration style.`,
+  },
 ];
 
 async function main() {

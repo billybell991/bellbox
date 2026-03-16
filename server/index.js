@@ -57,6 +57,7 @@ import { DeepfakeDetectiveGame } from './games/deepfake-detective/game.js';
 import { ArtHeistGame } from './games/art-heist/game.js';
 import { AIHostageGame } from './games/ai-hostage/game.js';
 import { StorySabotageGame } from './games/story-sabotage/game.js';
+import { SuperSketchyGame } from './games/super-sketchy/game.js';
 
 // BaseGame class constructors by game ID
 const BASE_GAME_CLASSES = {
@@ -321,6 +322,13 @@ const GAMES = {
     description: 'Match hilarious captions to meme images. The Meme Judge picks the winner!',
     howToPlay: 'Each round, a meme image is revealed. Everyone plays a caption card from their hand to match it. The Meme Judge picks the funniest combo. First to 7 points wins!',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
+    spicy: true, enabled: true,
+  },
+  'super-sketchy': {
+    id: 'super-sketchy', name: 'Super Sketchy', emoji: '✏️',
+    description: 'Draw a weird prompt. Others write fakes. Can you spot the real one?',
+    howToPlay: 'Everyone gets a secret, weird prompt and draws it on their phone. Then each drawing is shown — players write FAKE prompts to trick each other. Vote on which prompt you think is the REAL one. Points for fooling others, guessing right, and getting your art recognized!',
+    minPlayers: 3, maxPlayers: 8, color: '#FF69B4', category: 'Spark of Creation',
     spicy: true, enabled: true,
   },
 };
@@ -983,6 +991,41 @@ io.on('connection', (socket) => {
       // Kick off bot turn if first player is a bot
       scheduleTriviaBotTurn(room);
 
+    } else if (gameId === 'super-sketchy') {
+      // ── Super Sketchy — Drawful-style drawing + deception ──
+      room.gameInstance = new SuperSketchyGame(room.roomCode, room.hostId, room.players.get(room.hostId).name);
+      for (const socketId of room.playerOrder) {
+        if (socketId !== room.hostId) {
+          const p = room.players.get(socketId);
+          room.gameInstance.addPlayer(socketId, p.name, p.playerId);
+        }
+      }
+      for (const [pid, sid] of room.playerIdMap) {
+        room.gameInstance.playerIdMap.set(pid, sid);
+      }
+
+      const startResult = room.gameInstance.startGame(room.spiceLevel);
+      if (startResult.error) {
+        room.state = 'LOBBY';
+        room.activeGame = null;
+        room.gameInstance = null;
+        return callback(startResult);
+      }
+
+      callback({ success: true, game: gameId });
+      io.to(room.roomCode).emit('game-launched', { game: gameId });
+
+      // Send each player their secret prompt
+      for (const socketId of room.gameInstance.playerOrder) {
+        const assignment = room.gameInstance.assignments.get(socketId);
+        io.to(socketId).emit('ss-draw-phase', {
+          prompt: assignment?.prompt || '???',
+          timeLimit: 60,
+          scores: room.gameInstance.getScores(),
+          totalDrawings: room.gameInstance.totalDrawings,
+        });
+      }
+
     } else if (BASE_GAME_CLASSES[gameId]) {
       // ── Generic BaseGame launch ─────────────────────────
       const GameClass = BASE_GAME_CLASSES[gameId];
@@ -1234,6 +1277,32 @@ io.on('connection', (socket) => {
         activePlayerId: room.gameInstance.getActivePlayerId(),
         categories: room.gameInstance.categories,
       });
+
+    } else if (gameId === 'super-sketchy') {
+      room.gameInstance = new SuperSketchyGame(room.roomCode, room.hostId, room.players.get(room.hostId).name);
+      for (const socketId of room.playerOrder) {
+        if (socketId !== room.hostId) {
+          const p = room.players.get(socketId);
+          room.gameInstance.addPlayer(socketId, p.name, p.playerId);
+        }
+      }
+      for (const [pid, sid] of room.playerIdMap) {
+        room.gameInstance.playerIdMap.set(pid, sid);
+      }
+      const startResult = room.gameInstance.startGame(room.spiceLevel);
+      if (startResult.error) return callback(startResult);
+
+      callback({ success: true, game: gameId });
+      io.to(room.roomCode).emit('game-launched', { game: gameId });
+      for (const socketId of room.gameInstance.playerOrder) {
+        const assignment = room.gameInstance.assignments.get(socketId);
+        io.to(socketId).emit('ss-draw-phase', {
+          prompt: assignment?.prompt || '???',
+          timeLimit: 60,
+          scores: room.gameInstance.getScores(),
+          totalDrawings: room.gameInstance.totalDrawings,
+        });
+      }
 
     } else if (BASE_GAME_CLASSES[gameId]) {
       const GameClass = BASE_GAME_CLASSES[gameId];
@@ -1548,6 +1617,131 @@ io.on('connection', (socket) => {
     io.to(room.roomCode).emit('bg-round-start', result);
     scheduleBaseGameBotSubmissions(room);
   });
+
+  // ═══════════════════════════════════════════════════════════
+  // SUPER SKETCHY GAME EVENTS
+  // ═══════════════════════════════════════════════════════════
+
+  function isSuperSketchy(room) {
+    return room?.activeGame === 'super-sketchy' && room?.gameInstance instanceof SuperSketchyGame;
+  }
+
+  socket.on('ss-submit-drawing', ({ drawingData } = {}) => {
+    const room = getRoomByPlayer(socket.id);
+    if (!isSuperSketchy(room)) return;
+    const gi = room.gameInstance;
+    const result = gi.submitDrawing(socket.id, drawingData);
+    if (result?.allSubmitted) {
+      const decoyResult = gi.lockDrawings();
+      emitSSDecoyPhase(room, decoyResult);
+    }
+  });
+
+  socket.on('ss-lock-drawings', () => {
+    const room = getRoomByPlayer(socket.id);
+    if (!isSuperSketchy(room)) return;
+    const gi = room.gameInstance;
+    const result = gi.lockDrawings();
+    emitSSDecoyPhase(room, result);
+  });
+
+  socket.on('ss-submit-decoy', ({ decoyText } = {}) => {
+    const room = getRoomByPlayer(socket.id);
+    if (!isSuperSketchy(room)) return;
+    const gi = room.gameInstance;
+    const result = gi.submitDecoy(socket.id, decoyText);
+    if (result?.error) return;
+
+    io.to(room.roomCode).emit('ss-decoy-update', {
+      submittedCount: result.submittedCount,
+      totalDecoys: result.totalDecoys,
+    });
+
+    if (result.allSubmitted) {
+      const voteResult = gi.lockDecoys();
+      emitSSVotePhase(room, voteResult);
+    }
+  });
+
+  socket.on('ss-lock-decoys', () => {
+    const room = getRoomByPlayer(socket.id);
+    if (!isSuperSketchy(room)) return;
+    const gi = room.gameInstance;
+    const result = gi.lockDecoys();
+    emitSSVotePhase(room, result);
+  });
+
+  socket.on('ss-vote', ({ optionId } = {}) => {
+    const room = getRoomByPlayer(socket.id);
+    if (!isSuperSketchy(room)) return;
+    const gi = room.gameInstance;
+    const result = gi.castVote(socket.id, optionId);
+    if (result?.error) return;
+
+    if (result.allVoted) {
+      const reveal = gi.tallyAndReveal();
+      io.to(room.roomCode).emit('ss-reveal', reveal);
+    }
+  });
+
+  socket.on('ss-lock-votes', () => {
+    const room = getRoomByPlayer(socket.id);
+    if (!isSuperSketchy(room)) return;
+    const gi = room.gameInstance;
+    const reveal = gi.tallyAndReveal();
+    if (reveal?.error) return;
+    io.to(room.roomCode).emit('ss-reveal', reveal);
+  });
+
+  socket.on('ss-next-drawing', () => {
+    const room = getRoomByPlayer(socket.id);
+    if (!isSuperSketchy(room)) return;
+    const gi = room.gameInstance;
+    const result = gi.advanceAfterReveal();
+
+    if (result.state === 'GAME_OVER') {
+      io.to(room.roomCode).emit('ss-game-over', result);
+    } else {
+      emitSSDecoyPhase(room, result);
+    }
+  });
+
+  socket.on('ss-request-sync', () => {
+    const room = getRoomByPlayer(socket.id);
+    if (!isSuperSketchy(room)) return;
+    const gs = room.gameInstance.getFullState(socket.id);
+    if (gs?.gameState) {
+      socket.emit('ss-state-sync', gs.gameState);
+    }
+  });
+
+  function emitSSDecoyPhase(room, result) {
+    if (!result || result.error) return;
+    if (result.state === 'GAME_OVER') {
+      io.to(room.roomCode).emit('ss-game-over', result);
+      return;
+    }
+    const gi = room.gameInstance;
+    const nonArtists = gi.playerOrder.filter(id => id !== gi.currentArtistId);
+    io.to(room.roomCode).emit('ss-decoy-phase', {
+      drawingData: result.drawingData,
+      artistName: result.artistName,
+      artistId: result.artistId,
+      drawingsShown: result.drawingsShown,
+      totalDrawings: result.totalDrawings,
+      timeLimit: result.timeLimit || 30,
+      totalDecoys: nonArtists.length,
+    });
+  }
+
+  function emitSSVotePhase(room, result) {
+    if (!result || result.error) return;
+    io.to(room.roomCode).emit('ss-vote-phase', {
+      options: result.options,
+      artistId: result.artistId,
+      timeLimit: result.timeLimit || 15,
+    });
+  }
 
   // ═══════════════════════════════════════════════════════════
   // LEAVE / DISCONNECT

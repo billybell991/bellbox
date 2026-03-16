@@ -10,6 +10,7 @@ import ThemeSwitcher from './components/ThemeSwitcher';
 import NAHGame from './games/NerdsAgainstHumanity/Game';
 import MemeMeleeGame from './games/MemeMelee/Game';
 import TriviaGame from './games/TriviaFetch/Game';
+import SuperSketchyGame from './games/SuperSketchy/Game';
 import BaseGamePlayer from './games/BaseGamePlayer';
 
 function getPlayerId() {
@@ -94,6 +95,8 @@ export default function App() {
           } else if (res.activeGame === 'meme-melee') {
             setNahGameState(res.gameState);
             setScreen('meme-melee-game');
+          } else if (res.activeGame === 'super-sketchy') {
+            setScreen('super-sketchy-game');
           } else if (res.activeGame === 'trivia-fetch') {
             setTriviaGameState(res.gameState);
             setScreen('trivia-game');
@@ -155,6 +158,8 @@ export default function App() {
         setScreen('nah-game');
       } else if (game === 'meme-melee') {
         setScreen('meme-melee-game');
+      } else if (game === 'super-sketchy') {
+        setScreen('super-sketchy-game');
       } else if (game === 'trivia-fetch') {
         setScreen('trivia-game');
       } else {
@@ -324,6 +329,8 @@ export default function App() {
           setScreen('nah-game');
         } else if (res.activeGame === 'meme-melee') {
           setScreen('meme-melee-game');
+        } else if (res.activeGame === 'super-sketchy') {
+          setScreen('super-sketchy-game');
         } else if (res.activeGame === 'trivia-fetch') {
           setScreen('trivia-game');
         } else {
@@ -507,6 +514,16 @@ export default function App() {
           onRestartSame={handleRestartSameGame}
           isHost={isHost}
           onLeave={handleReturnToLobby}
+        />
+      )}
+
+      {screen === 'super-sketchy-game' && (
+        <SuperSketchyGame
+          socket={socket}
+          myId={socket.id}
+          isHost={isHost}
+          onReturn={handleReturnToLobby}
+          onRestartSame={handleRestartSameGame}
         />
       )}
 

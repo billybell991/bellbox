@@ -241,6 +241,7 @@ function VotePanel({ reveals, myId, onVote, voted }) {
 export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onReturn, onRestartSame }) {
   const [phase, setPhase] = useState('PREPARING');
   const [preparingMessage, setPreparingMessage] = useState('Generating round...');
+  const activeRoundRef = useRef(0);
   const [round, setRound] = useState(0);
   const [totalRounds, setTotalRounds] = useState(4);
   const [prompt, setPrompt] = useState(null);
@@ -264,6 +265,13 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
     };
 
     const onRoundStart = (data) => {
+      // Ignore duplicate round-start for the same round (prevents resetting mid-type)
+      if (activeRoundRef.current === data.round) {
+        // Only update bellbot if it arrives later
+        if (data.bellbotSays) setBellbotSays(data.bellbotSays);
+        return;
+      }
+      activeRoundRef.current = data.round;
       setPhase('SUBMISSION');
       setRound(data.round);
       setTotalRounds(data.totalRounds);
@@ -326,6 +334,11 @@ export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onRetur
     socket.on('bg-reveals', onReveals);
     socket.on('bg-vote-update', onVoteUpdate);
     socket.on('bg-round-end', onRoundEnd);
+
+    // Sync state on mount — fixes race where bg-round-start fires before listeners register
+    socket.emit('bg-get-state', (data) => {
+      if (data?.state === 'SUBMISSION') onRoundStart(data);
+    });
 
     return () => {
       socket.off('bg-preparing', onPreparing);

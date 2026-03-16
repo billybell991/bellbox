@@ -2,6 +2,7 @@
 // Categories, fallback questions, and AI-powered question generation
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -250,6 +251,28 @@ const FALLBACK = {
   ],
 };
 
+// ─── Load Pre-Generated Question Pool ─────────────────────────
+const QUESTION_POOL = { ...FALLBACK };
+try {
+  const poolPath = path.join(__dirname, '..', '..', 'trivia-expansion-data.json');
+  if (fs.existsSync(poolPath)) {
+    const expansion = JSON.parse(fs.readFileSync(poolPath, 'utf8'));
+    for (const [catId, questions] of Object.entries(expansion)) {
+      if (QUESTION_POOL[catId]) {
+        const existingTexts = new Set(QUESTION_POOL[catId].map(q => q.question));
+        const newQs = questions.filter(q => !existingTexts.has(q.question));
+        QUESTION_POOL[catId] = [...QUESTION_POOL[catId], ...newQs];
+      } else {
+        QUESTION_POOL[catId] = questions;
+      }
+    }
+    const total = Object.values(QUESTION_POOL).reduce((sum, qs) => sum + qs.length, 0);
+    console.log(`📚 Loaded ${total} trivia questions across ${Object.keys(QUESTION_POOL).length} categories`);
+  }
+} catch (e) {
+  console.warn('⚠️  Failed to load trivia expansion data:', e.message);
+}
+
 // ─── Gemini AI Setup ──────────────────────────────────────────
 let model = null;
 
@@ -266,13 +289,12 @@ if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your-api-key-h
 }
 
 // ─── Question Generation ──────────────────────────────────────
-function getRandomFallback(categoryId, usedHashes) {
-  const pool = FALLBACK[categoryId];
+function getRandomFromPool(categoryId, usedHashes) {
+  const pool = QUESTION_POOL[categoryId];
   if (!pool || pool.length === 0) {
-    // Fallback to a random category if somehow missing
-    const keys = Object.keys(FALLBACK);
+    const keys = Object.keys(QUESTION_POOL);
     const randomKey = keys[Math.floor(Math.random() * keys.length)];
-    return FALLBACK[randomKey][Math.floor(Math.random() * FALLBACK[randomKey].length)];
+    return QUESTION_POOL[randomKey][Math.floor(Math.random() * QUESTION_POOL[randomKey].length)];
   }
 
   // Try to find an unused question
@@ -286,44 +308,7 @@ function getRandomFallback(categoryId, usedHashes) {
 }
 
 export async function generateQuestion(categoryId, usedHashes = new Set()) {
-  const category = ALL_CATEGORIES.find(c => c.id === categoryId);
-  const catName = category ? category.name : categoryId;
-
-  if (!model) return getRandomFallback(categoryId, usedHashes);
-
-  try {
-    const usedList = usedHashes.size > 0 ? `\n\nDO NOT repeat these previously asked questions:\n${[...usedHashes].slice(-20).map(h => `- ${h}`).join('\n')}` : '';
-
-    const prompt = `You are the trivia engine for "Trivia Fetch!", a fun multiplayer trivia game hosted by Gus the Goldendoodle.
-
-Generate ONE trivia question for the category: "${catName}"
-
-Rules:
-- Generate a UNIQUE question that hasn't been asked before in this session
-- Make it interesting and fun, not obscure or trick-based
-- All 4 answer options should be plausible (no joke answers)
-- Include a brief, delightful fun fact about the correct answer
-- Vary difficulty across easy/medium/hard
-- Be creative — don't just ask the most obvious question${usedList}
-
-Respond with ONLY this JSON (no markdown fences, no extra text):
-{"question":"...","options":["A","B","C","D"],"correctIndex":0,"funFact":"...","difficulty":"medium"}`;
-
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const q = JSON.parse(text);
-
-    // Validate structure
-    if (!q.question || !Array.isArray(q.options) || q.options.length !== 4 ||
-        typeof q.correctIndex !== 'number' || q.correctIndex < 0 || q.correctIndex > 3) {
-      throw new Error('Invalid question structure from Gemini');
-    }
-
-    return q;
-  } catch (e) {
-    console.warn('Gemini question failed, using fallback:', e.message);
-    return getRandomFallback(categoryId, usedHashes);
-  }
+  return getRandomFromPool(categoryId, usedHashes);
 }
 
 // ─── Gus's Wild Questions ─────────────────────────────────────

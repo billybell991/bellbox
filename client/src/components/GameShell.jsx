@@ -6,6 +6,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // ── Timer Component ─────────────────────────────────────────
 function GameTimer({ seconds, onExpire, label }) {
   const [remaining, setRemaining] = useState(seconds);
+  const onExpireRef = useRef(onExpire);
+  onExpireRef.current = onExpire;
 
   useEffect(() => {
     setRemaining(seconds);
@@ -14,14 +16,14 @@ function GameTimer({ seconds, onExpire, label }) {
       setRemaining(prev => {
         if (prev <= 1) {
           clearInterval(interval);
-          onExpire?.();
+          onExpireRef.current?.();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [seconds, onExpire]);
+  }, [seconds]);
 
   const pct = seconds > 0 ? (remaining / seconds) * 100 : 0;
   const urgent = remaining <= 5;
@@ -29,18 +31,18 @@ function GameTimer({ seconds, onExpire, label }) {
 
   const getBarColor = () => {
     if (urgent) return '#f44336';
-    if (warning) return '#FFB347';
-    return '#21ffb2';
+    if (warning) return 'var(--accent-gold, #FFB347)';
+    return 'var(--secondary, #21ffb2)';
   };
 
   return (
     <div className={`gs-timer ${urgent ? 'gs-timer--urgent' : ''}`}>
       <div
         className="gs-timer-bar"
-        style={{ width: `${pct}%`, background: getBarColor(), boxShadow: `0 0 10px ${getBarColor()}` }}
+        style={{ width: `${pct}%`, background: getBarColor(), boxShadow: `0 0 8px ${getBarColor()}` }}
       />
-      <span className="gs-timer-text">
-        {remaining > 0 ? `${label ? label + ' ' : ''}⏰ ${remaining}s` : "⏰ Time's up!"}
+      <span className="gs-timer-text" style={{ color: getBarColor(), textShadow: `0 0 8px ${getBarColor()}` }}>
+        {remaining > 0 ? `⏰ ${remaining}s` : "⏰ Time's up!"}
       </span>
     </div>
   );
@@ -48,7 +50,21 @@ function GameTimer({ seconds, onExpire, label }) {
 
 // ── BellBot Commentary ──────────────────────────────────────
 function BellBotBubble({ message, skin }) {
-  if (!message) return null;
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (message) {
+      setVisible(true);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setVisible(false), 6000);
+    } else {
+      setVisible(false);
+    }
+    return () => clearTimeout(timerRef.current);
+  }, [message]);
+
+  if (!visible || !message) return null;
   const isImage = skin && (skin.startsWith('/') || skin.startsWith('http'));
   return (
     <div className="gs-bellbot">

@@ -1,0 +1,792 @@
+{
+  "memes": [
+    {
+      "spice": 1,
+      "alt": "Flamingos tea party fancy",
+      "prompt": "A group of elegant flamingos gathered around a small, ornate table, delicately sipping from tiny teacups with their long necks, feathers perfectly preened. Photorealistic, soft lighting."
+    },
+    {
+      "spice": 1,
+      "alt": "Toddler fixes car banana",
+      "prompt": "A chubby toddler with a determined expression, wearing a messy bib, deeply focused on trying to 'repair' a broken toy car by repeatedly tapping it with a ripe yellow banana. Bright, natural lighting, high detail."
+    },
+    {
+      "spice": 1,
+      "alt": "Cat miserable birthday hat",
+      "prompt": "A fluffy cat, forced into a tiny, colorful party hat, sits on a pristine cake, staring directly at the camera with an expression of profound existential dread and mild indignation. Photorealistic, slightly humorous."
+    },
+    {
+      "spice": 1,
+      "alt": "Baby goat plays fetch",
+      "prompt": "A tiny, fluffy baby goat, standing in a lush green field, comically trying to pick up and carry a tree branch that is significantly larger and longer than itself. Bright, cheerful, and photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Pancake stack googly eyes",
+      "prompt": "A perfectly golden stack of pancakes, topped with a pat of butter, featuring large, comically surprised googly eyes as a stream of maple syrup pours down its side. Bright, warm lighting, food photography style."
+    },
+    {
+      "spice": 1,
+      "alt": "Grumpy gnome squirrel argument",
+      "prompt": "A traditional ceramic garden gnome with a perpetually grumpy expression, standing in a flower bed, angrily shaking a tiny fist at a quick, cheeky squirrel who is raiding a bird feeder. Photorealistic, slightly humorous."
+    },
+    {
+      "spice": 1,
+      "alt": "Ducklings follow ladybug puddle",
+      "prompt": "A perfectly straight line of fluffy yellow baby ducklings, walking one behind the other, intently following a small red ladybug as it crawls across the surface of a shallow puddle. Bright, charming, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Child remote plant vibrating",
+      "prompt": "A young child with wide, confused eyes, clutching a TV remote control, staring intently at a potted houseplant that is visibly vibrating and shaking on a table beside them. Interior, soft light, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Chinchillas sorting tiny mail",
+      "prompt": "A detailed miniature post office interior, where several fluffy chinchillas, wearing tiny postman hats, are diligently sorting tiny letters into small mail slots. Photorealistic, highly detailed, whimsical."
+    },
+    {
+      "spice": 1,
+      "alt": "Rabbit bakes tiny bread",
+      "prompt": "A fluffy rabbit, wearing a white baker's apron and chef's hat, intently kneading a small ball of dough on a miniature floured workbench in a charming tiny bakery setting. Photorealistic, warm lighting."
+    },
+    {
+      "spice": 1,
+      "alt": "Eating giant pickle fancy",
+      "prompt": "A person in formal attire, sitting at an elegant restaurant table with white tablecloths, attempting to subtly and discreetly eat an comically oversized dill pickle with a look of mild embarrassment. Photorealistic, humorous."
+    },
+    {
+      "spice": 1,
+      "alt": "Baby confused by feet",
+      "prompt": "A very young baby, lying on a soft blanket, looking down at its own feet with an expression of profound confusion and wonder, as if seeing them for the first time. Bright, wholesome, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Fox cub peeks bookshelf",
+      "prompt": "A cute, fluffy fox cub with large ears, playfully peeking its head out from behind a warmly lit, overflowing bookshelf in a cozy living room, looking directly at the camera. Photorealistic, charming."
+    },
+    {
+      "spice": 1,
+      "alt": "Gnomes play miniature golf",
+      "prompt": "A whimsical scene in a backyard with several garden gnomes, holding tiny golf clubs, intently playing miniature golf on a perfectly manicured lawn, complete with tiny windmills and obstacles. Photorealistic, charming."
+    },
+    {
+      "spice": 1,
+      "alt": "Squirrel pays for nuts",
+      "prompt": "A sophisticated squirrel, wearing a tiny fedora, standing at a miniature grocery store checkout counter, holding a tiny wallet and looking expectantly at a tiny cashier. Photorealistic, humorous."
+    },
+    {
+      "spice": 1,
+      "alt": "Defeated by fitted sheet",
+      "prompt": "A person standing in a brightly lit laundry room, completely defeated and tangled in a large, unmanageable fitted sheet, looking utterly exasperated with their folding attempt. Photorealistic, relatable."
+    },
+    {
+      "spice": 1,
+      "alt": "Child presents mud pie",
+      "prompt": "A beaming child, covered in dirt, holding out a mud pie on a pristine porcelain plate with an expression of immense pride, offering it to an amused parent. Outdoor setting, bright, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Sleepy owl reading glasses",
+      "prompt": "A fluffy owl with its eyes barely open, wearing a tiny pair of reading glasses perched on its beak, slowly dozing off while sitting on a towering stack of open academic books. Photorealistic, cozy."
+    },
+    {
+      "spice": 1,
+      "alt": "Toaster sad burnt toast",
+      "prompt": "A slightly singed, anthropomorphic toaster oven with drawn-on sad eyes, looking down at a single, completely burnt piece of toast lying on a plate in front of it. Kitchen counter, humorous, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Raccoons build sandcastle",
+      "prompt": "A family of raccoons, some wearing tiny beach hats, diligently working together to construct a surprisingly elaborate sandcastle on a busy, sunny beach, looking intensely focused. Photorealistic, charming."
+    },
+    {
+      "spice": 1,
+      "alt": "Frog king bottle cap",
+      "prompt": "A small green frog, wearing a tiny, ill-fitting golden crown on its head, sitting by a puddle and intently inspecting a discarded bottle cap with wide eyes. Outdoor, natural lighting, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Squirrel with acorn trophy",
+      "prompt": "A muscular-looking squirrel, flexing its tiny biceps, proudly holding up an impossibly large acorn above its head like a bodybuilding champion receiving a trophy. Forest background, humorous, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Struggling child-proof bottle",
+      "prompt": "A person with a look of intense frustration and concentration, gritting their teeth, exerting maximum effort to open a seemingly impenetrable child-proof medicine bottle. Close-up, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Kids intense staring contest",
+      "prompt": "Three young children in a school playground, seated face-to-face, locked in an incredibly intense and dramatic staring contest, eyes wide open and unblinking, serious expressions. Outdoor, bright, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Hedgehog giant marshmallow",
+      "prompt": "A small hedgehog, walking carefully across a patch of grass, struggling to carry an impossibly large, fluffy white marshmallow in its tiny paws. Outdoor, charming, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Washing machine overflowing bubbles",
+      "prompt": "A modern washing machine, its door slightly ajar, comically overflowing with an enormous amount of soap bubbles, while a person stands beside it with a look of utter disbelief and exasperation. Kitchen/laundry room, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Swans synchronized swimming",
+      "prompt": "A group of majestic white swans, gracefully performing a perfectly synchronized swimming routine in a serene pond, their movements fluid and elegant, creating ripples in the water. Outdoor, beautiful, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Sad balloon deflated cake",
+      "prompt": "A forlorn, deflated birthday balloon, its string tangled messily around a half-eaten, slightly smudged birthday cake on a table, conveying a sense of post-party sadness. Soft lighting, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Toddler helps clean dirt",
+      "prompt": "A very young toddler, wearing overalls, with a look of intense concentration, pushing a miniature toy broom into a surprisingly large pile of dirt on a clean kitchen floor, creating more mess. Bright, humorous, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Pigeons examine dropped fry",
+      "prompt": "A congregation of several pigeons, all gathered around a single, perfectly golden dropped french fry on a sidewalk, peering at it with an intense, scientific curiosity. Urban setting, photorealistic, humorous."
+    },
+    {
+      "spice": 1,
+      "alt": "Person walks into glass",
+      "prompt": "A person with a slightly bewildered and dazed expression, having just walked face-first into a perfectly clean, clear glass door, one hand touching their forehead in mild pain. Office or modern building, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Gnome confused smart device",
+      "prompt": "A traditional garden gnome, seated on a modern kitchen counter, looking with wide, confused eyes at a sleek, glowing smart home speaker device, as if trying to understand its purpose. Photorealistic, humorous."
+    },
+    {
+      "spice": 1,
+      "alt": "Rooster presents breakfast",
+      "prompt": "A majestic rooster, standing proudly in a rustic kitchen, wearing a pristine chef's hat, gesturing with a wing towards a beautifully laid-out breakfast spread of eggs and bacon. Warm lighting, photorealistic, charming."
+    },
+    {
+      "spice": 1,
+      "alt": "Child hides crayon drawing",
+      "prompt": "A young child with a mischievous grin, attempting to very subtly 'hide' a colorful, scribbled crayon drawing on a refrigerator by carefully placing a magnet directly over the most incriminating part. Kitchen, bright, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Sloth reluctantly birthday",
+      "prompt": "A slow-moving sloth, wearing a tiny, crooked party hat, very, very slowly and reluctantly blowing out the single candle on a small birthday cake, looking utterly unenthusiastic. Photorealistic, humorous."
+    },
+    {
+      "spice": 1,
+      "alt": "Traffic cone deserted beach",
+      "prompt": "A bright orange traffic cone, looking out of place and slightly melancholic, sitting alone on a wide, deserted sandy beach as the sun sets in the background, casting long shadows. Serene, unexpected, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Prairie dogs serious meeting",
+      "prompt": "Several prairie dogs, standing upright in a close circular huddle, appearing to be engaged in a very serious and hushed conversation, their tiny paws gesturing subtly. Open grassland, bright, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Spinach selfie struggle",
+      "prompt": "A person smiling for a selfie, but with one finger subtly trying to dislodge a visible piece of spinach from their front teeth, eyes wide with mild panic. Close-up, photorealistic, humorous."
+    },
+    {
+      "spice": 1,
+      "alt": "Child teaches goldfish read",
+      "prompt": "A young child, kneeling beside a fishbowl, holding up a colorful picture book to a pet goldfish, pointing at the pages with a very serious and encouraging expression. Home interior, wholesome, photorealistic."
+    },
+    {
+      "spice": 1,
+      "alt": "Mouse pushes cheese skateboard",
+      "prompt": "A small, determined mouse, wearing a tiny backpack, meticulously pushing an impossibly large block of cheese on a miniature skateboard across a clean kitchen floor. Photorealistic, charming, whimsical."
+    },
+    {
+      "spice": 2,
+      "alt": "Awkward date birthday song",
+      "prompt": "A couple on a first date, seated at a restaurant table, the man leaning in with a forced smile attempting small talk, while in the background, a loud waiter vigorously sings 'Happy Birthday' to another table, making eye contact. Photorealistic, slightly cringey."
+    },
+    {
+      "spice": 2,
+      "alt": "Passive aggressive office memo",
+      "prompt": "A close-up of a brightly colored, overly polite yet clearly passive-aggressive office memo tacked to a bustling office bulletin board, with specific phrases underlined, obviously targeting an individual. Photorealistic, office environment."
+    },
+    {
+      "spice": 2,
+      "alt": "Parallel parking date disaster",
+      "prompt": "A person in the driver's seat, grimacing in concentration as they attempt a difficult parallel park, while their date in the passenger seat subtly braces for impact, wide-eyed with fear and regret. Street scene, night, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Home office hangover struggle",
+      "prompt": "A dishevelled person, wearing sunglasses indoors, hunched over a laptop at a cluttered home office desk, surrounded by empty coffee mugs, painkiller packets, and a half-eaten greasy breakfast. Morning light, photorealistic, relatable."
+    },
+    {
+      "spice": 2,
+      "alt": "Toilet paper shoe embarrassment",
+      "prompt": "A person confidently walking out of a public restroom, oblivious to the long stream of toilet paper trailing elegantly from their shoe, while passersby subtly try to suppress smiles. Public hallway, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Boring meeting phone browsing",
+      "prompt": "A corporate meeting room with a large table, where several professionals are seated, appearing to pay attention to a speaker, but with their hands discreetly below the table, illuminated by the glow of their smartphones. Photorealistic, office environment."
+    },
+    {
+      "spice": 2,
+      "alt": "Empty fridge life choices",
+      "prompt": "A person with a look of existential despair, standing in a dimly lit kitchen, staring into a completely empty, pristine refrigerator, reflecting on poor grocery decisions. Photorealistic, relatable."
+    },
+    {
+      "spice": 2,
+      "alt": "Awkward dating app DM",
+      "prompt": "A close-up of a smartphone screen showing a dating app, displaying a very cringeworthy, overly confident, and poorly punctuated opening message being typed by a person's thumbs in the foreground. Photorealistic, common scenario."
+    },
+    {
+      "spice": 2,
+      "alt": "Flat pack furniture frustration",
+      "prompt": "A frustrated person, sitting on the floor amidst a chaotic pile of unfinished flat-pack furniture pieces, confusing instruction manuals, and scattered tools, with a single screw held up in bewilderment. Home interior, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Horrified credit card bill",
+      "prompt": "A person seated at a kitchen table, eyes wide with horror, holding a large credit card bill, one hand dramatically clutching their forehead in utter disbelief at the total amount. Home interior, dramatic lighting, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Staged candid selfie travel",
+      "prompt": "A person carefully posing in a picturesque exotic location (e.g., in front of a famous landmark), holding their phone to take a 'candid' selfie, clearly directing their own relaxed expression. Bright, travel photography style, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Out of order coffee machine",
+      "prompt": "A broken coffee machine with a hastily written 'OUT OF ORDER' sign taped to it, surrounded by a small queue of tired, glassy-eyed office workers looking like desperate zombies in need of caffeine. Office kitchen, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Silent dirty dish argument",
+      "prompt": "A couple standing stiffly in a modern kitchen, backs turned slightly to each other, both staring intensely at a single dirty dish in an otherwise spotless sink, radiating passive-aggressive tension. Photorealistic, domestic."
+    },
+    {
+      "spice": 2,
+      "alt": "Muted mic video call fail",
+      "prompt": "A person on a video conference call, mid-sentence with an animated expression, suddenly realizing their microphone has been muted the entire time, their eyes widening in mortification. Laptop screen view, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Awkward date skill showoff",
+      "prompt": "A person, trying too hard to impress their date, awkwardly attempting to juggle two apples in a casual restaurant setting, one apple already wobbling precariously, while their date looks unimpressed. Photorealistic, slightly cringey."
+    },
+    {
+      "spice": 2,
+      "alt": "Stealth office nap desk",
+      "prompt": "An office employee, slumped down in their chair, clearly asleep, with their head mostly obscured by a large computer monitor and a strategically placed potted plant, hoping to go unnoticed. Photorealistic, office cube."
+    },
+    {
+      "spice": 2,
+      "alt": "Gourmet meal processed ingredients",
+      "prompt": "A person, looking earnest, carefully following a complex recipe book for a 'gourmet meal,' but the ingredients laid out on the counter are distinctly from processed, packaged foods, like instant ramen and cheese slices. Kitchen, humorous, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Pretending phone party avoidance",
+      "prompt": "A single person standing awkwardly alone at a bustling party, their face illuminated by the glow of their smartphone, pretending to be deeply engrossed in a text to avoid eye contact or conversation. Dark, party lighting, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Duct tape faucet repair",
+      "prompt": "A person with a determined but slightly desperate expression, tightly wrapping several layers of silver duct tape around a actively dripping kitchen faucet, clearly hoping for a miracle. Kitchen sink, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Obvious surprise gift reaction",
+      "prompt": "One partner holding a clumsily wrapped, very obviously shaped gift (e.g., a clearly visible guitar neck sticking out), while the other partner feigns an expression of utter astonishment and delight. Living room, humorous, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "No signal phone desperation",
+      "prompt": "A person standing in a beautiful, remote natural landscape (e.g., top of a mountain), holding their smartphone high above their head, desperately waving it around in search of a non-existent cell signal. Outdoor, scenic, humorous."
+    },
+    {
+      "spice": 2,
+      "alt": "Accidentally liked ex post",
+      "prompt": "A close-up of a smartphone screen showing a person's thumb hovering over the 'unlike' button of a very old, embarrassing social media post belonging to their crush's ex, their face in the reflection wide with panic. Screen glow, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Pet child video call interruption",
+      "prompt": "A corporate video call screen showing a professional speaking, while directly behind them, a cat is gracefully knocking over a stack of books, or a child is comically running past in a superhero cape. Screen capture style, humorous, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Microwave gourmet bewildered",
+      "prompt": "A person standing in front of an open microwave, staring with utter bewilderment and disappointment at a strangely textured, barely edible-looking meal on a plate inside it. Kitchen, soft lighting, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Covert date social media check",
+      "prompt": "A person seated at a dinner table, making eye contact and smiling at their date, but their free hand is subtly hidden below the table, illuminated by a smartphone screen displaying their date's social media profile. Restaurant setting, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Oversized best boss mug",
+      "prompt": "An office employee, beaming with self-satisfaction, carrying a comically oversized ceramic mug that boldly declares 'WORLD'S BEST BOSS' into a busy office, walking past confused coworkers. Office environment, humorous, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Secret fly check crowded",
+      "prompt": "A person in a crowded public space (e.g., subway, shopping mall), discreetly attempting to check if their pants fly is open, using a series of subtle, awkward movements while trying to appear casual. Photorealistic, urban."
+    },
+    {
+      "spice": 2,
+      "alt": "Pet love partner ignored",
+      "prompt": "A person dotingly stroking their pet (e.g., cat, dog) with intense affection, making cooing noises, while their human partner sits just a few feet away, looking visibly miffed and ignored. Cozy living room, photorealistic, humorous."
+    },
+    {
+      "spice": 2,
+      "alt": "Printer jam angry stare",
+      "prompt": "A close-up of a paper tray of a modern office printer, with several crumpled pieces of paper jammed inside, while a frustrated person's face, contorted in an angry stare, looms in the background. Office setting, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Jar of pickles impossible",
+      "prompt": "A person with a red face and bulging neck veins, struggling with all their might to twist open a stubborn jar of pickles, the lid completely unyielding to their extreme efforts. Kitchen, close-up, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Wrong group chat typo",
+      "prompt": "A close-up of a smartphone screen showing a text message with an obvious, embarrassing typo sent to a group chat, with a person's finger hovering over the delete button, eyes wide in horror. Screen glow, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Ironed wrinkles into shirt",
+      "prompt": "A person looking bewildered and defeated, holding up a freshly ironed shirt that now has an even more complex and permanent pattern of wrinkles pressed into it, clearly worse than before. Laundry room, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Confused by corporate jargon",
+      "prompt": "An office employee, leaning against a cubicle wall, staring at a brightly colored 'motivational' corporate poster filled with buzzwords and corporate jargon, their face a mask of utter confusion and bewilderment. Office setting, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Swiped left dream match",
+      "prompt": "A close-up of a smartphone screen showing a dating app profile, with a person's hand frozen in mid-air, eyes wide with horror as they realize they just accidentally swiped left on their perfect match. Screen glow, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Awkward wedding dance moves",
+      "prompt": "A person on a crowded wedding dance floor, attempting to execute 'cool' dance moves with extreme confidence, but their movements are completely out of sync, awkward, and drawing stares. Wedding reception, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Flimsy tent windy struggle",
+      "prompt": "A person in an outdoor setting (e.g., campsite), battling a strong gust of wind, desperately trying to assemble a flimsy tent that is flapping and collapsing around them, their face a picture of pure frustration. Outdoor, humorous, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Yelling at smart speaker",
+      "prompt": "A person standing in a modern living room, yelling loudly and exasperatedly at a sleek smart speaker, which has just responded with a completely irrelevant answer to a very simple command. Home interior, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "First time cooking chaos",
+      "prompt": "A person in a chaotic kitchen, covered in flour and various food splatters, holding a complex recipe book with a look of overwhelmed determination, surrounded by dirty pots, pans, and spilled ingredients. Home kitchen, photorealistic."
+    },
+    {
+      "spice": 2,
+      "alt": "Guilty snack hoarder office",
+      "prompt": "An office employee, caught in the act, subtly stuffing their pockets with free office snacks (e.g., mini candy bars, bags of chips), their eyes wide with guilt as a coworker observes them. Office breakroom, photorealistic, humorous."
+    },
+    {
+      "spice": 2,
+      "alt": "Uncomfortable public affection",
+      "prompt": "A single person sitting on a park bench or in a cafe, trying to subtly avert their gaze, looking visibly uncomfortable as an overly affectionate couple next to them engages in an intense public display of affection. Outdoor/cafe, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Rubber duck vast stormy ocean",
+      "prompt": "A single, bright yellow rubber duck, looking comically small, floating precariously on enormous, dark, turbulent waves in a vast and desolate stormy ocean under a dramatic sky. Surreal, photorealistic, cinematic."
+    },
+    {
+      "spice": 3,
+      "alt": "Skeleton sad birthday cake",
+      "prompt": "A fully articulated skeleton, wearing a tiny, brightly colored party hat, sitting alone at a small, dimly lit table, staring at a single, untouched slice of birthday cake with a forlorn expression. Dark humor, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Receipt existential dread",
+      "prompt": "A person staring blankly at a receipt for a seemingly insignificant purchase, contemplating the meaning of life. Their expression conveys profound existential dread, questioning fundamental existence. Close-up, soft, introspective lighting, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Giant rabbit creepy window",
+      "prompt": "A comically giant, slightly dishevelled, fluffy white rabbit with glowing red eyes, slowly rising into view outside a child's bedroom window at night, its immense size filling the frame. Dark, eerie, yet absurdly funny, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Fishbowl floating in space",
+      "prompt": "A spherical glass fishbowl, containing a single curious goldfish, inexplicably floating through the vacuum of outer space, with the blue and white marble of Earth visible in the background. Surreal, high contrast, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Underwater business meeting",
+      "prompt": "A group of stern-faced businessmen in full suits and ties, seated around an opulent boardroom table, completely submerged underwater, breathing from tiny, hidden scuba tanks, with fish swimming past. Surreal, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Office cubicle maze escape",
+      "prompt": "A person, disheveled and frantic, desperately trying to navigate an endless, labyrinthine maze constructed entirely from identical grey office cubicle walls, their face a mask of growing despair. Overhead shot, high contrast, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Plant suffocates self-help",
+      "prompt": "A small, once vibrant houseplant, visibly wilting and dying, almost completely buried under an impossibly tall, precariously balanced stack of brightly colored self-help books. Gloomy lighting, indoor, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Smiling mannequins observe street",
+      "prompt": "A person walking down a deserted city street at night, completely unaware of a silent, unmoving flock of identical mannequins, all with wide, unsettlingly fixed smiles, observing them from doorways and windows. Eerie, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Traffic light empty desert",
+      "prompt": "A single, glowing green traffic light, standing inexplicably upright in the middle of a sprawling, empty desert landscape under a starry night sky, with no roads or signs around. Surreal, stark, cinematic, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Hot dog bun floats to space",
+      "prompt": "A perfectly golden, empty hot dog bun, strangely buoyant, slowly ascending into the dark expanse of outer space, tied to a cluster of tiny, brightly colored party balloons. Whimsical, surreal, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Pigeons protest empty feeder",
+      "prompt": "A small group of disgruntled pigeons, wearing tiny, hand-drawn protest signs (e.g., 'SEED NOW!'), angrily picketing around an empty bird feeder in a suburban backyard. Humorous, photorealistic, slightly absurd."
+    },
+    {
+      "spice": 3,
+      "alt": "Elevator endless commute",
+      "prompt": "A person with a defeated and weary expression, standing alone in a sterile office elevator, looking out at the closing doors as it endlessly ascends and descends, devoid of floor buttons or escape. Photorealistic, unsettling."
+    },
+    {
+      "spice": 3,
+      "alt": "Giant sock puppet stares TV",
+      "prompt": "A comically large, crudely made human-sized sock puppet with button eyes, sitting perfectly still and upright in a cozy living room armchair, silently staring at the back of a person watching TV, unseen by them. Eerie, humorous, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Grumpy cloud sad rain",
+      "prompt": "A bright, sunny street scene, but directly overhead, a single enormous cloud, clearly shaped like a grumpy human face, is raining down tiny, perfectly formed sad tears onto the pavement below. Surreal, vivid, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Eagle sorts recycling facility",
+      "prompt": "A majestic bald eagle, wearing tiny safety glasses, standing upright in a sparkling, futuristic recycling facility, meticulously sorting plastic bottles from paper with its beak. Surreal, humorous, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Gnomes tiny seance candle",
+      "prompt": "A circle of traditional garden gnomes, their faces unusually serious, gathered around a small, flickering candle in a dimly lit garden shed, holding hands for a miniature seance. Eerie, humorous, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Buffering screen existential crisis",
+      "prompt": "A close-up of a computer monitor displaying a perpetually spinning, buffering loading icon, with a person's reflection in the screen, their face contorted in a silent scream of existential crisis. Dim room, photorealistic, unsettling."
+    },
+    {
+      "spice": 3,
+      "alt": "Business fly orders coffee",
+      "prompt": "A comically oversized, anthropomorphic housefly, wearing a perfectly tailored miniature business suit and tie, standing at the counter of a bustling urban coffee shop, attempting to order a latte. Absurd, humorous, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Upside down tree roots sky",
+      "prompt": "A large, mature tree, growing entirely upside down in a lush green field, its gnarled roots reaching towards the sky like branches, while its leafy crown is buried deep beneath the earth. Surreal, vibrant, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Cat drives sports car bored",
+      "prompt": "A fluffy cat, wearing a tiny leather jacket and sunglasses, behind the wheel of a miniature, souped-up sports car, driving through a suburban neighborhood with an expression of profound boredom. Humorous, photorealistic, action shot."
+    },
+    {
+      "spice": 3,
+      "alt": "Lonely sock deserted island",
+      "prompt": "A single, forlorn white sock, looking weathered and abandoned, sitting upright on a small, deserted tropical island beach, gazing wistfully out at the vast, empty ocean. Humorous, slightly poignant, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "VHS life regret montage",
+      "prompt": "A person with a look of profound regret and despair, watching an old, grainy VHS tape playing on a vintage TV, which shows a montage of their own past life choices, clearly leading to bad outcomes. Dim lighting, nostalgic yet unsettling, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Chimp butler severed hand",
+      "prompt": "A perfectly groomed chimpanzee, wearing a neat butler's uniform, standing in a dimly lit, opulent mansion, holding a silver platter on which rests a realistic, but clearly prop, severed human hand. Darkly humorous, unsettling, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Whale swims through clouds",
+      "prompt": "A colossal, majestic humpback whale, with its barnacled body gleaming, swimming effortlessly through a sea of fluffy white clouds high above a sprawling, sunlit metropolis. Surreal, breathtaking, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Sentient carts escape lot",
+      "prompt": "Several shopping carts, each with drawn-on angry or determined faces, silently and slowly moving in unison across a dark, empty supermarket parking lot, attempting a coordinated escape. Eerie, humorous, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Kick me sign gravestone",
+      "prompt": "A close-up of a very old, moss-covered gravestone in a gloomy cemetery, with a comically oversized, brightly colored 'KICK ME' sign clumsily taped to its back. Dark humor, atmospheric, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Stock photo existential loop",
+      "prompt": "A person's face, tired and glazed over, illuminated by a computer screen, on which an endless, repeating loop of generic, cheerful stock photography images (e.g., people laughing at salad) plays relentlessly. Office setting, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Goblin reads bedtime story",
+      "prompt": "A small, grotesque yet oddly charming goblin, wearing miniature striped pajamas and a nightcap, sitting on the edge of a child's bed, holding a picture book and reading a bedtime story with a surprisingly gentle expression. Eerie, whimsical, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Fish flock in sky sunset",
+      "prompt": "A vibrant sunset sky, where instead of birds, a large flock of shimmering fish (e.g., mackerel, tuna) are gracefully flying in formation, silhouetted against the colorful horizon. Surreal, beautiful, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Giant broccoli house roof",
+      "prompt": "A normal suburban house, but from its roof, a colossal, impossibly large broccoli stalk has violently erupted, tearing through the shingles and reaching towards the sky. Surreal, humorous, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Headless doll swing set",
+      "prompt": "A desolate backyard swing set, with a worn, headless doll sitting perfectly upright in one of the swings, gently swaying back and forth in a faint breeze, its empty neck staring forward. Eerie, melancholic, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "No reflection black puddle",
+      "prompt": "A person kneeling by a perfectly still, inky black puddle on a dark street, staring intently at its surface, trying to find their reflection, but it shows absolutely nothing, just endless blackness. Dark, unsettling, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Giant googly eyes stall",
+      "prompt": "A person sitting on a toilet in a public bathroom stall, looking up with wide, terrified eyes at a pair of comically oversized, disembodied googly eyes slowly peering over the top of the stall door. Humorous, jump scare, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Waterfall flows upwards clouds",
+      "prompt": "A majestic waterfall, but instead of falling downwards, its water is powerfully flowing upwards into the sky, defying gravity, culminating in a turbulent mass of white clouds. Surreal, breathtaking, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Gnomes chess foggy forest",
+      "prompt": "A circle of traditional garden gnomes, their faces grim and concentrated, playing a serious chess tournament on a miniature chessboard in a mystical, foggy forest, surrounded by moss and tiny mushrooms. Whimsical, eerie, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Giant candle tiny cupcake",
+      "prompt": "A comically oversized, brightly lit birthday candle, casting long shadows, stuck into a single, very small and lonely cupcake, sitting on a pristine white pedestal in the center of a vast, empty, dimly lit room. Humorous, melancholic, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Waiting room stuck clock",
+      "prompt": "A person sitting alone in a drab, sterile waiting room, staring with a look of profound despair at a wall clock whose hands are visibly stuck, perpetually displaying the same unmoving time. Fluorescent lighting, unsettling, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Flamingos chase mailman",
+      "prompt": "A terrified mailman, dropping his mailbag, running frantically down a suburban street, being fiercely pursued by an aggressive flock of bright pink plastic garden flamingos that have inexplicably come to life. Absurd, humorous, photorealistic."
+    },
+    {
+      "spice": 3,
+      "alt": "Hand from washing machine",
+      "prompt": "A person's bare hand, reaching out from the open door of a spinning washing machine, perfectly holding up a freshly laundered, impeccably folded white shirt against the swirling suds inside. Surreal, clean, photorealistic."
+    }
+  ],
+  "captions": {
+    "1": [
+      "When the snack drawer is empty.",
+      "POV: You just woke up.",
+      "Me trying to remember where I put it.",
+      "My brain on Mondays.",
+      "That awkward moment during a video call.",
+      "When your pet does something weird.",
+      "The sound of the ice cream truck.",
+      "My reaction to any math problem.",
+      "Waiting for the microwave to ding.",
+      "When the teacher says 'group project.'",
+      "POV: You finally get to relax.",
+      "Me before my first cup of coffee.",
+      "That feeling when you lose your phone.",
+      "The last chip in the bag.",
+      "When your printer runs out of ink.",
+      "My face seeing the giant spider.",
+      "Trying to sneak a treat past the dog.",
+      "When the internet connection is slow.",
+      "POV: You hear your favorite song.",
+      "Me after five minutes of chores.",
+      "The alarm clock on Saturday morning.",
+      "When you finally finish homework.",
+      "That look your cat gives you.",
+      "My personal space invasion.",
+      "When the food is finally ready.",
+      "POV: You open the fridge.",
+      "Me explaining a simple concept.",
+      "The joy of new socks.",
+      "When you find money in old clothes.",
+      "My brain buffering mid-sentence.",
+      "That moment of pure relief.",
+      "The struggle of putting on a duvet cover.",
+      "When your younger sibling copies you.",
+      "POV: Your parent walks in.",
+      "Me trying to ignore my responsibilities.",
+      "The satisfying click of a cap.",
+      "When the remote is missing.",
+      "My dog hearing a treat bag crinkle.",
+      "Trying to look busy at work/school.",
+      "When you step on a Lego.",
+      "POV: The last slice of pizza.",
+      "Me attempting to parallel park.",
+      "My happy dance for good news.",
+      "When you accidentally hit 'reply all'.",
+      "My reaction to any unexpected noise.",
+      "That feeling of a fresh haircut.",
+      "When your favorite show has a cliffhanger.",
+      "POV: You're alone in the house.",
+      "Me trying to remember a password.",
+      "The moment the movie starts buffering.",
+      "When you get a new notification.",
+      "The struggle of opening a new jar.",
+      "Trying to reach something on the top shelf.",
+      "When the ice dispenser gets stuck.",
+      "POV: Your turn on the game console.",
+      "Me after a long day of pretending.",
+      "The pure bliss of a warm blanket.",
+      "When you find the perfect parking spot.",
+      "My internal monologue during a test.",
+      "That first sip of cold water."
+    ],
+    "2": [
+      "When you see your ex's new post.",
+      "POV: First date going horribly wrong.",
+      "Me after one glass of wine.",
+      "My therapist's next session agenda.",
+      "That 'read' receipt from someone you like.",
+      "When the passive aggression levels up.",
+      "POV: You just sent a risky text.",
+      "Me pretending to know what's happening.",
+      "My boss asking for 'quick five minutes'.",
+      "That moment of post-online shopping regret.",
+      "When the dating app algorithm fails you.",
+      "POV: You successfully avoided eye contact.",
+      "Me trying to look busy at work.",
+      "The 3 AM existential dread hits.",
+      "When someone asks about your life plans.",
+      "My face when the bill arrives.",
+      "That moment you realize you're old.",
+      "POV: Another Monday morning meeting.",
+      "Me after scrolling social media too long.",
+      "The struggle of responding to a vague text.",
+      "When your phone dies mid-argument.",
+      "My internal scream during a presentation.",
+      "That friend who always overshares.",
+      "POV: You just heard some juicy gossip.",
+      "Me remembering all my past mistakes.",
+      "The sweet embrace of a hangover cure.",
+      "When your boundaries are non-existent.",
+      "My brain replaying cringe moments.",
+      "That 'Are we serious?' look.",
+      "POV: Someone's giving unsolicited advice.",
+      "Me after successfully gaslighting myself.",
+      "The internal debate of sending a text.",
+      "When your bank account mocks you.",
+      "My therapist trying to hide their shock.",
+      "That moment you spot your frenemy.",
+      "POV: You're trying to ignore the red flags.",
+      "Me attempting to be a functioning adult.",
+      "The energy of a full inbox.",
+      "When your entire personality is sarcasm.",
+      "My social battery is officially dead.",
+      "That moment of awkward small talk.",
+      "POV: You just accidentally liked an old post.",
+      "Me scrolling through my ex's stories.",
+      "The sheer audacity of some people.",
+      "When your toxic traits align perfectly.",
+      "My face when someone says 'team building.'",
+      "That moment before you hit 'send.'",
+      "POV: You're pretending to listen.",
+      "Me explaining my chaotic weekend.",
+      "The weight of Monday morning.",
+      "When you're too emotionally invested.",
+      "My inner critic on overdrive.",
+      "That feeling of being utterly drained.",
+      "POV: You just saw the group chat drama.",
+      "Me after confronting my problems.",
+      "The sweet relief of cancelling plans.",
+      "When your online persona crashes.",
+      "My response to 'How are you doing?'",
+      "That moment of profound regret.",
+      "POV: You just got ghosted."
+    ],
+    "3": [
+      "This is my villain origin story.",
+      "My brain at 3 AM: *static noise*.",
+      "Just embraced the goblin mode.",
+      "The feral urge to destroy.",
+      "Unsupervised and fully caffeinated.",
+      "I'm not okay, I'm just existing.",
+      "POV: You've been awake too long.",
+      "Me accepting my fate as a cryptid.",
+      "The void stares back, and it's me.",
+      "When the screams become whispers.",
+      "My brain: 'What if you just... ran?'",
+      "That feeling of being a glitch in the matrix.",
+      "POV: Your inner demons take the wheel.",
+      "Me questioning everything I know.",
+      "The chaos is a comforting presence.",
+      "When you haven't slept in days.",
+      "My spirit animal is a gremlin.",
+      "That moment of absolute mental collapse.",
+      "POV: You're speaking in tongues.",
+      "Me descending into madness, gracefully.",
+      "The abyss is calling, and I must answer.",
+      "When the intrusive thoughts win.",
+      "My internal monologue is a horror movie.",
+      "That feeling of unraveling completely.",
+      "POV: You've lost all sense of time.",
+      "Me plotting my escape from reality.",
+      "The quiet hum of impending doom.",
+      "When your sanity is hanging by a thread.",
+      "My brain just hit factory reset.",
+      "That primal urge to scream into the void.",
+      "POV: You're becoming the main character.",
+      "Me before my final form.",
+      "The sweet release of not caring anymore.",
+      "When the universe demands chaos.",
+      "My brain cells spontaneously combusting.",
+      "That moment of serene derangement.",
+      "POV: You've gone full feral.",
+      "Me collecting evidence for my memoir.",
+      "The overwhelming urge to hibernate forever.",
+      "When you're powered by spite.",
+      "My brain running on pure caffeine and chaos.",
+      "That feeling of impending doom, but make it fashion.",
+      "POV: You're now a cryptid.",
+      "Me trying to remember my own name.",
+      "The sweet sound of internal screaming.",
+      "When the mask finally slips.",
+      "My brain is a static TV screen.",
+      "That feeling of being utterly unhinged.",
+      "POV: You've embraced the darkness within.",
+      "Me talking to myself in public.",
+      "The sweet embrace of nihilism.",
+      "When your sanity decides to take a vacation.",
+      "My last two brain cells fighting.",
+      "That moment before the primal scream.",
+      "POV: You're losing your grip on reality.",
+      "Me deciding to be a problem.",
+      "The quiet desperation of existence.",
+      "When your internal monologue gets loud.",
+      "My brain is a broken record player.",
+      "That feeling of being completely unbothered."
+    ]
+  }
+}

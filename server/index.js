@@ -140,7 +140,7 @@ const GAMES = {
     description: 'Write hilarious captions for bizarre AI images — and get roasted by SassBot!',
     howToPlay: 'Each round, an AI generates a bizarre image. Everyone writes their funniest caption for it. SassBot — the AI judge — roasts your answers and scores each one based on creativity, humor, and relevance. The sassier the spice level, the meaner SassBot gets. Highest score wins the round!',
     minPlayers: 3, maxPlayers: 10, color: '#AFFF33', category: 'Wordplay & Wit',
-    enabled: true,
+    spicy: true, enabled: true,
   },
   'hot-take-tribunal': {
     id: 'hot-take-tribunal', name: 'Hot Take Tribunal', emoji: '🔥',
@@ -209,7 +209,7 @@ const GAMES = {
     description: 'Decode emoji rebus puzzles! Pharaoh Punhotep demands answers!',
     howToPlay: 'Each round, the AI creates an emoji rebus puzzle based on the topic packs you picked at launch. Type your best guess! The closer your answer, the more points you earn. Exact matches score big. Pharaoh Punhotep judges your wisdom!',
     minPlayers: 3, maxPlayers: 10, color: '#ff4081', category: 'Spark of Creation',
-    enabled: true,
+    spicy: true, enabled: true,
   },
   'one-word-story': {
     id: 'one-word-story', name: 'One Word Story', emoji: '📖',
@@ -326,7 +326,7 @@ const GAMES = {
 };
 
 function getEnabledGames() {
-  return Object.values(GAMES).filter(g => g.enabled).map(g => {
+  return Object.values(GAMES).filter(g => g.enabled).sort((a, b) => a.name.localeCompare(b.name)).map(g => {
     // NAH gets theme packs for pre-launch configuration
     if (g.id === 'nerds-against-humanity') {
       return { ...g, nahThemes };
@@ -1406,6 +1406,24 @@ io.on('connection', (socket) => {
   function isBaseGame(room) {
     return room && BASE_GAME_CLASSES[room.activeGame] && room.gameInstance;
   }
+
+  // ── State sync (client requests current state on mount) ──
+  socket.on('bg-get-state', (callback) => {
+    const room = getRoomByPlayer(socket.id);
+    if (!isBaseGame(room)) return callback?.({});
+    const gi = room.gameInstance;
+    if (!gi) return callback?.({});
+    callback?.({
+      state: gi.state,
+      round: gi.round,
+      totalRounds: gi.totalRounds,
+      prompt: gi.currentPrompt,
+      bellbotSays: '',
+      timeLimit: gi.state === 'SUBMISSION' ? gi.submissionTime : gi.state === 'VOTING' ? gi.votingTime : 0,
+      players: gi.getPlayerList(),
+      scores: gi.getScores(),
+    });
+  });
 
   // ── Submit entry (text or audio) ────────────────────────
   socket.on('bg-submit', async ({ submission } = {}, callback) => {

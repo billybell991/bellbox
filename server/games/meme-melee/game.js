@@ -1,7 +1,7 @@
 // Meme Melee — Game Logic
 // Same mechanics as NAH but with meme images as "black cards" and caption cards as "white cards"
 
-import { buildMemeDeck, memeCards } from './cards.js';
+import { buildMemeDeck, availableMemes } from './cards.js';
 
 function shuffle(array) {
   const a = [...array];
@@ -27,6 +27,7 @@ export class MemeGameRoom {
     this.memeDeck = [];     // meme images (like black cards)
     this.captionDeck = [];  // caption cards (like white cards)
     this.currentMeme = null;
+    this.usedMemes = new Set(); // track used meme URLs across rematches
     this.cardCzarIndex = 0;
     this.submissions = new Map();
     this.roundNumber = 0;
@@ -159,11 +160,15 @@ export class MemeGameRoom {
 
   startRound() {
     if (this.memeDeck.length === 0) {
-      this.memeDeck = shuffle([...memeCards]);
+      // Prefer unseen memes, fallback to full reshuffle if all used
+      const unseen = availableMemes.filter(m => !this.usedMemes.has(m.imageUrl));
+      this.memeDeck = shuffle(unseen.length > 0 ? [...unseen] : [...availableMemes]);
+      if (unseen.length === 0) this.usedMemes.clear();
     }
 
     this.roundNumber++;
     this.currentMeme = this.memeDeck.pop();
+    this.usedMemes.add(this.currentMeme.imageUrl);
     this.submissions = new Map();
     this.shuffledSubmissions = [];
     this.state = 'PICKING';

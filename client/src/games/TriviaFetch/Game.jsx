@@ -169,9 +169,9 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
   };
 
   const getTimerColor = () => {
-    if (timeLeft > 10) return 'var(--secondary)';
-    if (timeLeft > 5) return 'var(--accent-gold)';
-    return 'var(--error)';
+    if (timeLeft > 10) return '#21ffb2';
+    if (timeLeft > 5) return '#FFB347';
+    return '#f44336';
   };
 
   const getOptionClass = (index) => {
@@ -259,10 +259,10 @@ export default function Game({ socket, playerName, roomCode, gameState, setGameS
                 style={{
                   width: `${(timeLeft / 20) * 100}%`,
                   background: getTimerColor(),
-                  boxShadow: `0 0 10px ${getTimerColor()}`,
+                  boxShadow: `0 0 8px ${getTimerColor()}`,
                 }}
               />
-              <span className="gs-timer-text">
+              <span className="gs-timer-text" style={{ color: getTimerColor(), textShadow: `0 0 8px ${getTimerColor()}` }}>
                 {timeLeft > 0 ? `⏰ ${timeLeft}s` : "⏰ Time's up!"}
               </span>
             </div>

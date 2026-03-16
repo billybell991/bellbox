@@ -27,7 +27,23 @@ const IMAGE_MODELS = [
 ];
 
 // Circuit breaker: models that have hit their daily quota this session
-const exhaustedModels = new Set();
+// Auto-resets after 30 minutes to retry in case quota refreshes
+const exhaustedModels = new Map(); // model.id -> timestamp when exhausted
+
+function isModelExhausted(modelId) {
+  const timestamp = exhaustedModels.get(modelId);
+  if (!timestamp) return false;
+  // Auto-reset after 30 minutes
+  if (Date.now() - timestamp > 30 * 60 * 1000) {
+    exhaustedModels.delete(modelId);
+    return false;
+  }
+  return true;
+}
+
+function markModelExhausted(modelId) {
+  exhaustedModels.set(modelId, Date.now());
+}
 
 function isQuotaExhausted(bodyText) {
   return bodyText.includes('RESOURCE_EXHAUSTED') || bodyText.includes('quota');
@@ -179,14 +195,14 @@ export async function generateImage(prompt, aspectRatio = '1:1') {
   }
 
   for (const model of IMAGE_MODELS) {
-    if (exhaustedModels.has(model.id)) continue;
+    if (isModelExhausted(model.id)) continue;
 
     const result = model.type === 'predict'
       ? await tryImagenPredict(model, prompt, aspectRatio, apiKey)
       : await tryGeminiImage(model, prompt, aspectRatio, apiKey);
 
     if (result === 'QUOTA_EXHAUSTED') {
-      exhaustedModels.add(model.id);
+      markModelExhausted(model.id);
       console.warn(`[ImageGen] ${model.name} quota exhausted, trying next tier...`);
       continue;
     }

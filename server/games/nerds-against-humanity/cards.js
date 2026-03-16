@@ -646,8 +646,17 @@ const themeDecks = {
   science:  { black: scienceBlackCards,  white: scienceWhiteCards },
 };
 
+// Spice algorithm:
+//   Level 1 (Family Fun)  = only spice 1 content
+//   Level 2 (Spicy)       = spice 1 + spice 2 content
+//   Level 3 (Unhinged)    = spice 2 + spice 3 content (NO family fun)
+function getSpiceLevels(spiceLevel) {
+  if (spiceLevel === 1) return [1];
+  if (spiceLevel === 2) return [1, 2];
+  return [2, 3]; // unhinged
+}
+
 // Build combined decks from selected themes, filtered by spice level
-// spiceLevel 1 = clean only, 2 = clean+spicy, 3 = everything
 export function buildDeck(selectedThemes, spiceLevel = 3) {
   const ids = selectedThemes && selectedThemes.length > 0
     ? selectedThemes
@@ -664,10 +673,9 @@ export function buildDeck(selectedThemes, spiceLevel = 3) {
   }
 
   // Filter by spice level
-  if (spiceLevel < 3) {
-    black = black.filter(card => classifySpice(card.text) <= spiceLevel);
-    white = white.filter(card => classifySpice(card) <= spiceLevel);
-  }
+  const levels = getSpiceLevels(spiceLevel);
+  black = black.filter(card => levels.includes(classifySpice(card.text)));
+  white = white.filter(card => levels.includes(classifySpice(card)));
 
   return { blackCards: black, whiteCards: white };
 }

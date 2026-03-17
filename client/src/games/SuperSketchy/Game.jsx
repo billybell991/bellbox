@@ -445,13 +445,15 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
 
       {/* ── REVEAL PHASE ── */}
       {phase === 'reveal' && reveal && (
-        <div className="ss-phase ss-phase--reveal">
-          <div className="ss-drawing-display ss-drawing-display--small">
-            {currentDrawing ? (
-              <img src={currentDrawing} alt="Drawing" className="ss-drawing-img" />
-            ) : (
-              <div className="ss-blank-canvas">🎨</div>
-            )}
+        <div className="ss-phase ss-phase--reveal" style={{ overflowY: 'auto' }}>
+          <div className="ss-reveal-canvas-wrap">
+            <div className="ss-drawing-display">
+              {currentDrawing ? (
+                <img src={currentDrawing} alt="Drawing" className="ss-drawing-img" />
+              ) : (
+                <div className="ss-blank-canvas">🎨</div>
+              )}
+            </div>
           </div>
           <div className="ss-real-prompt">
             <div className="ss-real-label">✅ The REAL prompt was:</div>
@@ -463,18 +465,19 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
 
           {/* Show who voted for what (hide the real answer row if we're the artist — we already know it) */}
           <div className="ss-reveal-options">
-            {reveal.options.filter(opt => !(opt.isReal && artistId === myId)).map(opt => (
-              <div key={opt.id} className={`ss-reveal-option ${opt.isReal ? 'ss-reveal-option--real' : 'ss-reveal-option--decoy'}`}>
+            {reveal.options.filter(opt => !(opt.isReal && artistId === myId)).map((opt, idx) => (
+              <div key={opt.id} className={`ss-reveal-option ${opt.isReal ? 'ss-reveal-option--real' : `ss-reveal-option--decoy${opt.votes.length > 0 ? ' ss-reveal-option--fooled' : ''}`}`} style={{ '--i': idx }}>
                 <div className="ss-option-text">
-                  {opt.isReal ? '✅' : '❌'} "{opt.text}"
+                  "{opt.text}"
                   {!opt.isReal && opt.authorName && (
                     <span className="ss-option-author"> — written by {opt.authorName}</span>
                   )}
                 </div>
-                {opt.votes.length > 0 && (
+                {/* Only show who voted for a DECOY — correct guessers are shown in the winner box below */}
+                {!opt.isReal && opt.votes.length > 0 && (
                   <div className="ss-option-voters">
                     Fooled: {opt.votes.map(v => v.name).join(', ')}
-                    {!opt.isReal && <span className="ss-bonus"> (+{opt.votes.length * 500}pts)</span>}
+                    <span className="ss-bonus"> (+{opt.votes.length * 500}pts)</span>
                   </div>
                 )}
               </div>
@@ -483,13 +486,13 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
 
           {/* Correct guessers */}
           {reveal.correctGuessers.length > 0 && (
-            <div className="ss-correct-guessers">
+            <div className="ss-correct-guessers ss-correct-guessers--winner">
               🧠 Got it right: {reveal.correctGuessers.map(g => g.name).join(', ')}
               <span className="ss-bonus"> (+1000pts each)</span>
             </div>
           )}
           {reveal.nobodyGuessedRight && (
-            <div className="ss-correct-guessers">
+            <div className="ss-correct-guessers ss-correct-guessers--trickster">
               😈 Nobody guessed it! {reveal.artistName} gets a bonus!
               <span className="ss-bonus"> (+500pts)</span>
             </div>

@@ -1836,8 +1836,8 @@ Rules:
     return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
   }
 
-  // Bot fake prompt pool for decoy submissions
-  const BOT_DECOY_POOL = [
+  // Bot fake prompt pools — tiered by spice level
+  const BOT_DECOY_POOL_1 = [
     'A horse eating spaghetti', 'Two cats in a trenchcoat', 'The world\'s saddest birthday party',
     'Someone stuck in a vending machine', 'A pigeon driving a bus', 'An octopus doing taxes',
     'A dog pretending to be a doctor', 'A ghost trying to use a phone', 'Someone sleeping at their own wedding',
@@ -1847,6 +1847,35 @@ Rules:
     'A wizard at the DMV', 'A snake with tiny arms', 'Two clouds having an argument',
     'A dinosaur in a tiny car', 'Someone walking their pet rock', 'A cactus giving a hug',
   ];
+  const BOT_DECOY_POOL_2 = [
+    'Two exes stuck in an elevator', 'A walk of shame on Sunday morning',
+    'Explaining a hickey to your mother', 'Getting caught reading someone\'s texts',
+    'A man hitting on someone way out of his league', 'Drunk texting your ex at 2am',
+    'A stripper on a lunch break', 'Sneaking someone out before your roommate wakes up',
+    'A one-night stand trying to remember names', 'Caught lying about being single',
+    'Someone crying in a bar bathroom', 'A married person on a dating app',
+    'Getting kicked out of a casino', 'A hungover person at a kid\'s birthday party',
+    'Doing the walk of shame past your neighbors', 'A couple fighting over the check',
+    'Someone passed out at their own party', 'Accidental FaceTime with your boss',
+    'A guy hiding from his girlfriend at a party', 'Two friends who kissed and are now awkward',
+  ];
+  const BOT_DECOY_POOL_3 = [
+    'Getting walked in on at the worst possible moment', 'A couple fighting naked',
+    'Explaining what you were doing to the paramedics', 'Sexting the wrong person',
+    'A threesome with a scheduling conflict', 'Caught by a Ring doorbell doing something shameful',
+    'Two people doing it in an IKEA showroom', 'Explaining your browser history to your mom',
+    'A naked person hiding in a closet while the spouse comes home', 'Getting a text from your hookup during Christmas dinner',
+    'Someone trying to sneak out a fire escape with no clothes on', 'A couple interrupted by an Airbnb check-in',
+    'Accidentally sending a risqué photo to a work group chat', 'Two-timing and both dates showing up at the same restaurant',
+    'Explaining the handcuffs to the locksmith', 'A very awkward morning after',
+    'Getting caught with the neighbor by the HOA', 'A very visible hickey at a job interview',
+    'Someone finishing a video call before realizing their screen share was still on', 'A walk of shame through a hotel lobby in last night\'s formal wear',
+  ];
+  function getBotDecoyPool(spiceLevel) {
+    if (spiceLevel >= 3) return BOT_DECOY_POOL_3;
+    if (spiceLevel >= 2) return BOT_DECOY_POOL_2;
+    return BOT_DECOY_POOL_1;
+  }
 
   function scheduleSSBotActions(room) {
     if (!room.aiBots) return;
@@ -1877,7 +1906,8 @@ Rules:
         if (gi.decoys.has(botId)) continue;
         setTimeout(() => {
           if (gi.state !== 'DECOY') return;
-          const decoy = BOT_DECOY_POOL[Math.floor(Math.random() * BOT_DECOY_POOL.length)];
+          const pool = getBotDecoyPool(gi.spiceLevel);
+          const decoy = pool[Math.floor(Math.random() * pool.length)];
           const result = gi.submitDecoy(botId, decoy);
           if (result?.error) return;
           io.to(room.roomCode).emit('ss-decoy-update', {

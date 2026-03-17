@@ -33,7 +33,7 @@ const POSTERS = [
   },
   {
     id: 'super-sketchy',
-    prompt: `A vibrant game poster in portrait 3:4 format with bold neon colors. The title "SUPER SKETCHY" appears at the top in large thick white block letters with a bright pink glow. Center the image on a giant pencil drawing a funny wobbly stick figure on white paper. The background is deep purple with scattered colorful question marks. Bold, clean, eye-catching design with strong contrast. Digital illustration style.`,
+    prompt: `A vibrant game poster in portrait 3:4 format with bold neon colors. The title "SUPER SKETCH" appears at the top in large thick white block letters with a bright pink glow. Center the image on a giant pencil drawing a funny wobbly stick figure on white paper. The stick figure has a suspicious, "I'm onto you" expression, with raised eyebrow and side-eye, like it's sussing someone out. The background is deep purple with scattered colorful question marks. Bold, clean, eye-catching design with strong contrast. Digital illustration style.`,
   },
 ];
 

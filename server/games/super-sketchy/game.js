@@ -1,4 +1,4 @@
-// Super Sketchy — Drawful-style drawing + deception game
+// Super Sketch — Drawful-style drawing + deception game
 // Draw a weird prompt → others guess what it is → vote on which guess is real → score
 
 function shuffle(array) {
@@ -416,7 +416,15 @@ export class SuperSketchyGame {
       isArtist,
       hasSubmittedDecoy: this.decoys.has(socketId),
       hasVoted: this.votes.has(socketId),
-      voteOptions: this.state === 'VOTING' ? this.voteOptions.filter(o => o.authorId !== socketId).map(o => ({ id: o.id, text: o.text })) : [],
+      // In voting phase, return all options but mark the player's own decoy
+      // so the client can show it greyed-out instead of hiding it entirely.
+      voteOptions: this.state === 'VOTING'
+        ? this.voteOptions.map(o => ({
+            id: o.id,
+            text: o.text,
+            isOwn: o.authorId === socketId,
+          }))
+        : [],
       drawingsShown: this.drawingsShown,
       totalDrawings: this.totalDrawings,
     };

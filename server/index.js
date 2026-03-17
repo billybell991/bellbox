@@ -325,7 +325,7 @@ const GAMES = {
     spicy: true, enabled: true,
   },
   'super-sketchy': {
-    id: 'super-sketchy', name: 'Super Sketchy', emoji: '✏️',
+    id: 'super-sketchy', name: 'Super Sketch', emoji: '✏️',
     description: 'Draw a weird prompt. Others write fakes. Can you spot the real one?',
     howToPlay: 'Everyone gets a secret, weird prompt and draws it on their phone. Then each drawing is shown — players write FAKE prompts to trick each other. Vote on which prompt you think is the REAL one. Points for fooling others, guessing right, and getting your art recognized!',
     minPlayers: 3, maxPlayers: 8, color: '#FF69B4', category: 'Spark of Creation',

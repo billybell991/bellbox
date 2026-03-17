@@ -4937,7 +4937,7 @@ h1, h2, h3 {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SUPER SKETCHY — Drawful-style drawing game
+  SUPER SKETCH — Drawful-style drawing game
    ═══════════════════════════════════════════════════════════════ */
 
 .ss-container {
@@ -5246,6 +5246,10 @@ h1, h2, h3 {
   background: rgba(139,92,246,0.3) !important;
   border-color: #8B5CF6 !important;
   box-shadow: 0 0 12px rgba(139,92,246,0.3);
+}
+.ss-vote-btn--own {
+  opacity: 0.35;
+  cursor: default;
 }
 .ss-vote-btn--dimmed { opacity: 0.4; cursor: default; }
 .ss-vote-btn { position: relative; }

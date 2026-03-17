@@ -319,7 +319,7 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
     <div className="ss-container">
       {/* Header */}
       <div className="ss-header">
-        <div className="ss-title">Super Sketchy</div>
+        <div className="ss-title">Super Sketch</div>
         <div className="ss-progress">
           {phase === 'drawing' ? `Round ${roundNumber}/${totalRounds}` :
            totalDrawings > 0 ? `Round ${roundNumber} · ${drawingsShown}/${totalDrawings}` :
@@ -428,9 +428,12 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
               {voteOptions.map(opt => (
                 <button
                   key={opt.id}
-                  className={`ss-vote-btn ${voted === opt.id ? 'ss-vote-btn--selected' : ''} ${selectedVote === opt.id && !voted ? 'ss-vote-btn--selected' : ''} ${(voted && voted !== opt.id) || (selectedVote && selectedVote !== opt.id && !voted) ? 'ss-vote-btn--dimmed' : ''}`}
-                  onClick={() => handleVote(opt.id)}
-                  disabled={!!voted}
+                  className={`ss-vote-btn ${opt.isOwn ? 'ss-vote-btn--own' : ''} ${voted === opt.id ? 'ss-vote-btn--selected' : ''} ${selectedVote === opt.id && !voted ? 'ss-vote-btn--selected' : ''} ${(voted && voted !== opt.id) || (selectedVote && selectedVote !== opt.id && !voted) ? 'ss-vote-btn--dimmed' : ''}`}
+                  onClick={() => {
+                    if (opt.isOwn) return; // can't vote for your own answer
+                    handleVote(opt.id);
+                  }}
+                  disabled={!!voted || opt.isOwn}
                 >
                   {opt.text}
                   {selectedVote === opt.id && !voted && (

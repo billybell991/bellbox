@@ -82,7 +82,7 @@ function DrawingCanvas({ onSubmit, disabled, timeLimit }) {
     onSubmit(imageData);
   };
 
-  const COLORS = ['#000000', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#FFFFFF'];
+  const COLORS = ['#000000', '#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#FFD600'];
 
   return (
     <div className="ss-canvas-area">
@@ -91,7 +91,7 @@ function DrawingCanvas({ onSubmit, disabled, timeLimit }) {
           <button
             key={c}
             className={`ss-color-btn ${color === c ? 'ss-color-btn--active' : ''}`}
-            style={{ background: c, border: c === '#FFFFFF' ? '2px solid #666' : '2px solid transparent' }}
+            style={{ background: c, border: '2px solid transparent' }}
             onClick={() => setColor(c)}
             disabled={disabled}
           />
@@ -113,7 +113,7 @@ function DrawingCanvas({ onSubmit, disabled, timeLimit }) {
         onClick={handleSubmit}
         disabled={disabled || !hasDrawn}
       >
-        ✅ Submit Drawing
+        Submit Drawing
       </button>
     </div>
   );
@@ -127,6 +127,8 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
   const [timeLimit, setTimeLimit] = useState(0);
   const [scores, setScores] = useState([]);
   const [winner, setWinner] = useState(null);
+  const [roundNumber, setRoundNumber] = useState(1);
+  const [totalRounds, setTotalRounds] = useState(3);
 
   // Decoy phase state
   const [currentDrawing, setCurrentDrawing] = useState(null);
@@ -155,7 +157,10 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
       setDrawingSubmitted(false);
       setScores(data.scores || []);
       setTotalDrawings(data.totalDrawings);
+      setRoundNumber(data.roundNumber || 1);
+      setTotalRounds(data.totalRounds || 3);
       setReveal(null);
+      setDrawingsShown(0);
     });
 
     // ── Decoy Phase ──
@@ -169,8 +174,11 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
       setDecoyCount({ submitted: 0, total: data.totalDecoys || 0 });
       setDrawingsShown(data.drawingsShown);
       setTotalDrawings(data.totalDrawings);
+      if (data.roundNumber) setRoundNumber(data.roundNumber);
+      if (data.totalRounds) setTotalRounds(data.totalRounds);
       setVoteOptions([]);
       setVoted(null);
+      setSelectedVote(null);
       setReveal(null);
     });
 
@@ -184,6 +192,7 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
       setVoteOptions(data.options);
       setTimeLimit(data.timeLimit);
       setVoted(null);
+      setSelectedVote(null);
     });
 
     // ── Reveal Phase ──
@@ -192,6 +201,8 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
       setReveal(data);
       setScores(data.scores || []);
       setTimeLimit(data.timeLimit || 0);
+      if (data.roundNumber) setRoundNumber(data.roundNumber);
+      if (data.totalRounds) setTotalRounds(data.totalRounds);
     });
 
     // ── Game Over ──
@@ -203,7 +214,13 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
 
     // ── Reconnect state sync ──
     socket.on('ss-state-sync', (data) => {
-      if (data.phase === 'drawing') {
+      if (data.roundNumber) setRoundNumber(data.roundNumber);
+      if (data.totalRounds) setTotalRounds(data.totalRounds);
+      if (data.phase === 'pending') {
+        setPhase('pending');
+        setCurrentDrawing(data.currentDrawing || null);
+        setArtistName(data.artistName || '');
+      } else if (data.phase === 'drawing') {
         setPhase('drawing');
         setMyPrompt(data.myPrompt);
         setDrawingSubmitted(data.myDrawingSubmitted);
@@ -249,9 +266,18 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
     socket.emit('ss-submit-decoy', { decoyText: text });
   };
 
+  const [selectedVote, setSelectedVote] = useState(null);
+
   const handleVote = (optionId) => {
-    setVoted(optionId);
-    socket.emit('ss-vote', { optionId });
+    if (voted) return;
+    if (selectedVote === optionId) {
+      // Second tap — confirm and submit
+      setVoted(optionId);
+      socket.emit('ss-vote', { optionId });
+    } else {
+      // First tap — highlight
+      setSelectedVote(optionId);
+    }
   };
 
   const handleNextDrawing = () => {
@@ -294,19 +320,22 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
       {/* Header */}
       <div className="ss-header">
         <div className="ss-title">Super Sketchy</div>
-        {totalDrawings > 0 && (
-          <div className="ss-progress">
-            Drawing {drawingsShown}/{totalDrawings}
-          </div>
-        )}
+        <div className="ss-progress">
+          {phase === 'drawing' ? `Round ${roundNumber}/${totalRounds}` :
+           totalDrawings > 0 ? `Round ${roundNumber} · ${drawingsShown}/${totalDrawings}` :
+           `Round ${roundNumber}/${totalRounds}`}
+        </div>
         <button className="ss-score-btn" onClick={() => setShowScoreboard(true)}>🏆</button>
       </div>
 
       {/* Timer */}
       {timeLimit > 0 && remaining > 0 && phase !== 'reveal' && phase !== 'gameover' && (
-        <div className={`ss-timer ${timerUrgent ? 'ss-timer--urgent' : ''}`}>
-          <div className="ss-timer-bar" style={{ width: `${timerPct}%`, background: timerColor }} />
-          <span className="ss-timer-text" style={{ color: timerColor }}>⏰ {remaining}s</span>
+        <div className={`gs-timer ${timerUrgent ? 'gs-timer--urgent' : ''}`}>
+          <div
+            className="gs-timer-bar"
+            style={{ width: `${timerPct}%`, background: timerColor, boxShadow: `0 0 8px ${timerColor}` }}
+          />
+          <span className="gs-timer-text" style={{ color: timerColor, textShadow: `0 0 8px ${timerColor}` }}>⏰ {remaining}s</span>
         </div>
       )}
 
@@ -330,13 +359,14 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
       {/* ── DRAWING PHASE ── */}
       {phase === 'drawing' && (
         <div className="ss-phase ss-phase--drawing">
+          <div className="ss-round-banner">✏️ Round {roundNumber} of {totalRounds} — Draw!</div>
           <div className="ss-prompt-card">
             <div className="ss-prompt-label">🎨 Your secret prompt:</div>
             <div className="ss-prompt-text">{myPrompt}</div>
           </div>
           {drawingSubmitted ? (
             <div className="ss-waiting">
-              <div className="ss-waiting-text">✅ Drawing submitted! Waiting for others...</div>
+              <div className="ss-waiting-text">Drawing submitted! Waiting for others...</div>
             </div>
           ) : (
             <DrawingCanvas
@@ -368,7 +398,7 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
             </div>
           ) : decoySubmitted ? (
             <div className="ss-waiting">
-              <div className="ss-waiting-text">✅ Fake prompt submitted! Waiting for others...</div>
+              <div className="ss-waiting-text">✅ Answer submitted! Waiting for others...</div>
             </div>
           ) : (
             <DecoyInput onSubmit={handleSubmitDecoy} />
@@ -398,11 +428,14 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
               {voteOptions.map(opt => (
                 <button
                   key={opt.id}
-                  className={`ss-vote-btn ${voted === opt.id ? 'ss-vote-btn--selected' : ''} ${voted && voted !== opt.id ? 'ss-vote-btn--dimmed' : ''}`}
-                  onClick={() => !voted && handleVote(opt.id)}
+                  className={`ss-vote-btn ${voted === opt.id ? 'ss-vote-btn--selected' : ''} ${selectedVote === opt.id && !voted ? 'ss-vote-btn--selected' : ''} ${(voted && voted !== opt.id) || (selectedVote && selectedVote !== opt.id && !voted) ? 'ss-vote-btn--dimmed' : ''}`}
+                  onClick={() => handleVote(opt.id)}
                   disabled={!!voted}
                 >
                   {opt.text}
+                  {selectedVote === opt.id && !voted && (
+                    <span className="tap-to-submit">tap to pick</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -428,9 +461,9 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
             </div>
           </div>
 
-          {/* Show who voted for what */}
+          {/* Show who voted for what (hide the real answer row if we're the artist — we already know it) */}
           <div className="ss-reveal-options">
-            {reveal.options.map(opt => (
+            {reveal.options.filter(opt => !(opt.isReal && artistId === myId)).map(opt => (
               <div key={opt.id} className={`ss-reveal-option ${opt.isReal ? 'ss-reveal-option--real' : 'ss-reveal-option--decoy'}`}>
                 <div className="ss-option-text">
                   {opt.isReal ? '✅' : '❌'} "{opt.text}"
@@ -455,11 +488,19 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
               <span className="ss-bonus"> (+1000pts each)</span>
             </div>
           )}
+          {reveal.nobodyGuessedRight && (
+            <div className="ss-correct-guessers">
+              😈 Nobody guessed it! {reveal.artistName} gets a bonus!
+              <span className="ss-bonus"> (+500pts)</span>
+            </div>
+          )}
 
-          {/* Next drawing button (host) */}
+          {/* Next drawing / round / final scores button (host) */}
           {isHost && (
             <button className="ss-next-btn" onClick={handleNextDrawing}>
-              {reveal.drawingsRemaining > 0 ? '➡️ Next Drawing' : '🏆 Final Scores'}
+              {reveal.isGameOver ? '🏆 Final Scores' :
+               reveal.drawingsRemaining > 0 ? 'Next Drawing' :
+               `🎨 Round ${(reveal.roundNumber || 0) + 1} — Draw!`}
             </button>
           )}
         </div>
@@ -495,6 +536,29 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
           <div className="ss-waiting-text">Getting things ready... 🎨</div>
         </div>
       )}
+
+      {/* ── PENDING (joined mid-game) ── */}
+      {phase === 'pending' && (
+        <div className="ss-phase ss-phase--waiting">
+          <div className="ss-round-banner">🕒 Round {roundNumber} in progress — you'll play next round!</div>
+          {currentDrawing && (
+            <>
+              <div className="ss-info-bar">
+                <span>🗳️ {artistName ? `${artistName}'s drawing` : 'Current drawing'}</span>
+              </div>
+              <div className="ss-drawing-display">
+                <img src={currentDrawing} alt="Current drawing" className="ss-drawing-img" />
+              </div>
+            </>
+          )}
+          {!currentDrawing && (
+            <div className="ss-waiting-text">👀 Watching the action…</div>
+          )}
+          <div className="ss-correct-guessers" style={{marginTop: 12}}>
+            You'll join automatically when the next round starts.
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -515,7 +579,7 @@ function DecoyInput({ onSubmit }) {
 
   return (
     <div className="ss-decoy-input">
-      <div className="ss-decoy-label">✍️ Write a FAKE prompt to trick other players!</div>
+      <div className="ss-decoy-label">🤔 What do you think this is?</div>
       <div className="ss-input-row">
         <input
           ref={inputRef}
@@ -523,7 +587,7 @@ function DecoyInput({ onSubmit }) {
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-          placeholder="What do you think this is? (or make something up!)"
+          placeholder="Type your best guess (or bluff!)"
           maxLength={150}
         />
         <button

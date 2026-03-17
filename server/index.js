@@ -682,6 +682,27 @@ io.on('connection', (socket) => {
     if (!room) return callback({ error: 'Room not found' });
     if (room.players.size >= 10) return callback({ error: 'Room is full!' });
 
+    // Mid-game join: only Super Sketchy supports late joining as a pending player
+    if (room.state === 'IN_GAME') {
+      if (room.activeGame !== 'super-sketchy' || !room.gameInstance) {
+        return callback({ error: 'Game already in progress' });
+      }
+      // Add as pending — they'll be active starting next round
+      const gi = room.gameInstance;
+      const result = gi.addPendingPlayer(socket.id, name, playerId);
+      if (result.error) return callback(result);
+      // Register in room's player/id maps so reconnect works
+      room.players.set(socket.id, { name, playerId: playerId || null, vote: null, avatar: room.nextAvatar });
+      room.nextAvatar = (room.nextAvatar % 10) + 1;
+      if (playerId) room.playerIdMap.set(playerId, socket.id);
+      socket.join(code);
+      const pendingState = gi.getPendingState(socket.id);
+      callback({ success: true, ...pendingState });
+      socket.to(code).emit('player-joined', { players: room.getPlayerList() });
+      console.log(`⏳ ${name} joined mid-game as pending in ${code}`);
+      return;
+    }
+
     const result = room.addPlayer(socket.id, name, playerId);
     if (result.error) return callback(result);
 
@@ -1025,6 +1046,7 @@ io.on('connection', (socket) => {
           totalDrawings: room.gameInstance.totalDrawings,
         });
       }
+      scheduleSSBotActions(room);
 
     } else if (BASE_GAME_CLASSES[gameId]) {
       // ── Generic BaseGame launch ─────────────────────────
@@ -1301,8 +1323,11 @@ io.on('connection', (socket) => {
           timeLimit: 60,
           scores: room.gameInstance.getScores(),
           totalDrawings: room.gameInstance.totalDrawings,
+          roundNumber: room.gameInstance.roundNumber,
+          totalRounds: room.gameInstance.totalRounds,
         });
       }
+      scheduleSSBotActions(room);
 
     } else if (BASE_GAME_CLASSES[gameId]) {
       const GameClass = BASE_GAME_CLASSES[gameId];
@@ -1701,6 +1726,20 @@ io.on('connection', (socket) => {
 
     if (result.state === 'GAME_OVER') {
       io.to(room.roomCode).emit('ss-game-over', result);
+    } else if (result.state === 'DRAWING') {
+      // New round — send each player their new secret prompt
+      for (const socketId of gi.playerOrder) {
+        const assignment = gi.assignments.get(socketId);
+        io.to(socketId).emit('ss-draw-phase', {
+          prompt: assignment?.prompt || '???',
+          timeLimit: 60,
+          scores: gi.getScores(),
+          totalDrawings: gi.totalDrawings,
+          roundNumber: gi.roundNumber,
+          totalRounds: gi.totalRounds,
+        });
+      }
+      scheduleSSBotActions(room);
     } else {
       emitSSDecoyPhase(room, result);
     }
@@ -1709,16 +1748,169 @@ io.on('connection', (socket) => {
   socket.on('ss-request-sync', () => {
     const room = getRoomByPlayer(socket.id);
     if (!isSuperSketchy(room)) return;
-    const gs = room.gameInstance.getFullState(socket.id);
+    const gi = room.gameInstance;
+    if (gi.isPending(socket.id)) {
+      const ps = gi.getPendingState(socket.id);
+      socket.emit('ss-state-sync', ps.gameState);
+      return;
+    }
+    const gs = gi.getFullState(socket.id);
     if (gs?.gameState) {
       socket.emit('ss-state-sync', gs.gameState);
     }
   });
 
+  // ── Generate a visible bot drawing (random SVG scribble) ──
+  // Ask Gemini to draw a simple SVG sketch for the given prompt.
+  // Falls back to the random scribble if Gemini is unavailable or fails.
+  async function generateBotSVGDrawing(prompt) {
+    try {
+      const { getModel } = await import('./bellbot.js');
+      const model = getModel();
+      if (!model) return generateBotDrawing();
+
+      const instruction = `You are a terrible-but-trying artist in a party drawing game. Draw a simple SVG sketch (600x600) that represents: "${prompt}"
+
+Rules:
+- Output ONLY a valid SVG string starting with <svg and ending with </svg>. No markdown, no explanation.
+- White background: <rect width="600" height="600" fill="white"/>
+- Use only basic shapes: <circle>, <rect>, <line>, <polyline>, <polygon>, <ellipse>, <path>
+- Black or dark strokes, stroke-width 3-6, fill="none" or simple solid fills
+- Aim for a recognizable but charmingly bad stick-figure / cartoon style
+- Include 5-15 elements total
+- Keep it simple — this should look like a human drew it quickly with a marker`;
+
+      const result = await model.generateContent(instruction);
+      const text = result.response.text().trim();
+      // Extract just the SVG tag
+      const match = text.match(/<svg[\s\S]*<\/svg>/i);
+      if (!match) return generateBotDrawing();
+      const svg = match[0]
+        .replace(/width="[^"]*"/, 'width="600"')
+        .replace(/height="[^"]*"/, 'height="600"');
+      return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+    } catch {
+      return generateBotDrawing();
+    }
+  }
+
+  function generateBotDrawing() {
+    const colors = ['#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#000000'];
+    const pick = () => colors[Math.floor(Math.random() * colors.length)];
+    const rnd = (max) => Math.floor(Math.random() * max);
+    const els = [];
+    // Random circles
+    for (let i = 0; i < 6 + rnd(8); i++) {
+      els.push(`<circle cx="${20 + rnd(560)}" cy="${20 + rnd(560)}" r="${10 + rnd(40)}" fill="${pick()}" opacity="0.7"/>`);
+    }
+    // Random squiggly lines
+    for (let i = 0; i < 3 + rnd(4); i++) {
+      const pts = [];
+      for (let j = 0; j < 4 + rnd(4); j++) pts.push(`${rnd(600)},${rnd(600)}`);
+      els.push(`<polyline points="${pts.join(' ')}" fill="none" stroke="${pick()}" stroke-width="${3 + rnd(5)}" stroke-linecap="round" stroke-linejoin="round"/>`);
+    }
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="600" height="600" fill="white"/>${els.join('')}</svg>`;
+    return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+  }
+
+  // Bot fake prompt pool for decoy submissions
+  const BOT_DECOY_POOL = [
+    'A horse eating spaghetti', 'Two cats in a trenchcoat', 'The world\'s saddest birthday party',
+    'Someone stuck in a vending machine', 'A pigeon driving a bus', 'An octopus doing taxes',
+    'A dog pretending to be a doctor', 'A ghost trying to use a phone', 'Someone sleeping at their own wedding',
+    'A fish climbing a tree', 'An alien at a job interview', 'A penguin on a surfboard',
+    'The worst haircut ever', 'A robot learning to cry', 'A bear at a tea party',
+    'Someone proposing at a funeral', 'A clown doing your taxes', 'A chicken crossing a highway',
+    'A wizard at the DMV', 'A snake with tiny arms', 'Two clouds having an argument',
+    'A dinosaur in a tiny car', 'Someone walking their pet rock', 'A cactus giving a hug',
+  ];
+
+  function scheduleSSBotActions(room) {
+    if (!room.aiBots) return;
+    const gi = room.gameInstance;
+    if (!gi) return;
+
+    if (gi.state === 'DRAWING') {
+      // Bots auto-submit drawings — ask Gemini to draw the prompt
+      for (const botId of room.getBotIds()) {
+        const assignment = gi.assignments.get(botId);
+        if (!assignment || assignment.drawingData) continue;
+        const drawDelay = 8000 + Math.random() * 12000; // 8-20s to "think"
+        setTimeout(async () => {
+          if (gi.state !== 'DRAWING') return;
+          const drawingData = await generateBotSVGDrawing(assignment.prompt);
+          const result = gi.submitDrawing(botId, drawingData);
+          if (result?.allSubmitted) {
+            const decoyResult = gi.lockDrawings();
+            emitSSDecoyPhase(room, decoyResult);
+            scheduleSSBotActions(room);
+          }
+        }, drawDelay);
+      }
+    } else if (gi.state === 'DECOY') {
+      // Bots auto-submit decoy prompts (skip if bot is the artist)
+      for (const botId of room.getBotIds()) {
+        if (botId === gi.currentArtistId) continue;
+        if (gi.decoys.has(botId)) continue;
+        setTimeout(() => {
+          if (gi.state !== 'DECOY') return;
+          const decoy = BOT_DECOY_POOL[Math.floor(Math.random() * BOT_DECOY_POOL.length)];
+          const result = gi.submitDecoy(botId, decoy);
+          if (result?.error) return;
+          io.to(room.roomCode).emit('ss-decoy-update', {
+            submittedCount: result.submittedCount,
+            totalDecoys: result.totalDecoys,
+          });
+          if (result.allSubmitted) {
+            const voteResult = gi.lockDecoys();
+            emitSSVotePhase(room, voteResult);
+            scheduleSSBotActions(room);
+          }
+        }, 1500 + Math.random() * 2500);
+      }
+    } else if (gi.state === 'VOTING') {
+      // Bots auto-vote randomly (skip if bot is the artist)
+      for (const botId of room.getBotIds()) {
+        if (botId === gi.currentArtistId) continue;
+        if (gi.votes.has(botId)) continue;
+        setTimeout(() => {
+          if (gi.state !== 'VOTING') return;
+          // Pick a random option (but not their own decoy)
+          const options = gi.voteOptions.filter(o => o.authorId !== botId);
+          if (options.length === 0) return;
+          const pick = options[Math.floor(Math.random() * options.length)];
+          const result = gi.castVote(botId, pick.id);
+          if (result?.error) return;
+          if (result.allVoted) {
+            const reveal = gi.tallyAndReveal();
+            io.to(room.roomCode).emit('ss-reveal', reveal);
+          }
+        }, 1500 + Math.random() * 2000);
+      }
+    }
+  }
+
   function emitSSDecoyPhase(room, result) {
     if (!result || result.error) return;
     if (result.state === 'GAME_OVER') {
       io.to(room.roomCode).emit('ss-game-over', result);
+      return;
+    }
+    if (result.state === 'DRAWING') {
+      // New round started — send each player their new prompt
+      const gi = room.gameInstance;
+      for (const socketId of gi.playerOrder) {
+        const assignment = gi.assignments.get(socketId);
+        io.to(socketId).emit('ss-draw-phase', {
+          prompt: assignment?.prompt || '???',
+          timeLimit: 60,
+          scores: gi.getScores(),
+          totalDrawings: gi.totalDrawings,
+          roundNumber: gi.roundNumber,
+          totalRounds: gi.totalRounds,
+        });
+      }
+      scheduleSSBotActions(room);
       return;
     }
     const gi = room.gameInstance;
@@ -1729,18 +1921,29 @@ io.on('connection', (socket) => {
       artistId: result.artistId,
       drawingsShown: result.drawingsShown,
       totalDrawings: result.totalDrawings,
+      roundNumber: result.roundNumber || gi.roundNumber,
+      totalRounds: result.totalRounds || gi.totalRounds,
       timeLimit: result.timeLimit || 30,
       totalDecoys: nonArtists.length,
     });
+    scheduleSSBotActions(room);
   }
 
   function emitSSVotePhase(room, result) {
     if (!result || result.error) return;
-    io.to(room.roomCode).emit('ss-vote-phase', {
-      options: result.options,
-      artistId: result.artistId,
-      timeLimit: result.timeLimit || 15,
-    });
+    const gi = room.gameInstance;
+    // Emit individually so each player's own decoy is filtered out
+    for (const socketId of gi.playerOrder) {
+      const filteredOptions = gi.voteOptions
+        .filter(o => o.authorId !== socketId)
+        .map(o => ({ id: o.id, text: o.text }));
+      io.to(socketId).emit('ss-vote-phase', {
+        options: filteredOptions,
+        artistId: result.artistId,
+        timeLimit: result.timeLimit || 15,
+      });
+    }
+    scheduleSSBotActions(room);
   }
 
   // ═══════════════════════════════════════════════════════════

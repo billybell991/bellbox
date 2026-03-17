@@ -126,3 +126,7 @@ function getFallback(event, ctx) {
 export function isBellBotAvailable() {
   return model !== null;
 }
+
+export function getModel() {
+  return model;
+}

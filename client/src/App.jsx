@@ -87,7 +87,7 @@ export default function App() {
         if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
         if (res.aiBots !== undefined) setAiBots(res.aiBots);
 
-        if (res.state === 'IN_GAME' && res.activeGame && res.gameState) {
+        if ((res.state === 'IN_GAME' || res.state === 'PENDING') && res.activeGame && res.gameState) {
           // Restore game-specific state
           if (res.activeGame === 'nerds-against-humanity') {
             setNahGameState(res.gameState);
@@ -324,7 +324,7 @@ export default function App() {
       if (res.spiceLevel) setSpiceLevel(res.spiceLevel);
       if (res.aiBots !== undefined) setAiBots(res.aiBots);
 
-      if (res.state === 'IN_GAME' && res.activeGame) {
+      if ((res.state === 'IN_GAME' || res.state === 'PENDING') && res.activeGame) {
         if (res.activeGame === 'nerds-against-humanity') {
           setScreen('nah-game');
         } else if (res.activeGame === 'meme-melee') {

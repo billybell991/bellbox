@@ -1,5 +1,5 @@
 // Super Sketchy — Drawful-style drawing + deception game
-// Draw a weird prompt → others write fake prompts → vote on which is real
+// Draw a weird prompt → others guess what it is → vote on which guess is real → score
 
 function shuffle(array) {
   const a = [...array];
@@ -12,8 +12,8 @@ function shuffle(array) {
 
 // ── Prompt Database ─────────────────────────────────────────
 const PROMPTS = {
+  // SPICE 1 — Family Fun: silly, absurd, safe for all ages
   1: [
-    // Family Fun — innocent weirdness
     'A cat wearing a top hat riding a skateboard',
     'Pizza delivery to the moon',
     'A penguin at a job interview',
@@ -54,92 +54,166 @@ const PROMPTS = {
     'A superhero whose only power is folding laundry',
     'The last parking spot in the universe',
     'A dinosaur trying to make a bed',
+    'A bear stuck in a revolving door',
+    'A flamingo at a bowling alley',
+    'The world\'s tiniest dragon with the world\'s biggest attitude',
+    'A shark on a tricycle',
+    'A potato running for mayor',
+    'A grumpy cat at a birthday party',
+    'A hot dog wearing sunglasses at the beach',
+    'A hamster powering a city with its wheel',
+    'A wizard who only performs mundane spells',
+    'A dragon afraid of fire',
+    'An astronaut stuck in traffic on the way to the rocket',
+    'A monster under the bed who is actually very shy',
+    'The world\'s worst superhero landing',
+    'A ghost trying to use a smartphone',
+    'A T-rex trying to do pushups',
+    'A very tiny person trying to ride a very large dog',
+    'A cloud that rains glitter instead of rain',
+    'A pencil who dreams of becoming a paintbrush',
+    'A cookie refusing to be eaten',
+    'An escalator in a medieval castle',
+    'Two socks who lost each other in the laundry',
+    'A fire hydrant who wants to be a fountain',
+    'A broom that refuses to sweep',
+    'The loneliest bench in the park',
+    'A mailbox that reads all the letters',
+    'A submarine in a swimming pool',
+    'A very polite spider',
+    'A confused GPS giving directions underwater',
+    'A vending machine that only sells vegetables',
+    'A mirror that shows your future self',
   ],
+
+  // SPICE 2 — Spicy: crude body humor, drunk disasters, naked/embarrassing, sexual innuendo — NAH SPICY tier
   2: [
-    // Spicy — awkward, suggestive, mildly uncomfortable
-    'The walk of shame outfit',
-    'What your browser history looks like at 3 AM',
-    'A first date going horribly wrong',
-    'Skinny dipping and someone steals your clothes',
-    'Accidentally sending a text to the wrong person',
-    'The most awkward elevator ride ever',
-    'Getting caught picking your nose at a red light',
-    'The morning after a bad decision',
-    'A drunk person arguing with a stop sign',
-    'Failing to parallel park while everyone watches',
-    'The face you make during an awkward silence',
-    'Waking up somewhere you don\'t recognize',
-    'Your most embarrassing childhood photo',
-    'A regrettable haircut',
-    'Someone farting in yoga class',
-    'The worst possible thing to say at a wedding',
-    'Trying to act sober in front of your parents',
-    'Being too hungover to function',
-    'A bathroom emergency with no bathroom in sight',
-    'Getting caught dancing alone by your roommate',
-    'The face your dog gives you when you come home drunk',
-    'Trying to flirt and completely failing',
-    'Falling asleep in a meeting and everyone notices',
-    'Your dating profile vs reality',
-    'Getting your card declined on a first date',
-    'A bad tattoo you got on vacation',
-    'The moment you realize the walls are thin',
-    'Eating something off the floor and someone saw',
-    'Accidentally liking an ex\'s old photo at 2 AM',
-    'The desperate search for a bathroom at a festival',
-    'Your Uber driver eating your fries',
-    'Being the only one who dressed up for the party',
-    'A passive-aggressive sticky note from your roommate',
-    'The exact moment you lock your keys in your car',
-    'Running into your ex while looking your worst',
-    'That one uncle at every family gathering',
-    'What actually happens at office Christmas parties',
-    'A questionable food truck at 2 AM',
-    'The face you make when someone says "we need to talk"',
-    'Getting pantsed in public',
+    'Skinny dipping when someone steals all the clothes',
+    'Waking up completely naked somewhere you\'ve never been',
+    'Getting caught in the shower by your roommate\'s new date',
+    'A beer gut in a Speedo at a crowded public pool',
+    'An accidental erection at the absolute worst moment in public',
+    'The wrong bachelor party getting the very aggressive stripper',
+    'A visible ass crack at a fancy restaurant',
+    'Finding your own underwear somewhere it definitely should not be',
+    'Your weed dealer turning out to be your new boss',
+    'Getting so drunk you confess your deepest kinks to a complete stranger',
+    'Your sexts being read aloud by accident at a family function',
+    'The walk of shame in someone else\'s underwear',
+    'A fart so powerful it ends a first date instantly',
+    'The exact moment your thong becomes visible at a work presentation',
+    'A very drunk person trying to flirt with a coat rack',
+    'Someone\'s mom accidentally opening their browser history on the big TV',
+    'Waking up with a stranger\'s name tattooed on your body',
+    'Getting caught on a nudist beach when you didn\'t know it was one',
+    'A bachelorette party gone completely sideways',
+    'Accidentally sending your nudes to the wrong group chat',
+    'A hangover so bad you regret being alive',
+    'A drunk person trying to explain their kink to a confused Uber driver',
+    'Being pantsed in front of your entire office',
+    'Discovering your parents\' sex tape while house-sitting',
+    'Running out of toilet paper on a first date at their place',
+    'The face you make during a very aggressive prostate exam',
+    'Getting walked in on during something that\'s hard to explain innocently',
+    'A striptease that goes catastrophically wrong',
+    'Your boner being clearly visible in a formal group photo',
+    'An old man in a thong at the beach who has absolutely no shame',
+    'A very drunk bridesmaid\'s toast at a wedding',
+    'Someone projectile vomiting on their date mid-kiss',
+    'Getting a lap dance from someone who turns out to be your cousin',
+    'The desperate morning-after search for your underwear',
+    'An ass so hairy it could have its own Instagram',
+    'Your sexting auto-corrects changing everything to something horrifying',
+    'A very graphic breakup in a very small restaurant',
+    'A drunk person convinced they can definitely drive right now',
+    'Accidentally sitting on someone\'s crotch on a crowded bus',
+    'The face you make when you realize your microphone was on the whole time',
+    'Getting your junk caught in your zipper at the worst possible moment',
+    'A man who is very clearly not wearing anything under his kilt in the wind',
+    'Getting blackout drunk at your own work retirement party',
+    'The moment you realize the bathroom you used had no walls',
+    'Accidentally moaning in a library',
+    'Someone who clearly never learned what a gym towel is for',
+    'A very horny ghost haunting a couple\'s honeymoon suite',
+    'Your elderly grandmother finding your vibrator and asking what it\'s for',
+    'Being walked in on by your parents at the absolute worst possible time',
+    'Someone\'s ass getting stuck in an IKEA toilet',
+    'A very drunk man proposing to a woman he\'s known for forty minutes',
+    'The exact moment your bathing suit falls off mid-dive',
+    'Getting an erection during a very solemn work presentation',
+    'Someone smuggling something suspicious through airport security in their pants',
+    'A very aggressive farting competition at a first family dinner',
+    'Your one-night stand turning out to be your new coworker\'s spouse',
+    'A very hairy man\'s first and last attempt at a wax',
+    'Accidentally walking into the wrong gender\'s locker room and staying too long',
+    'The look on the paramedic\'s face when they find out how this happened',
+    'Getting your head stuck somewhere between a headboard and a wall',
+    'A speed date where you both realize you\'ve slept with each other\'s exes',
   ],
+
+  // SPICE 3 — Unhinged: explicit sex acts, genitalia, kinks, depraved scenarios — NAH UNHINGED tier
   3: [
-    // Unhinged — explicit, absurd, CAH energy
-    'A strip club for robots',
-    'What Satan does on his day off',
-    'The worst possible thing to find in your search history',
-    'A nudist colony\'s fire drill',
-    'Getting caught doing something unspeakable with a vacuum cleaner',
-    'Death by mayo',
-    'What your organs do when you take a shot of tequila',
-    'A sex ed class taught by aliens',
-    'The most disturbing thing in your roommate\'s drawer',
-    'Accidentally sending your boss a nude',
-    'A prostate exam performed by Captain Hook',
-    'What happens in the ball pit when the lights go off',
-    'The worst use of whipped cream',
-    'Someone finding your "special" folder',
-    'A dick pic drawn by Picasso',
-    'The walk of shame in a dinosaur costume',
-    'A glory hole at a confessional',
-    'Getting a boner at the absolute worst time',
-    'What the priest really does after hours',
-    'A furry convention emergency evacuation',
-    'Drunk sexting your ex and hitting send to the group chat',
-    'Finding your mom\'s secret toy drawer',
-    'The world\'s most uncomfortable lap dance',
-    'A colonoscopy performed by a clown',
-    'What\'s actually in hot dogs',
-    'A threesome gone horribly wrong',
-    'Getting caught masturbating by Alexa who announces it',
-    'The last thing you want to see in a public bathroom stall',
-    'The morning after a blackout written as a crime scene',
-    'A strip search that got too friendly',
-    'What really happens at massage parlors',
-    'Two people discovering they\'re Eskimo brothers',
-    'A pregnancy scare at prom',
-    'Your grandma\'s browser history',
-    'The worst possible fortune in a fortune cookie',
-    'A flasher at a nudist beach (the irony)',
-    'What Grindr looks like for aliens',
-    'A censored tattoo in an inappropriate place',
-    'The world\'s most awkward prostate exam',
-    'Getting your junk caught in something mechanical',
+    'A prostate exam performed by Captain Hook with a hook',
+    'What your genitals would look like as a Renaissance painting',
+    'Getting caught masturbating by your Alexa who immediately announces it to the house',
+    'A colonoscopy performed by an overly enthusiastic clown',
+    'Accidentally sending your boss a nude instead of your CV',
+    'A glory hole at a church confessional booth',
+    'A threesome ruined by terrible logistics and a pullout couch',
+    'A sex dungeon that turns out to be an Airbnb with really bad reviews',
+    'The worst possible use of whipped cream at a dinner party',
+    'Your grandma\'s browser history projected on a jumbotron at the Super Bowl',
+    'A strip club for sentient robots with performance anxiety',
+    'A very aggressive orgy interrupted by a fire alarm and mandatory evacuation',
+    'Two people realizing they\'re using the same sex worker as a therapist',
+    'What Satan does for fun on his day off',
+    'A nudist colony fire drill where no one is allowed to cover up',
+    'Accidentally discovering what a glory hole is the hard way',
+    'A dick pic text sent to the wrong group when everyone is relatives',
+    'Your "special folder" opened on the office projector by IT support',
+    'Getting a boner at your grandmother\'s open casket funeral',
+    'What the doctor writes in "cause of injury" that cannot be shared',
+    'A drunk sext sent to your ex that also accidentally cc\'s your boss and priest',
+    'The morning after a blackout written as a forensic crime scene report',
+    'Finding your mom\'s collection of sex toys while helping her move',
+    'A pregnancy scare at your senior prom after-party',
+    'An alien anthropologist\'s confused report on Grindr',
+    'Getting a very personal tattoo removed by a very judgmental dermatologist',
+    'A couples therapist watching two people describe their fetishes in real time',
+    'The last thing you\'d want your urologist to say during a procedure',
+    'A strip search that got WAY too personal and nobody complained',
+    'What the TSA confiscates from someone\'s carry-on that requires a supervisor',
+    'Getting your genitals stuck in a piece of gym equipment',
+    'A swinger party accidentally advertised as a neighborhood block party',
+    'Two people discovering they are each other\'s exes\' parents',
+    'A drunk Vegas wedding consummated before anyone realized they were cousins',
+    'The police report from a night that began with "hold my beer and watch this"',
+    'What your therapist privately writes under "most disturbing session this year"',
+    'A donkey show explained to someone who genuinely doesn\'t know what it is',
+    'Someone\'s "business trip to Vegas" as described by their hotel room\'s minibar tab',
+    'Getting caught mid-act by a Ring doorbell camera that auto-uploads to the family cloud',
+    'A very detailed medical description of where the gerbil was found',
+    'An erotic audiobook accidentally played at full volume in a library',
+    'What the hotel laundry service put in the "unusual items" complaint field',
+    'A drunk person explaining pegging to a very confused priest at a wedding',
+    'The autopsy report for someone whose cause of death is too embarrassing to print',
+    'A sex ed class taught completely incorrectly by a very confident alien',
+    'The forensic analysis of what happened in that hot tub',
+    'A retirement speech for someone whose career highlights are all NSFW',
+    'Your search history read aloud in court as character evidence',
+    'Getting blackout drunk and waking up legally married to three different people',
+    'A pornographic version of a children\'s fairy tale explained to a judge',
+    'The exact moment you realize your kink and your phobia are the same thing',
+    'A wedding night ruined by a forgotten safe word and a very concerned neighbor',
+    'What the obituary actually meant when it said "passed peacefully at home"',
+    'Getting your junk tattooed while blackout drunk on a cruise ship',
+    'A hostage negotiation where the hostage\'s embarrassing secret leaks mid-call',
+    'A priest discovering his parishioner\'s OnlyFans mid-confession',
+    'The look on the ER nurse\'s face when you explain what the eggplant was for',
+    'Being caught watching niche fetish content at 30,000 feet on the plane\'s WiFi',
+    'What a proctologist has seen that permanently changed their perspective on humanity',
+    'A very aggressive lap dance from someone who turns out to be your high school principal',
+    'Getting your balls waxed for the first time by someone who is clearly a trainee',
   ],
 };
 
@@ -150,13 +224,16 @@ function getSpiceLevels(level) {
   return [2, 3];
 }
 
-// ── Game States ─────────────────────────────────────────────
-// LOBBY → DRAWING → DECOY → VOTING → REVEAL → (next drawing or GAME_OVER)
-
+// ── Game Constants ──────────────────────────────────────────
 const DRAW_TIME = 60;
 const DECOY_TIME = 30;
 const VOTE_TIME = 15;
 const REVEAL_TIME = 8;
+const TOTAL_ROUNDS = 3;
+
+// Game flow per round:
+//   DRAWING (everyone draws) → for each drawing: DECOY → VOTING → REVEAL → next drawing
+//   After all drawings in a round → next round (or GAME_OVER after round 3)
 
 export class SuperSketchyGame {
   constructor(roomCode, hostId, hostName) {
@@ -169,20 +246,30 @@ export class SuperSketchyGame {
     this.state = 'LOBBY';
     this.spiceLevel = 2;
 
-    // Drawing assignments: socketId -> { prompt, drawingData }
+    // Round tracking
+    this.roundNumber = 0;
+    this.totalRounds = TOTAL_ROUNDS;
+
+    // Drawing assignments for CURRENT round: socketId -> { prompt, drawingData }
     this.assignments = new Map();
-    // Queue of socket IDs whose drawings still need to be shown
+    // Queue of socket IDs whose drawings still need to be shown this round
     this.drawingQueue = [];
     this.currentArtistId = null;
-    // Decoys: socketId -> their fake prompt text
+    // Decoys for current drawing: socketId -> their guess text
     this.decoys = new Map();
-    // Votes: voterId -> optionId (the prompt/decoy they picked)
+    // Votes for current drawing: voterId -> optionId
     this.votes = new Map();
     // Options for current vote: [{ id, text, authorId, isReal }]
     this.voteOptions = [];
-    // Round tracking
+    // Per-round drawing progress
     this.drawingsShown = 0;
     this.totalDrawings = 0;
+
+    // Track used prompts across rounds to avoid repeats
+    this.usedPrompts = new Set();
+
+    // Players who joined mid-game — promoted to active at start of next round
+    this.pendingPlayers = new Map(); // socketId -> { name, playerId }
 
     this.addPlayer(hostId, hostName);
   }
@@ -196,9 +283,55 @@ export class SuperSketchyGame {
     return { success: true };
   }
 
+  // Add a late-joining player — they'll be active starting next round
+  addPendingPlayer(socketId, name, playerId) {
+    if (this.players.has(socketId) || this.pendingPlayers.has(socketId)) return { error: 'Already in game' };
+    this.pendingPlayers.set(socketId, { name, playerId });
+    if (playerId) this.playerIdMap.set(playerId, socketId);
+    return { success: true };
+  }
+
+  isPending(socketId) {
+    return this.pendingPlayers.has(socketId);
+  }
+
+  getPendingState(socketId) {
+    const pending = this.pendingPlayers.get(socketId);
+    if (!pending) return null;
+    const currentArtist = this.currentArtistId ? this.players.get(this.currentArtistId) : null;
+    const assignment = this.currentArtistId ? this.assignments.get(this.currentArtistId) : null;
+    return {
+      roomCode: this.roomCode,
+      players: this.getPlayerList(),
+      isHost: false,
+      playerName: pending.name,
+      state: 'PENDING',
+      activeGame: 'super-sketchy',
+      gameState: {
+        phase: 'pending',
+        roundNumber: this.roundNumber,
+        totalRounds: this.totalRounds,
+        scores: this.getScores(),
+        // Show the current drawing so they can watch
+        currentDrawing: assignment?.drawingData || null,
+        artistName: currentArtist?.name || null,
+      },
+    };
+  }
+
   reconnectPlayer(playerId, newSocketId) {
     const oldSocketId = this.playerIdMap.get(playerId);
     if (!oldSocketId) return null;
+
+    // Handle pending player reconnect
+    const pendingEntry = this.pendingPlayers.get(oldSocketId);
+    if (pendingEntry) {
+      this.pendingPlayers.delete(oldSocketId);
+      this.pendingPlayers.set(newSocketId, pendingEntry);
+      this.playerIdMap.set(playerId, newSocketId);
+      return pendingEntry;
+    }
+
     const player = this.players.get(oldSocketId);
     if (!player) return null;
 
@@ -213,26 +346,21 @@ export class SuperSketchyGame {
     if (orderIdx !== -1) this.playerOrder[orderIdx] = newSocketId;
     if (this.hostId === oldSocketId) this.hostId = newSocketId;
 
-    // Swap in assignments
     if (this.assignments.has(oldSocketId)) {
       this.assignments.set(newSocketId, this.assignments.get(oldSocketId));
       this.assignments.delete(oldSocketId);
     }
-    // Swap in decoys
     if (this.decoys.has(oldSocketId)) {
       this.decoys.set(newSocketId, this.decoys.get(oldSocketId));
       this.decoys.delete(oldSocketId);
     }
-    // Swap in votes
     if (this.votes.has(oldSocketId)) {
       this.votes.set(newSocketId, this.votes.get(oldSocketId));
       this.votes.delete(oldSocketId);
     }
-    // Swap in drawingQueue
     const qIdx = this.drawingQueue.indexOf(oldSocketId);
     if (qIdx !== -1) this.drawingQueue[qIdx] = newSocketId;
     if (this.currentArtistId === oldSocketId) this.currentArtistId = newSocketId;
-    // Swap voteOptions authorId
     for (const opt of this.voteOptions) {
       if (opt.authorId === oldSocketId) opt.authorId = newSocketId;
     }
@@ -252,6 +380,7 @@ export class SuperSketchyGame {
   }
 
   getFullState(socketId) {
+    if (this.pendingPlayers.has(socketId)) return this.getPendingState(socketId);
     const player = this.players.get(socketId);
     if (!player) return null;
     const assignment = this.assignments.get(socketId);
@@ -263,6 +392,8 @@ export class SuperSketchyGame {
       state: this.state,
       gameState: {
         phase: this.state.toLowerCase(),
+        roundNumber: this.roundNumber,
+        totalRounds: this.totalRounds,
         myPrompt: assignment?.prompt || null,
         myDrawingSubmitted: !!assignment?.drawingData,
         currentDrawing: this.state === 'DECOY' || this.state === 'VOTING' || this.state === 'REVEAL'
@@ -286,37 +417,71 @@ export class SuperSketchyGame {
       isArtist,
       hasSubmittedDecoy: this.decoys.has(socketId),
       hasVoted: this.votes.has(socketId),
-      voteOptions: this.state === 'VOTING' ? this.voteOptions.map(o => ({ id: o.id, text: o.text })) : [],
+      voteOptions: this.state === 'VOTING' ? this.voteOptions.filter(o => o.authorId !== socketId).map(o => ({ id: o.id, text: o.text })) : [],
       drawingsShown: this.drawingsShown,
       totalDrawings: this.totalDrawings,
     };
   }
 
-  // ── Start Game ────────────────────────────────────────────
+  // ── Start Game (begins round 1) ──────────────────────────
 
   startGame(spiceLevel = 2) {
     if (this.playerOrder.length < 3) return { error: 'Need at least 3 players' };
     this.spiceLevel = spiceLevel;
+    this.roundNumber = 0;
+    this.usedPrompts.clear();
+    return this._startNextRound();
+  }
+
+  // ── Start a new round (assign fresh prompts, enter DRAWING) ──
+
+  _startNextRound() {
+    this.roundNumber++;
+    if (this.roundNumber > this.totalRounds) {
+      return this.endGame();
+    }
+
+    // Build prompt pool excluding already-used prompts
+    const levels = getSpiceLevels(this.spiceLevel);
+    let pool = levels.flatMap(lvl => PROMPTS[lvl] || []).filter(p => !this.usedPrompts.has(p));
+    if (pool.length < this.playerOrder.length) {
+      // If we ran out, reset and reshuffle
+      this.usedPrompts.clear();
+      pool = levels.flatMap(lvl => PROMPTS[lvl] || []);
+    }
+    pool = shuffle(pool);
 
     // Assign unique prompts to each player
-    const levels = getSpiceLevels(spiceLevel);
-    const pool = shuffle(levels.flatMap(lvl => PROMPTS[lvl] || []));
-
+    this.assignments.clear();
     let promptIdx = 0;
     for (const socketId of this.playerOrder) {
-      this.assignments.set(socketId, {
-        prompt: pool[promptIdx % pool.length],
-        drawingData: null,
-      });
+      const prompt = pool[promptIdx % pool.length];
+      this.assignments.set(socketId, { prompt, drawingData: null });
+      this.usedPrompts.add(prompt);
       promptIdx++;
     }
 
+    // Promote pending players into the active roster
+    for (const [socketId, { name, playerId }] of this.pendingPlayers) {
+      this.players.set(socketId, { name, score: 0, playerId });
+      this.playerOrder.push(socketId);
+      if (playerId) this.playerIdMap.set(playerId, socketId);
+    }
+    this.pendingPlayers.clear();
+
     this.totalDrawings = this.playerOrder.length;
     this.drawingsShown = 0;
+    this.drawingQueue = [];
+    this.currentArtistId = null;
+    this.decoys.clear();
+    this.votes.clear();
+    this.voteOptions = [];
     this.state = 'DRAWING';
 
     return {
       state: 'DRAWING',
+      roundNumber: this.roundNumber,
+      totalRounds: this.totalRounds,
       timeLimit: DRAW_TIME,
       players: this.getPlayerList(),
     };
@@ -340,7 +505,7 @@ export class SuperSketchyGame {
     return { success: true, allSubmitted };
   }
 
-  // ── Lock Drawings & Start Decoy Phase ─────────────────────
+  // ── Lock Drawings & Start cycling through them ────────────
 
   lockDrawings() {
     if (this.state !== 'DRAWING') return { error: 'Not in drawing phase' };
@@ -349,20 +514,20 @@ export class SuperSketchyGame {
     for (const id of this.playerOrder) {
       const a = this.assignments.get(id);
       if (a && !a.drawingData) {
-        a.drawingData = null; // Will show as blank canvas
+        a.drawingData = null;
       }
     }
 
-    // Shuffle drawing order
     this.drawingQueue = shuffle([...this.playerOrder]);
-    return this.showNextDrawing();
+    return this._showNextDrawing();
   }
 
-  // ── Show Next Drawing (starts DECOY phase) ────────────────
+  // ── Show Next Drawing (starts DECOY/guess phase) ──────────
 
-  showNextDrawing() {
+  _showNextDrawing() {
     if (this.drawingQueue.length === 0) {
-      return this.endGame();
+      // All drawings for this round done — start next round
+      return this._startNextRound();
     }
 
     this.currentArtistId = this.drawingQueue.shift();
@@ -382,15 +547,17 @@ export class SuperSketchyGame {
       artistId: this.currentArtistId,
       drawingsShown: this.drawingsShown,
       totalDrawings: this.totalDrawings,
+      roundNumber: this.roundNumber,
+      totalRounds: this.totalRounds,
       timeLimit: DECOY_TIME,
     };
   }
 
-  // ── Submit Decoy ──────────────────────────────────────────
+  // ── Submit Decoy/Guess ────────────────────────────────────
 
   submitDecoy(socketId, decoyText) {
-    if (this.state !== 'DECOY') return { error: 'Not in decoy phase' };
-    if (socketId === this.currentArtistId) return { error: 'Artist cannot submit a decoy' };
+    if (this.state !== 'DECOY') return { error: 'Not in guess phase' };
+    if (socketId === this.currentArtistId) return { error: 'Artist cannot submit a guess' };
     if (this.decoys.has(socketId)) return { error: 'Already submitted' };
 
     const cleaned = String(decoyText).trim().substring(0, 150);
@@ -398,19 +565,17 @@ export class SuperSketchyGame {
 
     this.decoys.set(socketId, cleaned);
 
-    // Check if all non-artist players submitted
     const nonArtists = this.playerOrder.filter(id => id !== this.currentArtistId);
     const allSubmitted = nonArtists.every(id => this.decoys.has(id));
 
     return { success: true, allSubmitted, submittedCount: this.decoys.size, totalDecoys: nonArtists.length };
   }
 
-  // ── Lock Decoys & Start Voting ────────────────────────────
+  // ── Lock Guesses & Start Voting ───────────────────────────
 
   lockDecoys() {
-    if (this.state !== 'DECOY') return { error: 'Not in decoy phase' };
+    if (this.state !== 'DECOY') return { error: 'Not in guess phase' };
 
-    // Auto-submit blank decoys for non-submitters
     const nonArtists = this.playerOrder.filter(id => id !== this.currentArtistId);
     for (const id of nonArtists) {
       if (!this.decoys.has(id)) {
@@ -418,7 +583,7 @@ export class SuperSketchyGame {
       }
     }
 
-    // Build vote options: real prompt + all decoys, shuffled
+    // Build vote options: real prompt + all guesses, shuffled
     const realPrompt = this.assignments.get(this.currentArtistId)?.prompt || '???';
     const options = [
       { id: 'real', text: realPrompt, authorId: null, isReal: true },
@@ -446,10 +611,9 @@ export class SuperSketchyGame {
     if (socketId === this.currentArtistId) return { error: 'Artist cannot vote' };
     if (this.votes.has(socketId)) return { error: 'Already voted' };
 
-    // Can't vote for your own decoy
     const chosen = this.voteOptions.find(o => o.id === optionId);
     if (!chosen) return { error: 'Invalid option' };
-    if (chosen.authorId === socketId) return { error: 'Cannot vote for your own decoy' };
+    if (chosen.authorId === socketId) return { error: 'Cannot vote for your own answer' };
 
     this.votes.set(socketId, optionId);
 
@@ -469,28 +633,33 @@ export class SuperSketchyGame {
 
     // Count votes per option
     const voteCounts = {};
-    for (const opt of this.voteOptions) {
-      voteCounts[opt.id] = [];
-    }
+    for (const opt of this.voteOptions) voteCounts[opt.id] = [];
     for (const [voterId, optionId] of this.votes) {
       if (!voteCounts[optionId]) voteCounts[optionId] = [];
       voteCounts[optionId].push(voterId);
     }
 
-    // Score: Artist gets +500 per correct guesser
     const correctGuessers = voteCounts['real'] || [];
     const artist = this.players.get(this.currentArtistId);
+
+    // Scoring:
+    // - Correct guesser: +1000 (double points — the big prize)
+    // - Artist: +500 per player who guessed correctly
+    // - Trickster: +500 per player fooled by their fake answer
+    // - If NOBODY guessed right AND artist is human, artist gets +500 bonus
+    const artistIsBot = typeof this.currentArtistId === 'string' && this.currentArtistId.startsWith('ai-bot-');
     if (artist) {
       artist.score += correctGuessers.length * 500;
+      if (correctGuessers.length === 0 && !artistIsBot) {
+        artist.score += 500; // nobody-got-it bonus (humans only)
+      }
     }
 
-    // Score: Correct guessers get +1000
     for (const gId of correctGuessers) {
       const guesser = this.players.get(gId);
       if (guesser) guesser.score += 1000;
     }
 
-    // Score: Tricksters get +500 per player fooled by their decoy
     const tricksterResults = [];
     for (const opt of this.voteOptions) {
       if (opt.isReal) continue;
@@ -510,13 +679,17 @@ export class SuperSketchyGame {
 
     this.state = 'REVEAL';
 
-    // Build reveal data
-    const reveal = {
+    const isLastDrawingInRound = this.drawingQueue.length === 0;
+    const isLastRound = this.roundNumber >= this.totalRounds;
+    const isGameOver = isLastDrawingInRound && isLastRound;
+
+    return {
       state: 'REVEAL',
       realPrompt,
       artistName,
       artistId: this.currentArtistId,
-      artistBonus: correctGuessers.length * 500,
+      artistBonus: correctGuessers.length === 0 && !artistIsBot ? 500 : correctGuessers.length * 500,
+      nobodyGuessedRight: correctGuessers.length === 0 && !artistIsBot,
       correctGuessers: correctGuessers.map(id => ({
         id, name: this.players.get(id)?.name || '?',
       })),
@@ -534,19 +707,21 @@ export class SuperSketchyGame {
       drawingsRemaining: this.drawingQueue.length,
       drawingsShown: this.drawingsShown,
       totalDrawings: this.totalDrawings,
+      roundNumber: this.roundNumber,
+      totalRounds: this.totalRounds,
+      isGameOver,
       timeLimit: REVEAL_TIME,
     };
-
-    return reveal;
   }
 
   // ── Advance After Reveal ──────────────────────────────────
 
   advanceAfterReveal() {
     if (this.drawingQueue.length === 0) {
-      return this.endGame();
+      // Round is over — start next round or end game
+      return this._startNextRound();
     }
-    return this.showNextDrawing();
+    return this._showNextDrawing();
   }
 
   // ── End Game ──────────────────────────────────────────────

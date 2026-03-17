@@ -68,6 +68,11 @@ export default function Lobby({
       </div>
       )}
 
+      <div className="whats-new-banner pop-in" aria-live="polite">
+        <span className="whats-new-pill">NEW</span>
+        <span className="whats-new-text">Super Sketch just dropped. Yeah, we said it.</span>
+      </div>
+
       {/* Game Selector */}
       <GameList
         games={games}

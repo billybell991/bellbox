@@ -1677,7 +1677,7 @@ io.on('connection', (socket) => {
           }
           const decoyResult = gi.lockDrawings();
           emitSSDecoyPhase(room, decoyResult);
-        }, 6000);
+        }, 4000);
       }
     }
   });
@@ -1705,6 +1705,28 @@ io.on('connection', (socket) => {
     if (result.allSubmitted) {
       const voteResult = gi.lockDecoys();
       emitSSVotePhase(room, voteResult);
+      return;
+    }
+
+    // If all HUMAN players have now submitted, give bots a 3s grace window
+    // then auto-fill any missing bot decoys and advance.
+    if (room.aiBots) {
+      const botIds = new Set(room.getBotIds());
+      const nonArtists = gi.playerOrder.filter(id => id !== gi.currentArtistId);
+      const anyHumanDecoyPending = nonArtists.some(id => !gi.decoys.has(id) && !botIds.has(id));
+      if (!anyHumanDecoyPending) {
+        setTimeout(() => {
+          if (gi.state !== 'DECOY') return;
+          const pool = getBotDecoyPool(gi.spiceLevel);
+          for (const id of nonArtists) {
+            if (!gi.decoys.has(id)) {
+              gi.submitDecoy(id, pool[Math.floor(Math.random() * pool.length)]);
+            }
+          }
+          const voteResult = gi.lockDecoys();
+          emitSSVotePhase(room, voteResult);
+        }, 3000);
+      }
     }
   });
 
@@ -1780,57 +1802,74 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ── Generate a visible bot drawing (random SVG scribble) ──
-  // Ask Gemini to draw a simple SVG sketch for the given prompt.
-  // Falls back to the random scribble if Gemini is unavailable or fails.
-  async function generateBotSVGDrawing(prompt) {
-    try {
-      const { getModel } = await import('./bellbot.js');
-      const model = getModel();
-      if (!model) return generateBotDrawing();
-
-      const instruction = `You are a terrible-but-trying artist in a party drawing game. Draw a simple SVG sketch (600x600) that represents: "${prompt}"
-
-Rules:
-- Output ONLY a valid SVG string starting with <svg and ending with </svg>. No markdown, no explanation.
-- White background: <rect width="600" height="600" fill="white"/>
-- Use only basic shapes: <circle>, <rect>, <line>, <polyline>, <polygon>, <ellipse>, <path>
-- Black or dark strokes, stroke-width 3-6, fill="none" or simple solid fills
-- Aim for a recognizable but charmingly bad stick-figure / cartoon style
-- Include 5-15 elements total
-- Keep it simple — this should look like a human drew it quickly with a marker`;
-
-      const result = await Promise.race([
-        model.generateContent(instruction),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini timeout')), 5000)),
-      ]);
-      const text = result.response.text().trim();
-      // Extract just the SVG tag
-      const match = text.match(/<svg[\s\S]*<\/svg>/i);
-      if (!match) return generateBotDrawing();
-      const svg = match[0]
-        .replace(/width="[^"]*"/, 'width="600"')
-        .replace(/height="[^"]*"/, 'height="600"');
-      return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
-    } catch {
-      return generateBotDrawing();
-    }
-  }
-
+  // ── Bot drawing generator (varied SVG styles) ──
   function generateBotDrawing() {
-    const colors = ['#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#000000'];
+    const colors = ['#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#6D4C41', '#00ACC1', '#F06292'];
     const pick = () => colors[Math.floor(Math.random() * colors.length)];
     const rnd = (max) => Math.floor(Math.random() * max);
     const els = [];
-    // Random circles
-    for (let i = 0; i < 6 + rnd(8); i++) {
-      els.push(`<circle cx="${20 + rnd(560)}" cy="${20 + rnd(560)}" r="${10 + rnd(40)}" fill="${pick()}" opacity="0.7"/>`);
-    }
-    // Random squiggly lines
-    for (let i = 0; i < 3 + rnd(4); i++) {
-      const pts = [];
-      for (let j = 0; j < 4 + rnd(4); j++) pts.push(`${rnd(600)},${rnd(600)}`);
-      els.push(`<polyline points="${pts.join(' ')}" fill="none" stroke="${pick()}" stroke-width="${3 + rnd(5)}" stroke-linecap="round" stroke-linejoin="round"/>`);
+    // Pick a random style so each bot drawing looks distinct
+    const style = rnd(5);
+    if (style === 0) {
+      // Stick figure attempt
+      const cx = 100 + rnd(400), cy = 60 + rnd(100);
+      els.push(`<circle cx="${cx}" cy="${cy}" r="30" fill="none" stroke="#000" stroke-width="4"/>`);
+      els.push(`<line x1="${cx}" y1="${cy+30}" x2="${cx}" y2="${cy+150}" stroke="#000" stroke-width="4"/>`);
+      els.push(`<line x1="${cx-50}" y1="${cy+80}" x2="${cx+50}" y2="${cy+70}" stroke="#000" stroke-width="4"/>`);
+      els.push(`<line x1="${cx}" y1="${cy+150}" x2="${cx-40}" y2="${cy+250}" stroke="#000" stroke-width="4"/>`);
+      els.push(`<line x1="${cx}" y1="${cy+150}" x2="${cx+40}" y2="${cy+250}" stroke="#000" stroke-width="4"/>`);
+      // Some context scribbles
+      for (let i = 0; i < 3 + rnd(4); i++) {
+        const pts = [];
+        for (let j = 0; j < 3 + rnd(4); j++) pts.push(`${rnd(600)},${rnd(600)}`);
+        els.push(`<polyline points="${pts.join(' ')}" fill="none" stroke="${pick()}" stroke-width="${2+rnd(4)}" stroke-linecap="round" stroke-linejoin="round"/>`);
+      }
+    } else if (style === 1) {
+      // House/building attempt
+      const bx = 150 + rnd(200), by = 200 + rnd(150), bw = 150 + rnd(150), bh = 150 + rnd(100);
+      els.push(`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="${pick()}" opacity="0.4" stroke="#000" stroke-width="3"/>`);
+      els.push(`<polygon points="${bx},${by} ${bx+bw},${by} ${bx+bw/2},${by-80}" fill="${pick()}" opacity="0.6" stroke="#000" stroke-width="3"/>`);
+      els.push(`<rect x="${bx+bw*0.35}" y="${by+bh*0.5}" width="${bw*0.3}" height="${bh*0.45}" fill="${pick()}" stroke="#000" stroke-width="2"/>`);
+      for (let i = 0; i < 2 + rnd(3); i++)
+        els.push(`<rect x="${bx+rnd(bw-30)}" y="${by+20+rnd(bh*0.4)}" width="${20+rnd(30)}" height="${20+rnd(30)}" fill="none" stroke="${pick()}" stroke-width="2"/>`);
+    } else if (style === 2) {
+      // Sun + landscape scribble
+      els.push(`<circle cx="${80+rnd(100)}" cy="${60+rnd(80)}" r="${30+rnd(30)}" fill="#FB8C00" opacity="0.8"/>`);
+      for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI/4, r = 70+rnd(20);
+        const cx = 80+rnd(100), cy = 60+rnd(80);
+        els.push(`<line x1="${cx}" y1="${cy}" x2="${Math.round(cx+Math.cos(a)*r)}" y2="${Math.round(cy+Math.sin(a)*r)}" stroke="#FB8C00" stroke-width="3"/>`);
+      }
+      // Ground
+      const gy = 380 + rnd(100);
+      els.push(`<rect x="0" y="${gy}" width="600" height="${600-gy}" fill="#43A047" opacity="0.5"/>`);
+      for (let i = 0; i < 4 + rnd(4); i++) {
+        const tx = rnd(560), th = 40+rnd(80);
+        els.push(`<rect x="${tx}" y="${gy-th}" width="${15+rnd(20)}" height="${th}" fill="#6D4C41"/>`);
+        els.push(`<ellipse cx="${tx+10}" cy="${gy-th}" rx="${25+rnd(20)}" ry="${20+rnd(20)}" fill="#43A047" opacity="0.8"/>`);
+      }
+    } else if (style === 3) {
+      // Abstract expressionist (original style but more varied)
+      for (let i = 0; i < 5 + rnd(6); i++)
+        els.push(`<ellipse cx="${20+rnd(560)}" cy="${20+rnd(560)}" rx="${15+rnd(60)}" ry="${10+rnd(50)}" fill="${pick()}" opacity="${0.4+Math.random()*0.5}"/>`);
+      for (let i = 0; i < 4 + rnd(5); i++) {
+        const pts = [];
+        for (let j = 0; j < 5 + rnd(5); j++) pts.push(`${rnd(600)},${rnd(600)}`);
+        els.push(`<polyline points="${pts.join(' ')}" fill="none" stroke="${pick()}" stroke-width="${3+rnd(6)}" stroke-linecap="round" stroke-linejoin="round"/>`);
+      }
+    } else {
+      // Animal blob attempt
+      const bx = 150+rnd(200), by = 180+rnd(150);
+      els.push(`<ellipse cx="${bx}" cy="${by}" rx="${80+rnd(60)}" ry="${60+rnd(40)}" fill="${pick()}" opacity="0.6" stroke="#000" stroke-width="3"/>`);
+      els.push(`<circle cx="${bx+100+rnd(60)}" cy="${by-20+rnd(40)}" r="${40+rnd(30)}" fill="${pick()}" opacity="0.7" stroke="#000" stroke-width="3"/>`);
+      // Eyes
+      els.push(`<circle cx="${bx+110+rnd(20)}" cy="${by-10+rnd(20)}" r="6" fill="#000"/>`);
+      // Legs
+      for (let i = 0; i < 4; i++)
+        els.push(`<line x1="${bx-60+i*40}" y1="${by+50}" x2="${bx-70+i*40+rnd(20)}" y2="${by+120+rnd(40)}" stroke="#000" stroke-width="5" stroke-linecap="round"/>`);
+      // Tail
+      const pts = [`${bx-70},${by}`, `${bx-110},${by-30+rnd(40)}`, `${bx-130},${by+rnd(30)}`];
+      els.push(`<polyline points="${pts.join(' ')}" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/>`);
     }
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="600" height="600" fill="white"/>${els.join('')}</svg>`;
     return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
@@ -1883,14 +1922,14 @@ Rules:
     if (!gi) return;
 
     if (gi.state === 'DRAWING') {
-      // Bots auto-submit drawings — ask Gemini to draw the prompt
+      // Bots auto-submit drawings instantly with a short "thinking" delay
       for (const botId of room.getBotIds()) {
         const assignment = gi.assignments.get(botId);
         if (!assignment || assignment.drawingData) continue;
         const drawDelay = 2000 + Math.random() * 3000; // 2-5s to "think"
-        setTimeout(async () => {
+        setTimeout(() => {
           if (gi.state !== 'DRAWING') return;
-          const drawingData = await generateBotSVGDrawing(assignment.prompt);
+          const drawingData = generateBotDrawing();
           const result = gi.submitDrawing(botId, drawingData);
           if (result?.allSubmitted) {
             const decoyResult = gi.lockDrawings();

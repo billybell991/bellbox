@@ -398,7 +398,7 @@ export default function Game({ socket, myId, isHost, onReturn, onRestartSame }) 
             </div>
           ) : decoySubmitted ? (
             <div className="ss-waiting">
-              <div className="ss-waiting-text">✅ Answer submitted! Waiting for others...</div>
+              <div className="ss-waiting-text">Answer submitted! Waiting for others...</div>
             </div>
           ) : (
             <DecoyInput onSubmit={handleSubmitDecoy} />

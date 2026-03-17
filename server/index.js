@@ -1659,6 +1659,26 @@ io.on('connection', (socket) => {
     if (result?.allSubmitted) {
       const decoyResult = gi.lockDrawings();
       emitSSDecoyPhase(room, decoyResult);
+    } else if (result?.success) {
+      // If all non-bot players have now submitted, don't wait for bot timers.
+      // Give bots a 6-second grace window; if they haven't drawn by then,
+      // auto-fill instant scribbles and proceed so humans are never blocked.
+      const botIds = new Set(room.getBotIds());
+      const anyHumanPending = gi.playerOrder.some(id => {
+        const a = gi.assignments.get(id);
+        return a && !a.drawingData && !botIds.has(id);
+      });
+      if (!anyHumanPending) {
+        setTimeout(() => {
+          if (gi.state !== 'DRAWING') return; // bots already submitted naturally
+          for (const id of gi.playerOrder) {
+            const a = gi.assignments.get(id);
+            if (a && !a.drawingData) a.drawingData = generateBotDrawing();
+          }
+          const decoyResult = gi.lockDrawings();
+          emitSSDecoyPhase(room, decoyResult);
+        }, 6000);
+      }
     }
   });
 
@@ -1780,7 +1800,10 @@ Rules:
 - Include 5-15 elements total
 - Keep it simple — this should look like a human drew it quickly with a marker`;
 
-      const result = await model.generateContent(instruction);
+      const result = await Promise.race([
+        model.generateContent(instruction),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini timeout')), 5000)),
+      ]);
       const text = result.response.text().trim();
       // Extract just the SVG tag
       const match = text.match(/<svg[\s\S]*<\/svg>/i);
@@ -1835,7 +1858,7 @@ Rules:
       for (const botId of room.getBotIds()) {
         const assignment = gi.assignments.get(botId);
         if (!assignment || assignment.drawingData) continue;
-        const drawDelay = 8000 + Math.random() * 12000; // 8-20s to "think"
+        const drawDelay = 2000 + Math.random() * 3000; // 2-5s to "think"
         setTimeout(async () => {
           if (gi.state !== 'DRAWING') return;
           const drawingData = await generateBotSVGDrawing(assignment.prompt);

@@ -240,7 +240,7 @@ function VotePanel({ reveals, myId, onVote, voted }) {
 
 export default function BaseGamePlayer({ socket, myId, isHost, gameInfo, onReturn, onRestartSame }) {
   const [phase, setPhase] = useState('PREPARING');
-  const [preparingMessage, setPreparingMessage] = useState('Generating round...');
+  const [preparingMessage, setPreparingMessage] = useState('Getting things ready...');
   const activeRoundRef = useRef(0);
   const [round, setRound] = useState(0);
   const [totalRounds, setTotalRounds] = useState(4);
